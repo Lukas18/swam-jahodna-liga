@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}{{ course.name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ course.name }}</h1>
+    {% if course.description %}<p class="text-muted mt-1">{{ course.description }}</p>{% endif %}
+  </div>
+  <div class="flex gap-1">
+    <a href="/course/{{ course.id }}/edit" class="btn btn-secondary">Edit Course</a>
+    <a href="/" class="btn btn-ghost">← Back</a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="flex items-center gap-2" style="margin-bottom:1.2rem">
+    <h2 style="margin-bottom:0">Scorecard</h2>
+    <span class="text-muted" style="font-size:0.85rem">{{ course.holes|length }} holes &middot; Total default par: <strong>{{ course.holes|sum(attribute='default_par') }}</strong></span>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Hole</th>
+          <th>Default Par</th>
+          {% for cat in categories %}
+          <th>{{ cat }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for hole in course.holes %}
+        <tr>
+          <td class="td-mono" style="font-weight:600">{{ hole.number }}</td>
+          <td class="td-mono">{{ hole.default_par }}</td>
+          {% for cat in categories %}
+          {% set cp = hole.category_pars | selectattr('category', 'eq', cat) | first %}
+          <td class="td-mono">
+            {% if cp %}
+            <span style="color:var(--accent2)">{{ cp.par }}</span>
+            {% else %}
+            <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr style="background:var(--surface2)">
+          <td style="font-weight:700;font-size:0.8rem;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">TOTAL</td>
+          <td class="td-mono" style="font-weight:700;color:var(--accent)">{{ course.holes|sum(attribute='default_par') }}</td>
+          {% for cat in categories %}
+          <td class="td-mono" style="font-weight:700;color:var(--accent)">
+            {% set total = namespace(v=0) %}
+            {% for h in course.holes %}{% set total.v = total.v + h.par_for(cat) %}{% endfor %}
+            {{ total.v }}
+          </td>
+          {% endfor %}
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+  <p class="text-muted mt-2" style="font-size:0.8rem">Category columns show overrides only. Blank (—) means the hole uses default par.</p>
+</div>
+{% endblock %}

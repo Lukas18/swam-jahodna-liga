@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Edit {{ course.name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Edit Course</h1>
+  <a href="/course/{{ course.id }}" class="btn btn-ghost">← Back</a>
+</div>
+
+<div style="max-width:900px">
+  <form method="POST">
+    <div class="card">
+      <h2>Course Info</h2>
+      <div class="form-group">
+        <label>Course Name</label>
+        <input type="text" name="name" value="{{ course.name }}" required>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea name="description">{{ course.description or '' }}</textarea>
+      </div>
+    </div>
+
+    <div class="card mt-2">
+      <h2>Hole Pars &amp; Category Overrides</h2>
+      <p class="text-muted" style="font-size:0.85rem;margin-bottom:1.5rem">
+        Set default par per hole. For categories that play the same par, leave the override blank.
+        Only fill in category overrides when a specific category uses a different tee/par.
+      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="min-width:60px">Hole</th>
+              <th style="min-width:100px">Default Par</th>
+              {% for cat in categories %}
+              <th style="min-width:90px">{{ cat }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for hole in course.holes %}
+            <tr>
+              <td class="td-mono" style="font-weight:700;color:var(--accent)">{{ hole.number }}</td>
+              <td>
+                <input type="number" name="par_{{ hole.number }}" value="{{ hole.default_par }}"
+                       min="2" max="7" class="hole-input">
+              </td>
+              {% for cat in categories %}
+              {% set cp = hole.category_pars | selectattr('category', 'eq', cat) | first %}
+              <td>
+                <input type="number" name="catpar_{{ hole.number }}_{{ cat }}"
+                       value="{{ cp.par if cp else '' }}"
+                       min="2" max="7" class="hole-input" placeholder="—">
+              </td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="flex gap-1 mt-3">
+      <button type="submit" class="btn btn-primary">Save Changes</button>
+      <a href="/course/{{ course.id }}" class="btn btn-ghost">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

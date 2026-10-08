@@ -1,0 +1,6 @@
+streamlit>=1.50,<2
+pandas>=2.2,<3
+openpyxl>=3.1,<4
+# Retained for the original Flask app and migration reference.
+flask>=3.0,<4
+flask-sqlalchemy>=3.1,<4

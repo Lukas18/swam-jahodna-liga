@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Edit Player' if player else 'New Player' }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>{{ 'Edit Player' if player else 'New Player' }}</h1>
+  <a href="/players" class="btn btn-ghost">← Players</a>
+</div>
+
+<div style="max-width:480px">
+  <form method="POST">
+    <div class="card">
+      <div class="form-row">
+        <div class="form-group">
+          <label>First Name</label>
+          <input type="text" name="first_name" value="{{ player.first_name if player else '' }}"
+                 required placeholder="Jan" autofocus>
+        </div>
+        <div class="form-group">
+          <label>Last Name</label>
+          <input type="text" name="last_name" value="{{ player.last_name if player else '' }}"
+                 required placeholder="Novák">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Default Category</label>
+          <select name="category" required>
+            {% for cat in categories %}
+            <option value="{{ cat }}" {{ 'selected' if player and player.category == cat }}>{{ cat }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Default Handicap</label>
+          <input type="number" name="handicap" value="{{ player.handicap if player else 0 }}"
+                 step="0.5" min="-20" max="50">
+        </div>
+      </div>
+      <p class="text-muted" style="font-size:0.8rem">
+        Category and handicap set here are used as defaults when registering for an event.
+        You can override both per tournament on the event page.
+      </p>
+    </div>
+
+    {% if player and player.event_entries %}
+    <div class="card mt-2">
+      <h3>Event History</h3>
+      <div style="display:flex;flex-direction:column;gap:0.4rem">
+        {% for ep in player.event_entries %}
+        <div class="flex items-center gap-2" style="font-size:0.85rem">
+          <a href="/event/{{ ep.event_id }}" style="color:var(--text);text-decoration:none;font-weight:500">
+            {{ ep.event.name }}
+          </a>
+          <span class="text-muted">{{ ep.event.date.strftime('%d %b %Y') }}</span>
+          <span class="badge badge-{{ ep.category }}">{{ ep.category }}</span>
+          <span class="text-muted">HCP {{ ep.handicap }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="flex gap-1 mt-3">
+      <button type="submit" class="btn btn-primary">
+        {{ 'Save Changes' if player else 'Add Player' }}
+      </button>
+      <a href="/players" class="btn btn-ghost">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

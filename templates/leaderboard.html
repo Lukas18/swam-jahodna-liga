@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% block title %}Leaderboard · {{ event.name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>🏆 Leaderboard</h1>
+    <p class="text-muted mt-1">{{ event.name }} · {{ event.date.strftime('%d %B %Y') }} · {{ event.course.name }}</p>
+  </div>
+  <div class="flex gap-1">
+    <a href="/event/{{ event.id }}/scores" class="btn btn-secondary">Log Scores</a>
+    <a href="/event/{{ event.id }}" class="btn btn-ghost">← Event</a>
+  </div>
+</div>
+
+<!-- Filters & Sort -->
+<div class="card mb-2">
+  <div class="flex gap-2 items-center flex-wrap">
+    <div>
+      <h3 style="margin-bottom:0.3rem">Filter by Category</h3>
+      <div class="flex gap-1 flex-wrap">
+        <a href="?sort={{ sort_by }}&category=all" class="btn btn-sm {{ 'btn-primary' if cat_filter == 'all' else 'btn-ghost' }}">All</a>
+        {% for cat in categories %}
+        <a href="?sort={{ sort_by }}&category={{ cat }}" class="btn btn-sm {{ 'btn-secondary' if cat_filter == cat else 'btn-ghost' }}">{{ cat }}</a>
+        {% endfor %}
+      </div>
+    </div>
+    <div style="margin-left:auto">
+      <h3 style="margin-bottom:0.3rem">Sort by</h3>
+      <div class="flex gap-1">
+        <a href="?sort=throws&category={{ cat_filter }}" class="btn btn-sm {{ 'btn-secondary' if sort_by == 'throws' else 'btn-ghost' }}">Total Throws</a>
+        <a href="?sort=to_par&category={{ cat_filter }}" class="btn btn-sm {{ 'btn-primary' if sort_by == 'to_par' else 'btn-ghost' }}">+/− Par</a>
+        {% if event.use_handicap %}
+        <a href="?sort=to_par_hcp&category={{ cat_filter }}" class="btn btn-sm {{ 'btn-secondary' if sort_by == 'to_par_hcp' else 'btn-ghost' }}">+/− HCP</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if results %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th style="width:40px">#</th>
+        <th>Player</th>
+        <th>Cat</th>
+        <th>HCP</th>
+        {% for r in range(1, event.num_rounds + 1) %}
+        <th style="text-align:center">R{{ r }} Throws</th>
+        <th style="text-align:center">R{{ r }} +/−</th>
+        {% endfor %}
+        <th style="text-align:center;color:var(--text)">Total Throws</th>
+        <th style="text-align:center;color:var(--accent)">+/− Par</th>
+        {% if event.use_handicap %}
+        <th style="text-align:center;color:var(--warn)">+/− HCP</th>
+        {% endif %}
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in results %}
+      {% set player = row.player %}
+      {% set rank = loop.index %}
+      <tr>
+        <td>
+          {% if rank == 1 %}<span class="rank-1">①</span>
+          {% elif rank == 2 %}<span class="rank-2">②</span>
+          {% elif rank == 3 %}<span class="rank-3">③</span>
+          {% else %}<span class="text-muted td-mono">{{ rank }}</span>{% endif %}
+        </td>
+        <td style="font-weight:500">{{ player.full_name }}</td>
+        <td><span class="badge badge-{{ player.category }}">{{ player.category }}</span></td>
+        <td class="td-mono text-muted">{{ player.handicap }}</td>
+
+        {% for r in range(1, event.num_rounds + 1) %}
+        {% set rnd = row.rounds | selectattr('round_number', 'eq', r) | first %}
+        {% if rnd %}
+        <td class="td-mono" style="text-align:center">{{ rnd.total_throws() }}</td>
+        <td style="text-align:center">
+          {% set tp = rnd.to_par() %}
+          <span class="to-par {{ 'neg' if tp < 0 else 'pos' if tp > 0 else 'even' }}">
+            {{ 'E' if tp == 0 else ('+' + tp|string if tp > 0 else tp) }}
+          </span>
+        </td>
+        {% else %}
+        <td class="text-muted td-mono" style="text-align:center">—</td>
+        <td class="text-muted" style="text-align:center">—</td>
+        {% endif %}
+        {% endfor %}
+
+        <td class="td-mono" style="text-align:center;font-weight:700;font-size:1rem">
+          {% if row.rounds_played > 0 %}{{ row.total_throws }}{% else %}<span class="text-muted">—</span>{% endif %}
+        </td>
+        <td style="text-align:center">
+          {% if row.rounds_played > 0 %}
+          {% set tp = row.to_par %}
+          <span class="to-par {{ 'neg' if tp < 0 else 'pos' if tp > 0 else 'even' }}" style="font-size:1rem;font-weight:700">
+            {{ 'E' if tp == 0 else ('+' + tp|string if tp > 0 else tp) }}
+          </span>
+          {% else %}<span class="text-muted">—</span>{% endif %}
+        </td>
+        {% if event.use_handicap %}
+        <td style="text-align:center">
+          {% if row.rounds_played > 0 %}
+          {% set th = row.to_par_hcp %}
+          <span class="to-par {{ 'neg' if th < 0 else 'pos' if th > 0 else 'even' }}" style="font-size:1rem;font-weight:700;color:var(--warn)">
+            {{ 'E' if th == 0 else ('+' + th|string if th > 0 else th) }}
+          </span>
+          {% else %}<span class="text-muted">—</span>{% endif %}
+        </td>
+        {% endif %}
+        <td>
+          <a href="/event/{{ event.id }}/scores?player_id={{ player.id }}&round=1"
+             class="btn btn-sm btn-ghost">Scores</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Per-round detail cards -->
+{% if event.num_rounds > 1 %}
+<hr class="divider">
+<h2>Round-by-Round Detail</h2>
+{% for row in results %}
+{% set player = row.player %}
+{% if row.rounds %}
+<div class="card mb-2">
+  <div class="flex items-center gap-2 mb-2 flex-wrap">
+    <div style="font-weight:600">{{ player.full_name }}</div>
+    <span class="badge badge-{{ player.category }}">{{ player.category }}</span>
+    <span class="text-muted" style="font-size:0.82rem">{{ row.rounds_played }}/{{ event.num_rounds }} rounds</span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem">
+    {% for rnd in row.rounds %}
+    {% set tp = rnd.to_par() %}
+    <div style="background:var(--surface2);border-radius:8px;padding:1rem;border:1px solid var(--border)">
+      <div class="flex items-center gap-2" style="margin-bottom:0.75rem">
+        <span style="font-weight:700;font-size:0.9rem">Round {{ rnd.round_number }}</span>
+        <span class="td-mono" style="font-size:1.1rem;font-weight:700">{{ rnd.total_throws() }}</span>
+        <span class="to-par {{ 'neg' if tp < 0 else 'pos' if tp > 0 else 'even' }}" style="font-size:0.9rem">
+          ({{ 'E' if tp == 0 else ('+' + tp|string if tp > 0 else tp) }})
+        </span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px">
+        {% for score in rnd.scores %}
+        {% set hole = event.course.holes | selectattr('number', 'eq', score.hole_number) | first %}
+        {% set par = hole.par_for(player.category) if hole else 3 %}
+        {% set diff = score.throws - par %}
+        <span class="score-chip
+          {% if diff <= -2 %}score-eagle
+          {% elif diff == -1 %}score-birdie
+          {% elif diff == 0 %}score-par
+          {% elif diff == 1 %}score-bogey
+          {% else %}score-double{% endif %}"
+          title="Hole {{ score.hole_number }} — {{ score.throws }} throws (par {{ par }})">
+          {{ score.throws }}
+        </span>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{% else %}
+<div class="card empty-state">
+  <div style="font-size:2rem">📋</div>
+  <p>No scores logged yet. Head to the event page to log round scores.</p>
+  <a href="/event/{{ event.id }}" class="btn btn-primary mt-2">Go to Event</a>
+</div>
+{% endif %}
+{% endblock %}

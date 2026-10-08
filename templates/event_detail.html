@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% block title %}{{ event.name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ event.name }}</h1>
+    <div class="flex gap-2 items-center mt-1 flex-wrap">
+      <span class="text-muted">{{ event.date.strftime('%d %B %Y') }}</span>
+      <span class="text-muted">·</span>
+      <span class="text-muted">{{ event.course.name }}</span>
+      <span class="text-muted">·</span>
+      <span class="text-muted">{{ event.num_rounds }} round{{ 's' if event.num_rounds > 1 }}</span>
+      {% if event.use_handicap %}<span class="badge" style="background:rgba(255,165,2,0.15);color:var(--warn);border:1px solid rgba(255,165,2,0.3)">Handicap ON</span>{% endif %}
+    </div>
+    {% if event.description %}<p class="text-muted mt-1" style="font-size:0.85rem">{{ event.description }}</p>{% endif %}
+  </div>
+  <div class="flex gap-1">
+    <a href="/event/{{ event.id }}/leaderboard" class="btn btn-primary">🏆 Leaderboard</a>
+    <a href="/" class="btn btn-ghost">← Back</a>
+  </div>
+</div>
+
+<div class="flex gap-1 flex-wrap mb-2">
+  {% for cat in event.categories_list() %}
+  <span class="badge badge-{{ cat }}" style="font-size:0.82rem;padding:4px 10px">{{ cat }}</span>
+  {% endfor %}
+</div>
+
+<div class="section">
+  <div class="flex items-center gap-2" style="margin-bottom:1rem">
+    <h2 style="margin-bottom:0">Players</h2>
+    <span class="text-muted" style="font-size:0.85rem">{{ event.players|length }} registered</span>
+  </div>
+
+  <!-- Add player from registry -->
+  <div class="card mb-2">
+    <h3>Register Player from Registry</h3>
+    {% set unregistered = [] %}
+    {% for p in available_players %}
+      {% if p.id not in registered_ids %}
+        {% set _ = unregistered.append(p) %}
+      {% endif %}
+    {% endfor %}
+
+    {% if unregistered %}
+    <form method="POST" action="/event/{{ event.id }}/add_player">
+      <div class="form-row" style="grid-template-columns:2fr 1fr 1fr auto">
+        <div class="form-group" style="margin-bottom:0">
+          <label>Player</label>
+          <select name="player_id" id="player-select" required onchange="prefillPlayer(this)">
+            <option value="">— select player —</option>
+            {% for p in unregistered %}
+            <option value="{{ p.id }}" data-category="{{ p.category }}" data-handicap="{{ p.handicap }}">
+              {{ p.last_name }}, {{ p.first_name }} — {{ p.category }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label>Category <span class="text-muted" style="font-weight:400;text-transform:none">(override)</span></label>
+          <select name="category" id="player-category">
+            {% for cat in event.categories_list() %}
+            <option value="{{ cat }}">{{ cat }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label>Handicap <span class="text-muted" style="font-weight:400;text-transform:none">(override)</span></label>
+          <input type="number" name="handicap" id="player-handicap" value="0" step="0.5" min="-20" max="50">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label>&nbsp;</label>
+          <button type="submit" class="btn btn-primary">Add</button>
+        </div>
+      </div>
+    </form>
+    {% else %}
+    <p class="text-muted" style="font-size:0.88rem">
+      All registry players are already registered, or the registry is empty.
+      <a href="/player/new" style="color:var(--accent)">Add a new player →</a>
+    </p>
+    {% endif %}
+
+    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);font-size:0.82rem;color:var(--muted)">
+      Player not in the list?
+      <a href="/player/new" style="color:var(--accent2)">Create them in the registry first →</a>
+    </div>
+  </div>
+
+  {% if event.players %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Player</th>
+          <th colspan="2">Category &amp; Handicap</th>
+          <th>Rounds</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ep in event.players %}
+        <tr>
+          <td class="td-mono text-muted">{{ loop.index }}</td>
+          <td style="font-weight:500">
+            <a href="/player/{{ ep.player_id }}/edit" style="color:var(--text);text-decoration:none">
+              {{ ep.full_name }}
+            </a>
+          </td>
+          <td colspan="2">
+            <form method="POST" action="/event/{{ event.id }}/edit_player/{{ ep.id }}"
+                  class="flex gap-1 items-center">
+              <select name="category" style="width:90px;padding:0.3rem 0.5rem;font-size:0.82rem">
+                {% for cat in categories %}
+                <option value="{{ cat }}" {{ 'selected' if ep.category == cat }}>{{ cat }}</option>
+                {% endfor %}
+              </select>
+              <input type="number" name="handicap" value="{{ ep.handicap }}" step="0.5"
+                     style="width:70px;padding:0.3rem 0.5rem;font-size:0.82rem">
+              <button type="submit" class="btn btn-sm btn-secondary">Save</button>
+            </form>
+          </td>
+          <td>
+            <div class="flex gap-1 items-center flex-wrap">
+              {% for r in range(1, event.num_rounds + 1) %}
+              {% set has_round = ep.rounds | selectattr('round_number', 'eq', r) | list | length > 0 %}
+              <a href="/event/{{ event.id }}/scores?player_id={{ ep.id }}&round={{ r }}"
+                 class="btn btn-sm {{ 'btn-secondary' if has_round else 'btn-ghost' }}">
+                R{{ r }}{% if has_round %} ✓{% endif %}
+              </a>
+              {% endfor %}
+            </div>
+          </td>
+          <td>
+            <form method="POST" action="/event/{{ event.id }}/remove_player/{{ ep.id }}"
+                  onsubmit="return confirm('Remove {{ ep.full_name }} from this event?')">
+              <button class="btn btn-sm btn-danger" type="submit">Remove</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="card empty-state">
+    <div style="font-size:2rem">👤</div>
+    <p>No players registered yet. Pick from the registry above.</p>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+function prefillPlayer(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  if (!opt.value) return;
+  const catSel = document.getElementById('player-category');
+  const hcpInput = document.getElementById('player-handicap');
+  if (catSel) {
+    for (let i = 0; i < catSel.options.length; i++) {
+      if (catSel.options[i].value === opt.dataset.category) { catSel.selectedIndex = i; break; }
+    }
+  }
+  if (hcpInput) hcpInput.value = opt.dataset.handicap;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+{% block title %}Log Scores{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Log Scores</h1>
+    <p class="text-muted mt-1">{{ event.name }} · {{ event.course.name }}</p>
+  </div>
+  <a href="/event/{{ event.id }}" class="btn btn-ghost">← Back to Event</a>
+</div>
+
+<!-- Player & Round picker -->
+<div class="card mb-2">
+  <h3>Select Player &amp; Round</h3>
+  <form method="GET" class="flex gap-2 items-center flex-wrap">
+    <div class="form-group" style="margin-bottom:0;min-width:200px">
+      <label>Player</label>
+      <select name="player_id" onchange="this.form.submit()">
+        <option value="">— choose player —</option>
+        {% for p in event.players %}
+        <option value="{{ p.id }}" {{ 'selected' if selected_player and selected_player.id == p.id }}>
+          {{ p.full_name }} ({{ p.category }})
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+    {% if selected_player %}
+    <div class="form-group" style="margin-bottom:0">
+      <label>Round</label>
+      <select name="round_number" onchange="this.form.submit()">
+        {% for r in range(1, event.num_rounds + 1) %}
+        <option value="{{ r }}" {{ 'selected' if round_number == r }}>Round {{ r }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
+  </form>
+</div>
+
+{% if selected_player %}
+<!-- Score entry form -->
+{% if existing_round %}
+<div class="alert alert-info">Editing existing scores for Round {{ round_number }}. Submitting will overwrite.</div>
+{% endif %}
+
+<form method="POST">
+  <input type="hidden" name="player_id" value="{{ selected_player.id }}">
+  <input type="hidden" name="round_number" value="{{ round_number }}">
+
+  <div class="card">
+    <div class="flex items-center gap-2" style="margin-bottom:1.5rem;flex-wrap:wrap">
+      <h2 style="margin-bottom:0">
+        {{ selected_player.full_name }} — Round {{ round_number }}
+      </h2>
+      <span class="badge badge-{{ selected_player.category }}">{{ selected_player.category }}</span>
+      {% if event.use_handicap %}
+      <span class="text-muted" style="font-size:0.85rem">HCP: {{ selected_player.handicap }}</span>
+      {% endif %}
+    </div>
+
+    <!-- Holes 1-9 -->
+    <h3>Front Nine</h3>
+    <div style="display:grid;grid-template-columns:repeat(9,1fr);gap:0.5rem;margin-bottom:1.5rem">
+      {% for hole in event.course.holes %}
+      {% if hole.number <= 9 %}
+      {% set par = hole.par_for(selected_player.category) %}
+      {% set existing_score = existing_round.scores | selectattr('hole_number', 'eq', hole.number) | first if existing_round else none %}
+      <div style="text-align:center">
+        <label style="font-size:0.7rem;margin-bottom:0.2rem">H{{ hole.number }}</label>
+        <input type="number" name="hole_{{ hole.number }}"
+               value="{{ existing_score.throws if existing_score else par }}"
+               min="1" max="15" class="hole-input"
+               id="h{{ hole.number }}" data-par="{{ par }}"
+               oninput="updateCell(this)">
+        <div class="par-display" id="chip{{ hole.number }}">p{{ par }}</div>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+
+    {% if event.course.holes|length > 9 %}
+    <!-- Holes 10-18 -->
+    <h3>Back Nine</h3>
+    <div style="display:grid;grid-template-columns:repeat(9,1fr);gap:0.5rem;margin-bottom:1.5rem">
+      {% for hole in event.course.holes %}
+      {% if hole.number > 9 %}
+      {% set par = hole.par_for(selected_player.category) %}
+      {% set existing_score = existing_round.scores | selectattr('hole_number', 'eq', hole.number) | first if existing_round else none %}
+      <div style="text-align:center">
+        <label style="font-size:0.7rem;margin-bottom:0.2rem">H{{ hole.number }}</label>
+        <input type="number" name="hole_{{ hole.number }}"
+               value="{{ existing_score.throws if existing_score else par }}"
+               min="1" max="15" class="hole-input"
+               id="h{{ hole.number }}" data-par="{{ par }}"
+               oninput="updateCell(this)">
+        <div class="par-display" id="chip{{ hole.number }}">p{{ par }}</div>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Running totals -->
+    <div style="background:var(--surface2);border-radius:8px;padding:1rem;display:flex;gap:2rem;flex-wrap:wrap">
+      <div>
+        <div class="text-muted" style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px">Total Throws</div>
+        <div id="total-throws" style="font-family:'DM Mono',monospace;font-size:1.6rem;font-weight:700;color:var(--text)">—</div>
+      </div>
+      <div>
+        <div class="text-muted" style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px">To Par</div>
+        <div id="total-par" style="font-family:'DM Mono',monospace;font-size:1.6rem;font-weight:700">—</div>
+      </div>
+      {% if event.use_handicap %}
+      <div>
+        <div class="text-muted" style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px">To Par (HCP adj.)</div>
+        <div id="total-hcp" style="font-family:'DM Mono',monospace;font-size:1.6rem;font-weight:700;color:var(--warn)">—</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="flex gap-1 mt-3">
+    <button type="submit" class="btn btn-primary" style="font-size:1rem;padding:0.7rem 2rem">Save Scores</button>
+    <a href="/event/{{ event.id }}" class="btn btn-ghost">Cancel</a>
+  </div>
+</form>
+
+<script>
+const handicap = {{ selected_player.handicap }};
+const useHandicap = {{ 'true' if event.use_handicap else 'false' }};
+
+function getColor(diff) {
+  if (diff <= -2) return 'var(--eagle)';
+  if (diff === -1) return 'var(--birdie)';
+  if (diff === 0) return 'var(--muted)';
+  if (diff === 1) return '#ff6b6b';
+  return 'var(--danger)';
+}
+
+function updateCell(input) {
+  const par = parseInt(input.dataset.par);
+  const val = parseInt(input.value);
+  const chip = document.getElementById('chip' + input.id.substring(1));
+  if (!isNaN(val)) {
+    const diff = val - par;
+    chip.style.color = getColor(diff);
+    if (diff < 0) chip.textContent = diff;
+    else if (diff === 0) chip.textContent = 'E';
+    else chip.textContent = '+' + diff;
+  }
+  updateTotals();
+}
+
+function updateTotals() {
+  const inputs = document.querySelectorAll('input[data-par]');
+  let totalThrows = 0, totalPar = 0;
+  inputs.forEach(inp => {
+    const v = parseInt(inp.value);
+    const p = parseInt(inp.dataset.par);
+    if (!isNaN(v)) totalThrows += v;
+    totalPar += p;
+  });
+  const toPar = totalThrows - totalPar;
+  document.getElementById('total-throws').textContent = totalThrows;
+  const parEl = document.getElementById('total-par');
+  parEl.textContent = toPar === 0 ? 'E' : (toPar > 0 ? '+' + toPar : toPar);
+  parEl.style.color = getColor(toPar);
+  if (useHandicap) {
+    const hcpAdj = totalThrows - (totalPar + handicap);
+    const hcpEl = document.getElementById('total-hcp');
+    hcpEl.textContent = hcpAdj === 0 ? 'E' : (hcpAdj > 0 ? '+' + hcpAdj : hcpAdj);
+  }
+}
+
+// Init on load
+document.querySelectorAll('input[data-par]').forEach(updateCell);
+</script>
+{% else %}
+<div class="card empty-state">
+  <div style="font-size:2rem">👆</div>
+  <p>Select a player above to start entering scores.</p>
+</div>
+{% endif %}
+{% endblock %}

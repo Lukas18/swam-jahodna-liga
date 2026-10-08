@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}New Event{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>New Event</h1>
+  <a href="/" class="btn btn-ghost">← Back</a>
+</div>
+
+{% if not courses %}
+<div class="card empty-state">
+  <div style="font-size:2rem">⚠️</div>
+  <p>You need to create a course before creating an event.</p>
+  <a href="/course/new" class="btn btn-primary mt-2">+ New Course</a>
+</div>
+{% else %}
+<div style="max-width:620px">
+  <form method="POST">
+    <div class="card">
+      <h2>Event Details</h2>
+      <div class="form-group">
+        <label>Tournament Name</label>
+        <input type="text" name="name" required placeholder="e.g. Spring Open 2025">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" name="date" required>
+        </div>
+        <div class="form-group">
+          <label>Number of Rounds</label>
+          <input type="number" name="num_rounds" value="1" min="1" max="10" required style="max-width:100px">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Course</label>
+        <select name="course_id" required>
+          {% for course in courses %}
+          <option value="{{ course.id }}">{{ course.name }} ({{ course.holes|length }} holes)</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea name="description" placeholder="Optional notes, location, rules..."></textarea>
+      </div>
+    </div>
+
+    <div class="card mt-2">
+      <h2>Categories</h2>
+      <div class="checkbox-group">
+        {% for cat in categories %}
+        <label class="checkbox-item">
+          <input type="checkbox" name="categories" value="{{ cat }}" checked>
+          <span class="badge badge-{{ cat }}">{{ cat }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card mt-2">
+      <h2>Handicap</h2>
+      <label class="checkbox-item" style="display:inline-flex">
+        <input type="checkbox" name="use_handicap">
+        <span>Use handicaps in scoring</span>
+      </label>
+      <p class="text-muted mt-1" style="font-size:0.82rem">When enabled, each player's handicap will be factored into the adjusted score column.</p>
+    </div>
+
+    <div class="flex gap-1 mt-3">
+      <button type="submit" class="btn btn-primary">Create Event</button>
+      <a href="/" class="btn btn-ghost">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

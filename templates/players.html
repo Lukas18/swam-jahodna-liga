@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Players{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Players</h1>
+    <p class="text-muted mt-1">{{ players|length }} player{{ 's' if players|length != 1 }} in the registry</p>
+  </div>
+  <a href="/player/new" class="btn btn-primary">+ New Player</a>
+</div>
+
+{% if players %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>Category</th>
+        <th>Handicap</th>
+        <th>Events Played</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for player in players %}
+      <tr>
+        <td class="td-mono text-muted">{{ loop.index }}</td>
+        <td style="font-weight:600">{{ player.full_name }}</td>
+        <td><span class="badge badge-{{ player.category }}">{{ player.category }}</span></td>
+        <td class="td-mono">{{ player.handicap }}</td>
+        <td class="text-muted">
+          {% set count = player.event_entries|length %}
+          {{ count }} event{{ 's' if count != 1 }}
+        </td>
+        <td>
+          <div class="flex gap-1">
+            <a href="/player/{{ player.id }}/edit" class="btn btn-sm btn-secondary">Edit</a>
+            <form method="POST" action="/player/{{ player.id }}/delete"
+                  onsubmit="return confirm('Remove {{ player.full_name }} from the registry? This will also remove them from all events.')">
+              <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card empty-state">
+  <div style="font-size:2.5rem">👤</div>
+  <p>No players yet. Add players to the registry first, then register them for events.</p>
+  <a href="/player/new" class="btn btn-primary mt-2">+ Add First Player</a>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}New Course{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>New Course</h1>
+  <a href="/" class="btn btn-ghost">← Back</a>
+</div>
+
+<div style="max-width:700px">
+  <form method="POST">
+    <div class="card">
+      <h2>Course Info</h2>
+      <div class="form-group">
+        <label>Course Name</label>
+        <input type="text" name="name" required placeholder="e.g. Riverside Park DGC">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea name="description" placeholder="Optional description..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Number of Holes</label>
+        <input type="number" name="num_holes" id="num_holes" value="18" min="1" max="36" required style="max-width:120px">
+      </div>
+    </div>
+
+    <div class="card mt-2" id="holes-card">
+      <h2>Hole Pars</h2>
+      <p class="text-muted" style="font-size:0.85rem;margin-bottom:1rem">Set default par for each hole. You can add per-category overrides after saving.</p>
+      <div id="holes-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:0.75rem">
+        <!-- dynamically filled by JS -->
+      </div>
+    </div>
+
+    <div class="flex gap-1 mt-3">
+      <button type="submit" class="btn btn-primary">Create Course</button>
+      <a href="/" class="btn btn-ghost">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<script>
+function buildHoles(n) {
+  const grid = document.getElementById('holes-grid');
+  grid.innerHTML = '';
+  for (let i = 1; i <= n; i++) {
+    grid.innerHTML += `
+      <div>
+        <label>Hole ${i}</label>
+        <input type="number" name="par_${i}" value="3" min="2" max="7" required class="hole-input">
+        <div class="par-display">par</div>
+      </div>`;
+  }
+}
+const numInput = document.getElementById('num_holes');
+buildHoles(parseInt(numInput.value));
+numInput.addEventListener('input', () => buildHoles(parseInt(numInput.value) || 1));
+</script>
+{% endblock %}

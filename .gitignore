@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+.streamlit/secrets.toml
+instance/
+data/*.tmp
+data/backups/
+
+# Local browser verification screenshots
+*-preview*.jpg
+contrast-*.jpg
