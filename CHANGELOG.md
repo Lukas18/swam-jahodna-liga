@@ -182,3 +182,10 @@
 
 - User authorized creating a new repository and pushing all changes. Initialize main and create private Lukas18/swam-jahodna-liga; include application source, legacy templates/migration, tests, configuration examples, documentation and current data/league.json. Keep actual secrets, virtual environment, runtime caches, local backups, legacy SQLite database and browser verification screenshots excluded.
 - Updated README with repository/data inclusion details. All 49 automated tests passed before the initial commit. Browser verification of the current Home row styling was completed in the preceding change; Device Hub remains waived for this web application.
+
+
+## 2026-10-08T23:42:41+02:00 — Remove explanatory result captions
+
+- Removed public read-only sidebar label and explanatory captions for Home standings, league points scope, tournament rankings, round averages, layout profiles and hole statistics (heat-map thresholds, combined weighting and per-category methodology). Retained section labels, event metadata, empty-state messages and admin form instructions.
+- Verified all 49 tests passed and actual Home/Statistics views no longer contain the removed captions. Saved clean-statistics-preview.jpg. Confirmed local admin password exists without exposing it; documented that cloud deployments require their own top-level admin_password in Streamlit Secrets. Authentication behaviour and business records remain unchanged.
+- Commit and push these changes to main in the private GitHub repository. Device Hub remains waived for this web application.

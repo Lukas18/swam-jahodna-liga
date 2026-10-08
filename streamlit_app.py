@@ -163,7 +163,6 @@ def home():
                     st.table(styled.format(escape='html'))
         if not standings:
             st.info('Standings will appear after the first recorded round.')
-        st.caption('Attendance counts tournaments with a recorded round, including incomplete tournaments. Tied places share the same medal and use T (for example T3, T3, 5).')
     st.subheader('Recent tournaments')
     if DATA['tournaments']:
         for t in sorted(DATA['tournaments'], key=lambda x: x['date'], reverse=True)[:8]:
@@ -223,7 +222,6 @@ def leagues():
         return
     cat = category_filter('league_cat')
     metric = metric_picker('league_rank')
-    st.caption('Points awarded per category.' if league['points_scope'] == 'category' else 'Points awarded across all players.')
     table(league_results(DATA, league['id'], cat, metric), 'league_table', sortable=True)
     st.caption('Placement points')
     points = pd.DataFrame({translate('Place'): list(range(1, len(league['points']) + 1)),
@@ -356,7 +354,6 @@ def courses():
     c1.metric('Holes', len(holes))
     c2.metric('Par', sum(h['par'] for h in holes))
     c3.metric('Length (m)', f"{sum(h['length'] for h in holes):.0f}")
-    st.caption('Category-specific holes' if cat in layout['profiles'] else 'Uses the default layout holes')
     st.dataframe(pd.DataFrame(holes).rename(columns={'number': 'Hole', 'par': 'Par', 'length': 'Length (m)'}), hide_index=True, width='stretch',
                  column_config={'Length (m)': st.column_config.NumberColumn(format='%.0f')})
     st.subheader('Layout statistics')
@@ -373,14 +370,9 @@ def courses():
             **{c: st.column_config.NumberColumn(format='%.2f') for c in frame if c.startswith('Average') or c.endswith(' %')},
             'Par': st.column_config.NumberColumn(format='%.2f' if cat == 'All' else '%.0f'),
             'Length (m)': st.column_config.NumberColumn(format='%.0f')})
-        st.caption('Heat map: green = below par; warm orange = above par. Averages within ±0.25 of par stay neutral; tint steps end at 0.75 and 1.50 throws from par. Outcome percentages use three strengths: >0–25%, >25–50%, >50%. Par percentages stay neutral.')
         st.download_button('Download hole statistics', frame.to_csv(index=False), 'hole_statistics.csv', 'text/csv')
     else:
         st.info('No hole-by-hole scores recorded for this layout and category yet.')
-    if cat == 'All':
-        st.caption('Combined statistics show one row per hole. Par and known lengths are sample-weighted averages; relative scores and outcome percentages use each score’s recorded par.')
-    else:
-        st.caption('Percentages use all recorded hole scores. Historical tee configurations with different par or length have separate rows. Totals-only results are excluded from hole statistics.')
     if admin():
         layout_editor(course, layout)
 
@@ -594,7 +586,6 @@ def tournaments():
     st.caption(f"{len(tournament_entries(DATA, t['id']))} registered players")
     complete = st.checkbox('Completed players only', value=True)
     table(tournament_results(DATA, t['id'], cat, metric, complete), 'tournament_table')
-    st.caption('Place is the player’s category rank, even in the combined view. Lower scores rank higher. Incomplete players are excluded by default. Raw totals across different hole counts are not directly comparable.')
     with st.expander('Round scorecards'):
         records = sorted([r for r in DATA['rounds'] if r['tournament_id'] == t['id'] and (cat == 'All' or r['category'] == cat)],
                          key=lambda r: (r['player_id'], r['round_number']))
@@ -631,7 +622,6 @@ def show_statistics(rounds, key, combine_categories=False):
     c1, c2 = st.columns(2)
     c1.metric('Average throws per round', f"{totals['Average throws']:.2f}")
     c2.metric('Average +/− par per round', f"{totals['Average +/− par']:+.2f}")
-    st.caption('Round averages include totals-only results and all recorded rounds, including incomplete tournaments.')
     st.subheader('Hole statistics')
     stats = hole_statistics(DATA, rounds, combine_categories=combine_categories)
     if stats:
@@ -640,14 +630,9 @@ def show_statistics(rounds, key, combine_categories=False):
             **{c: st.column_config.NumberColumn(format='%.2f') for c in frame if c.startswith('Average') or c.endswith(' %')},
             'Par': st.column_config.NumberColumn(format='%.2f' if combine_categories else '%.0f'),
             'Length (m)': st.column_config.NumberColumn(format='%.0f')})
-        st.caption('Heat map: green = below par; warm orange = above par. Averages within ±0.25 of par stay neutral; tint steps end at 0.75 and 1.50 throws from par. Outcome percentages use three strengths: >0–25%, >25–50%, >50%. Par percentages stay neutral.')
         st.download_button('Download hole statistics', frame.to_csv(index=False), 'hole_statistics.csv', 'text/csv', key=key + '_holes_csv')
     else:
         st.info('These results have totals only. Import or enter hole scores to see hole averages and outcome percentages.')
-    if combine_categories:
-        st.caption('Combined statistics show one row per hole. Par and known lengths are sample-weighted averages; relative scores and outcome percentages use each score’s recorded par.')
-    else:
-        st.caption('Hole averages and percentages use all recorded hole scores in the selected scope. Layouts, categories and historical par/length configurations stay separate.')
 
 
 def statistics_page():
@@ -800,8 +785,6 @@ with st.sidebar:
         if st.button('Sign out'):
             st.session_state.pop('admin_expires', None)
             st.rerun()
-    else:
-        st.caption('Public results · read-only')
     if st.button('Refresh results'):
         st.rerun()
 if 'notice' in st.session_state:
