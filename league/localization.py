@@ -52,7 +52,7 @@ SK = {
     'All courses': 'Všetky ihriská', 'All layouts': 'Všetky layouty',
     'Administration': 'Administrácia', 'Admin password': 'Heslo administrátora', 'Sign in': 'Prihlásiť sa',
     'Sign out': 'Odhlásiť sa', 'Incorrect password.': 'Nesprávne heslo.',
-    'Too many attempts. Try again in a minute.': 'Príliš veľa pokusov. Skúste to o minútu.',
+    'Too many attempts. Try again in a minute.': 'Príliš veľa pokusov.Co skúšaš moj zlaty ? Ani na to nemysli.',
     'Signed in. Manage all league data here.': 'Ste prihlásený. Tu môžete spravovať všetky údaje ligy.',
     'Administrator · session expires after 8 hours': 'Administrátor · prihlásenie platí 8 hodín',
     'Admin editing is disabled until an admin password is configured in Streamlit secrets or DISCGOLF_ADMIN_PASSWORD.':
