@@ -18,7 +18,7 @@ SK = {
     'Recent tournaments': 'Posledné turnaje', 'League': 'Liga', 'League tournaments': 'Turnaje ligy',
     'Placement points': 'Bodovanie podľa umiestnenia', 'Tournament': 'Turnaj', 'Date': 'Dátum',
     'Public results · read-only': 'Verejné výsledky · iba na čítanie', 'Refresh results': 'Obnoviť výsledky',
-    'Local competition. Every round counts.': 'Miestna liga. Každé kolo sa počíta.',
+    '2026 Fall Discgolf SWAM League Jahodna.': '2026 Jesenna Discgolfova SWAM liga na Jahodnej.',
     'Points awarded per category.': 'Body sa prideľujú v každej kategórii samostatne.',
     'Points awarded across all players.': 'Body sa prideľujú v spoločnom poradí všetkých hráčov.',
     'No results yet.': 'Zatiaľ nie sú žiadne výsledky.',
