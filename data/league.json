@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "revision": 37,
+  "revision": 3,
   "categories": [
     "MPO",
     "FPO",
@@ -564,6 +564,19 @@
       "date": "2026-10-03",
       "league_id": "6ae194d86ee949948155b104747f843f",
       "layout_id": "03de5d6782474cb0a68e454248a27184",
+      "num_rounds": 1,
+      "categories": [
+        "MPO",
+        "FPO",
+        "MA3"
+      ]
+    },
+    {
+      "id": "098dde3847bd4d20944ccdd42cbeb733",
+      "name": "DG Liga SWAM Jahodna Jesen 2026 6. kolo",
+      "date": "2026-10-10",
+      "league_id": "6ae194d86ee949948155b104747f843f",
+      "layout_id": "c171e6445d2343f1b1fc5f1a2d73c53b",
       "num_rounds": 1,
       "categories": [
         "MPO",
@@ -7892,6 +7905,1836 @@
         }
       ],
       "recorded_at": "2026-10-08T20:28:52.895997+00:00"
+    },
+    {
+      "id": "7b96105d6067486bbd0bc290535e7851",
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "389fdde1ba7640df814bebf11f174bef",
+      "layout_id": "c171e6445d2343f1b1fc5f1a2d73c53b",
+      "round_number": 1,
+      "category": "MPO",
+      "handicap": 0.0,
+      "total": 57,
+      "par": 60,
+      "holes": [
+        {
+          "number": 1,
+          "par": 4,
+          "length": 133.0,
+          "throws": 3
+        },
+        {
+          "number": 2,
+          "par": 3,
+          "length": 98.0,
+          "throws": 3
+        },
+        {
+          "number": 3,
+          "par": 3,
+          "length": 80.0,
+          "throws": 3
+        },
+        {
+          "number": 4,
+          "par": 3,
+          "length": 53.0,
+          "throws": 4
+        },
+        {
+          "number": 5,
+          "par": 3,
+          "length": 85.0,
+          "throws": 3
+        },
+        {
+          "number": 6,
+          "par": 3,
+          "length": 95.0,
+          "throws": 3
+        },
+        {
+          "number": 7,
+          "par": 3,
+          "length": 85.0,
+          "throws": 2
+        },
+        {
+          "number": 8,
+          "par": 3,
+          "length": 86.0,
+          "throws": 3
+        },
+        {
+          "number": 9,
+          "par": 5,
+          "length": 220.0,
+          "throws": 5
+        },
+        {
+          "number": 10,
+          "par": 3,
+          "length": 70.0,
+          "throws": 3
+        },
+        {
+          "number": 11,
+          "par": 4,
+          "length": 186.0,
+          "throws": 4
+        },
+        {
+          "number": 12,
+          "par": 3,
+          "length": 120.0,
+          "throws": 3
+        },
+        {
+          "number": 13,
+          "par": 3,
+          "length": 64.0,
+          "throws": 2
+        },
+        {
+          "number": 14,
+          "par": 3,
+          "length": 90.0,
+          "throws": 3
+        },
+        {
+          "number": 15,
+          "par": 4,
+          "length": 200.0,
+          "throws": 3
+        },
+        {
+          "number": 16,
+          "par": 4,
+          "length": 143.0,
+          "throws": 3
+        },
+        {
+          "number": 17,
+          "par": 3,
+          "length": 105.0,
+          "throws": 4
+        },
+        {
+          "number": 18,
+          "par": 3,
+          "length": 150.0,
+          "throws": 3
+        }
+      ],
+      "recorded_at": "2026-10-10T16:56:56.993374+00:00"
+    },
+    {
+      "id": "6264a91772b046509ad5eb96cfe0451b",
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "619513652eeb422cb7f1e5fbd6cfecaa",
+      "layout_id": "c171e6445d2343f1b1fc5f1a2d73c53b",
+      "round_number": 1,
+      "category": "MPO",
+      "handicap": 0.0,
+      "total": 60,
+      "par": 60,
+      "holes": [
+        {
+          "number": 1,
+          "par": 4,
+          "length": 133.0,
+          "throws": 4
+        },
+        {
+          "number": 2,
+          "par": 3,
+          "length": 98.0,
+          "throws": 3
+        },
+        {
+          "number": 3,
+          "par": 3,
+          "length": 80.0,
+          "throws": 3
+        },
+        {
+          "number": 4,
+          "par": 3,
+          "length": 53.0,
+          "throws": 2
+        },
+        {
+          "number": 5,
+          "par": 3,
+          "length": 85.0,
+          "throws": 3
+        },
+        {
+          "number": 6,
+          "par": 3,
+          "length": 95.0,
+          "throws": 3
+        },
+        {
+          "number": 7,
+          "par": 3,
+          "length": 85.0,
+          "throws": 3
+        },
+        {
+          "number": 8,
+          "par": 3,
+          "length": 86.0,
+          "throws": 3
+        },
+        {
+          "number": 9,
+          "par": 5,
+          "length": 220.0,
+          "throws": 6
+        },
+        {
+          "number": 10,
+          "par": 3,
+          "length": 70.0,
+          "throws": 2
+        },
+        {
+          "number": 11,
+          "par": 4,
+          "length": 186.0,
+          "throws": 5
+        },
+        {
+          "number": 12,
+          "par": 3,
+          "length": 120.0,
+          "throws": 3
+        },
+        {
+          "number": 13,
+          "par": 3,
+          "length": 64.0,
+          "throws": 3
+        },
+        {
+          "number": 14,
+          "par": 3,
+          "length": 90.0,
+          "throws": 3
+        },
+        {
+          "number": 15,
+          "par": 4,
+          "length": 200.0,
+          "throws": 3
+        },
+        {
+          "number": 16,
+          "par": 4,
+          "length": 143.0,
+          "throws": 5
+        },
+        {
+          "number": 17,
+          "par": 3,
+          "length": 105.0,
+          "throws": 3
+        },
+        {
+          "number": 18,
+          "par": 3,
+          "length": 150.0,
+          "throws": 3
+        }
+      ],
+      "recorded_at": "2026-10-10T16:56:56.993525+00:00"
+    },
+    {
+      "id": "68572640b9b94a5ca8826308562231a5",
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "2c8af13d5fbe420780b1ab1309c8ad84",
+      "layout_id": "c171e6445d2343f1b1fc5f1a2d73c53b",
+      "round_number": 1,
+      "category": "MPO",
+      "handicap": 0.0,
+      "total": 61,
+      "par": 60,
+      "holes": [
+        {
+          "number": 1,
+          "par": 4,
+          "length": 133.0,
+          "throws": 4
+        },
+        {
+          "number": 2,
+          "par": 3,
+          "length": 98.0,
+          "throws": 3
+        },
+        {
+          "number": 3,
+          "par": 3,
+          "length": 80.0,
+          "throws": 3
+        },
+        {
+          "number": 4,
+          "par": 3,
+          "length": 53.0,
+          "throws": 5
+        },
+        {
+          "number": 5,
+          "par": 3,
+          "length": 85.0,
+          "throws": 2
+        },
+        {
+          "number": 6,
+          "par": 3,
+          "length": 95.0,
+          "throws": 3
+        },
+        {
+          "number": 7,
+          "par": 3,
+          "length": 85.0,
+          "throws": 2
+        },
+        {
+          "number": 8,
+          "par": 3,
+          "length": 86.0,
+          "throws": 4
+        },
+        {
+          "number": 9,
+          "par": 5,
+          "length": 220.0,
+          "throws": 5
+        },
+        {
+          "number": 10,
+          "par": 3,
+          "length": 70.0,
+          "throws": 3
+        },
+        {
+          "number": 11,
+          "par": 4,
+          "length": 186.0,
+          "throws": 5
+        },
+        {
+          "number": 12,
+          "par": 3,
+          "length": 120.0,
+          "throws": 3
+        },
+        {
+          "number": 13,
+          "par": 3,
+          "length": 64.0,
+          "throws": 2
+        },
+        {
+          "number": 14,
+          "par": 3,
+          "length": 90.0,
+          "throws": 3
+        },
+        {
+          "number": 15,
+          "par": 4,
+          "length": 200.0,
+          "throws": 3
+        },
+        {
+          "number": 16,
+          "par": 4,
+          "length": 143.0,
+          "throws": 4
+        },
+        {
+          "number": 17,
+          "par": 3,
+          "length": 105.0,
+          "throws": 3
+        },
+        {
+          "number": 18,
+          "par": 3,
+          "length": 150.0,
+          "throws": 4
+        }
+      ],
+      "recorded_at": "2026-10-10T16:56:56.993657+00:00"
+    },
+    {
+      "id": "22c6a47db3ea4e169aaa52e7940762a4",
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "fa3669fe22bd4c77ad2c436193e623f8",
+      "layout_id": "c171e6445d2343f1b1fc5f1a2d73c53b",
+      "round_number": 1,
+      "category": "FPO",
+      "handicap": 0.0,
+      "total": 84,
+      "par": 60,
+      "holes": [
+        {
+          "number": 1,
+          "par": 4,
+          "length": 133.0,
+          "throws": 4
+        },
+        {
+          "number": 2,
+          "par": 3,
+          "length": 98.0,
+          "throws": 5
+        },
+        {
+          "number": 3,
+          "par": 3,
+          "length": 80.0,
+          "throws": 3
+        },
+        {
+          "number": 4,
+          "par": 3,
+          "length": 53.0,
+          "throws": 4
+        },
+        {
+          "number": 5,
+          "par": 3,
+          "length": 85.0,
+          "throws": 5
+        },
+        {
+          "number": 6,
+          "par": 3,
+          "length": 95.0,
+          "throws": 5
+        },
+        {
+          "number": 7,
+          "par": 3,
+          "length": 85.0,
+          "throws": 3
+        },
+        {
+          "number": 8,
+          "par": 3,
+          "length": 86.0,
+          "throws": 4
+        },
+        {
+          "number": 9,
+          "par": 5,
+          "length": 220.0,
+          "throws": 9
+        },
+        {
+          "number": 10,
+          "par": 3,
+          "length": 70.0,
+          "throws": 3
+        },
+        {
+          "number": 11,
+          "par": 4,
+          "length": 186.0,
+          "throws": 6
+        },
+        {
+          "number": 12,
+          "par": 3,
+          "length": 120.0,
+          "throws": 4
+        },
+        {
+          "number": 13,
+          "par": 3,
+          "length": 64.0,
+          "throws": 4
+        },
+        {
+          "number": 14,
+          "par": 3,
+          "length": 90.0,
+          "throws": 4
+        },
+        {
+          "number": 15,
+          "par": 4,
+          "length": 200.0,
+          "throws": 4
+        },
+        {
+          "number": 16,
+          "par": 4,
+          "length": 143.0,
+          "throws": 5
+        },
+        {
+          "number": 17,
+          "par": 3,
+          "length": 105.0,
+          "throws": 7
+        },
+        {
+          "number": 18,
+          "par": 3,
+          "length": 150.0,
+          "throws": 5
+        }
+      ],
+      "recorded_at": "2026-10-10T16:56:56.993789+00:00"
+    },
+    {
+      "id": "164def640c854f4b8af2030c0d6f903c",
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "b9c9d464186a47f78b731a4758b0853a",
+      "layout_id": "c171e6445d2343f1b1fc5f1a2d73c53b",
+      "round_number": 1,
+      "category": "FPO",
+      "handicap": 0.0,
+      "total": 90,
+      "par": 60,
+      "holes": [
+        {
+          "number": 1,
+          "par": 4,
+          "length": 133.0,
+          "throws": 6
+        },
+        {
+          "number": 2,
+          "par": 3,
+          "length": 98.0,
+          "throws": 5
+        },
+        {
+          "number": 3,
+          "par": 3,
+          "length": 80.0,
+          "throws": 3
+        },
+        {
+          "number": 4,
+          "par": 3,
+          "length": 53.0,
+          "throws": 3
+        },
+        {
+          "number": 5,
+          "par": 3,
+          "length": 85.0,
+          "throws": 4
+        },
+        {
+          "number": 6,
+          "par": 3,
+          "length": 95.0,
+          "throws": 4
+        },
+        {
+          "number": 7,
+          "par": 3,
+          "length": 85.0,
+          "throws": 3
+        },
+        {
+          "number": 8,
+          "par": 3,
+          "length": 86.0,
+          "throws": 5
+        },
+        {
+          "number": 9,
+          "par": 5,
+          "length": 220.0,
+          "throws": 9
+        },
+        {
+          "number": 10,
+          "par": 3,
+          "length": 70.0,
+          "throws": 4
+        },
+        {
+          "number": 11,
+          "par": 4,
+          "length": 186.0,
+          "throws": 7
+        },
+        {
+          "number": 12,
+          "par": 3,
+          "length": 120.0,
+          "throws": 5
+        },
+        {
+          "number": 13,
+          "par": 3,
+          "length": 64.0,
+          "throws": 3
+        },
+        {
+          "number": 14,
+          "par": 3,
+          "length": 90.0,
+          "throws": 4
+        },
+        {
+          "number": 15,
+          "par": 4,
+          "length": 200.0,
+          "throws": 6
+        },
+        {
+          "number": 16,
+          "par": 4,
+          "length": 143.0,
+          "throws": 7
+        },
+        {
+          "number": 17,
+          "par": 3,
+          "length": 105.0,
+          "throws": 7
+        },
+        {
+          "number": 18,
+          "par": 3,
+          "length": 150.0,
+          "throws": 5
+        }
+      ],
+      "recorded_at": "2026-10-10T16:56:56.993924+00:00"
+    },
+    {
+      "id": "d7acfe87186b49a1a6d463004e84fd8f",
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "ff9ee1e3899742b3bc8d165184307f03",
+      "layout_id": "c171e6445d2343f1b1fc5f1a2d73c53b",
+      "round_number": 1,
+      "category": "MA3",
+      "handicap": 0.0,
+      "total": 63,
+      "par": 60,
+      "holes": [
+        {
+          "number": 1,
+          "par": 4,
+          "length": 133.0,
+          "throws": 3
+        },
+        {
+          "number": 2,
+          "par": 3,
+          "length": 98.0,
+          "throws": 3
+        },
+        {
+          "number": 3,
+          "par": 3,
+          "length": 80.0,
+          "throws": 2
+        },
+        {
+          "number": 4,
+          "par": 3,
+          "length": 53.0,
+          "throws": 3
+        },
+        {
+          "number": 5,
+          "par": 3,
+          "length": 85.0,
+          "throws": 3
+        },
+        {
+          "number": 6,
+          "par": 3,
+          "length": 95.0,
+          "throws": 3
+        },
+        {
+          "number": 7,
+          "par": 3,
+          "length": 85.0,
+          "throws": 3
+        },
+        {
+          "number": 8,
+          "par": 3,
+          "length": 86.0,
+          "throws": 3
+        },
+        {
+          "number": 9,
+          "par": 5,
+          "length": 220.0,
+          "throws": 6
+        },
+        {
+          "number": 10,
+          "par": 3,
+          "length": 70.0,
+          "throws": 3
+        },
+        {
+          "number": 11,
+          "par": 4,
+          "length": 186.0,
+          "throws": 6
+        },
+        {
+          "number": 12,
+          "par": 3,
+          "length": 120.0,
+          "throws": 3
+        },
+        {
+          "number": 13,
+          "par": 3,
+          "length": 64.0,
+          "throws": 3
+        },
+        {
+          "number": 14,
+          "par": 3,
+          "length": 90.0,
+          "throws": 2
+        },
+        {
+          "number": 15,
+          "par": 4,
+          "length": 200.0,
+          "throws": 4
+        },
+        {
+          "number": 16,
+          "par": 4,
+          "length": 143.0,
+          "throws": 4
+        },
+        {
+          "number": 17,
+          "par": 3,
+          "length": 105.0,
+          "throws": 4
+        },
+        {
+          "number": 18,
+          "par": 3,
+          "length": 150.0,
+          "throws": 5
+        }
+      ],
+      "recorded_at": "2026-10-10T16:56:56.994060+00:00"
+    },
+    {
+      "id": "2ae4d3b8c0ce4cf49f1a8db7e4751b65",
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "d97d8ae0e3f34d8eb2e294dbaa8e8da9",
+      "layout_id": "c171e6445d2343f1b1fc5f1a2d73c53b",
+      "round_number": 1,
+      "category": "MA3",
+      "handicap": 0.0,
+      "total": 67,
+      "par": 60,
+      "holes": [
+        {
+          "number": 1,
+          "par": 4,
+          "length": 133.0,
+          "throws": 4
+        },
+        {
+          "number": 2,
+          "par": 3,
+          "length": 98.0,
+          "throws": 3
+        },
+        {
+          "number": 3,
+          "par": 3,
+          "length": 80.0,
+          "throws": 3
+        },
+        {
+          "number": 4,
+          "par": 3,
+          "length": 53.0,
+          "throws": 4
+        },
+        {
+          "number": 5,
+          "par": 3,
+          "length": 85.0,
+          "throws": 3
+        },
+        {
+          "number": 6,
+          "par": 3,
+          "length": 95.0,
+          "throws": 3
+        },
+        {
+          "number": 7,
+          "par": 3,
+          "length": 85.0,
+          "throws": 3
+        },
+        {
+          "number": 8,
+          "par": 3,
+          "length": 86.0,
+          "throws": 3
+        },
+        {
+          "number": 9,
+          "par": 5,
+          "length": 220.0,
+          "throws": 6
+        },
+        {
+          "number": 10,
+          "par": 3,
+          "length": 70.0,
+          "throws": 3
+        },
+        {
+          "number": 11,
+          "par": 4,
+          "length": 186.0,
+          "throws": 4
+        },
+        {
+          "number": 12,
+          "par": 3,
+          "length": 120.0,
+          "throws": 4
+        },
+        {
+          "number": 13,
+          "par": 3,
+          "length": 64.0,
+          "throws": 3
+        },
+        {
+          "number": 14,
+          "par": 3,
+          "length": 90.0,
+          "throws": 3
+        },
+        {
+          "number": 15,
+          "par": 4,
+          "length": 200.0,
+          "throws": 5
+        },
+        {
+          "number": 16,
+          "par": 4,
+          "length": 143.0,
+          "throws": 5
+        },
+        {
+          "number": 17,
+          "par": 3,
+          "length": 105.0,
+          "throws": 4
+        },
+        {
+          "number": 18,
+          "par": 3,
+          "length": 150.0,
+          "throws": 4
+        }
+      ],
+      "recorded_at": "2026-10-10T16:56:56.994196+00:00"
+    },
+    {
+      "id": "6e4b618e430f4808aae2e216d77f90be",
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "e0cf1bdfd7b146ba9feccbc551abba1c",
+      "layout_id": "c171e6445d2343f1b1fc5f1a2d73c53b",
+      "round_number": 1,
+      "category": "MA3",
+      "handicap": 0.0,
+      "total": 68,
+      "par": 60,
+      "holes": [
+        {
+          "number": 1,
+          "par": 4,
+          "length": 133.0,
+          "throws": 4
+        },
+        {
+          "number": 2,
+          "par": 3,
+          "length": 98.0,
+          "throws": 3
+        },
+        {
+          "number": 3,
+          "par": 3,
+          "length": 80.0,
+          "throws": 4
+        },
+        {
+          "number": 4,
+          "par": 3,
+          "length": 53.0,
+          "throws": 4
+        },
+        {
+          "number": 5,
+          "par": 3,
+          "length": 85.0,
+          "throws": 3
+        },
+        {
+          "number": 6,
+          "par": 3,
+          "length": 95.0,
+          "throws": 4
+        },
+        {
+          "number": 7,
+          "par": 3,
+          "length": 85.0,
+          "throws": 3
+        },
+        {
+          "number": 8,
+          "par": 3,
+          "length": 86.0,
+          "throws": 3
+        },
+        {
+          "number": 9,
+          "par": 5,
+          "length": 220.0,
+          "throws": 6
+        },
+        {
+          "number": 10,
+          "par": 3,
+          "length": 70.0,
+          "throws": 3
+        },
+        {
+          "number": 11,
+          "par": 4,
+          "length": 186.0,
+          "throws": 5
+        },
+        {
+          "number": 12,
+          "par": 3,
+          "length": 120.0,
+          "throws": 3
+        },
+        {
+          "number": 13,
+          "par": 3,
+          "length": 64.0,
+          "throws": 4
+        },
+        {
+          "number": 14,
+          "par": 3,
+          "length": 90.0,
+          "throws": 5
+        },
+        {
+          "number": 15,
+          "par": 4,
+          "length": 200.0,
+          "throws": 3
+        },
+        {
+          "number": 16,
+          "par": 4,
+          "length": 143.0,
+          "throws": 4
+        },
+        {
+          "number": 17,
+          "par": 3,
+          "length": 105.0,
+          "throws": 4
+        },
+        {
+          "number": 18,
+          "par": 3,
+          "length": 150.0,
+          "throws": 3
+        }
+      ],
+      "recorded_at": "2026-10-10T16:56:56.994333+00:00"
+    },
+    {
+      "id": "dbe86daccfd54e09a8855900e50ace40",
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "ca9c772d3677413aac9a2629d4a7b19d",
+      "layout_id": "c171e6445d2343f1b1fc5f1a2d73c53b",
+      "round_number": 1,
+      "category": "MA3",
+      "handicap": 0.0,
+      "total": 69,
+      "par": 60,
+      "holes": [
+        {
+          "number": 1,
+          "par": 4,
+          "length": 133.0,
+          "throws": 5
+        },
+        {
+          "number": 2,
+          "par": 3,
+          "length": 98.0,
+          "throws": 3
+        },
+        {
+          "number": 3,
+          "par": 3,
+          "length": 80.0,
+          "throws": 3
+        },
+        {
+          "number": 4,
+          "par": 3,
+          "length": 53.0,
+          "throws": 4
+        },
+        {
+          "number": 5,
+          "par": 3,
+          "length": 85.0,
+          "throws": 5
+        },
+        {
+          "number": 6,
+          "par": 3,
+          "length": 95.0,
+          "throws": 4
+        },
+        {
+          "number": 7,
+          "par": 3,
+          "length": 85.0,
+          "throws": 3
+        },
+        {
+          "number": 8,
+          "par": 3,
+          "length": 86.0,
+          "throws": 3
+        },
+        {
+          "number": 9,
+          "par": 5,
+          "length": 220.0,
+          "throws": 6
+        },
+        {
+          "number": 10,
+          "par": 3,
+          "length": 70.0,
+          "throws": 3
+        },
+        {
+          "number": 11,
+          "par": 4,
+          "length": 186.0,
+          "throws": 7
+        },
+        {
+          "number": 12,
+          "par": 3,
+          "length": 120.0,
+          "throws": 4
+        },
+        {
+          "number": 13,
+          "par": 3,
+          "length": 64.0,
+          "throws": 4
+        },
+        {
+          "number": 14,
+          "par": 3,
+          "length": 90.0,
+          "throws": 2
+        },
+        {
+          "number": 15,
+          "par": 4,
+          "length": 200.0,
+          "throws": 3
+        },
+        {
+          "number": 16,
+          "par": 4,
+          "length": 143.0,
+          "throws": 4
+        },
+        {
+          "number": 17,
+          "par": 3,
+          "length": 105.0,
+          "throws": 3
+        },
+        {
+          "number": 18,
+          "par": 3,
+          "length": 150.0,
+          "throws": 3
+        }
+      ],
+      "recorded_at": "2026-10-10T16:56:56.994477+00:00"
+    },
+    {
+      "id": "9df61e3d31744cc9bdcc895ca6157a20",
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "09aaa555246640f1ae076332a246684b",
+      "layout_id": "c171e6445d2343f1b1fc5f1a2d73c53b",
+      "round_number": 1,
+      "category": "MA3",
+      "handicap": 0.0,
+      "total": 69,
+      "par": 60,
+      "holes": [
+        {
+          "number": 1,
+          "par": 4,
+          "length": 133.0,
+          "throws": 4
+        },
+        {
+          "number": 2,
+          "par": 3,
+          "length": 98.0,
+          "throws": 3
+        },
+        {
+          "number": 3,
+          "par": 3,
+          "length": 80.0,
+          "throws": 3
+        },
+        {
+          "number": 4,
+          "par": 3,
+          "length": 53.0,
+          "throws": 3
+        },
+        {
+          "number": 5,
+          "par": 3,
+          "length": 85.0,
+          "throws": 4
+        },
+        {
+          "number": 6,
+          "par": 3,
+          "length": 95.0,
+          "throws": 3
+        },
+        {
+          "number": 7,
+          "par": 3,
+          "length": 85.0,
+          "throws": 3
+        },
+        {
+          "number": 8,
+          "par": 3,
+          "length": 86.0,
+          "throws": 4
+        },
+        {
+          "number": 9,
+          "par": 5,
+          "length": 220.0,
+          "throws": 7
+        },
+        {
+          "number": 10,
+          "par": 3,
+          "length": 70.0,
+          "throws": 3
+        },
+        {
+          "number": 11,
+          "par": 4,
+          "length": 186.0,
+          "throws": 6
+        },
+        {
+          "number": 12,
+          "par": 3,
+          "length": 120.0,
+          "throws": 4
+        },
+        {
+          "number": 13,
+          "par": 3,
+          "length": 64.0,
+          "throws": 3
+        },
+        {
+          "number": 14,
+          "par": 3,
+          "length": 90.0,
+          "throws": 2
+        },
+        {
+          "number": 15,
+          "par": 4,
+          "length": 200.0,
+          "throws": 4
+        },
+        {
+          "number": 16,
+          "par": 4,
+          "length": 143.0,
+          "throws": 4
+        },
+        {
+          "number": 17,
+          "par": 3,
+          "length": 105.0,
+          "throws": 4
+        },
+        {
+          "number": 18,
+          "par": 3,
+          "length": 150.0,
+          "throws": 5
+        }
+      ],
+      "recorded_at": "2026-10-10T16:56:56.994621+00:00"
+    },
+    {
+      "id": "c794c0e57cc148628b67fd3865bdada1",
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "73489b263fa748aa9e55a8c7bf34a36c",
+      "layout_id": "c171e6445d2343f1b1fc5f1a2d73c53b",
+      "round_number": 1,
+      "category": "MA3",
+      "handicap": 0.0,
+      "total": 71,
+      "par": 60,
+      "holes": [
+        {
+          "number": 1,
+          "par": 4,
+          "length": 133.0,
+          "throws": 4
+        },
+        {
+          "number": 2,
+          "par": 3,
+          "length": 98.0,
+          "throws": 3
+        },
+        {
+          "number": 3,
+          "par": 3,
+          "length": 80.0,
+          "throws": 3
+        },
+        {
+          "number": 4,
+          "par": 3,
+          "length": 53.0,
+          "throws": 5
+        },
+        {
+          "number": 5,
+          "par": 3,
+          "length": 85.0,
+          "throws": 3
+        },
+        {
+          "number": 6,
+          "par": 3,
+          "length": 95.0,
+          "throws": 4
+        },
+        {
+          "number": 7,
+          "par": 3,
+          "length": 85.0,
+          "throws": 3
+        },
+        {
+          "number": 8,
+          "par": 3,
+          "length": 86.0,
+          "throws": 3
+        },
+        {
+          "number": 9,
+          "par": 5,
+          "length": 220.0,
+          "throws": 7
+        },
+        {
+          "number": 10,
+          "par": 3,
+          "length": 70.0,
+          "throws": 3
+        },
+        {
+          "number": 11,
+          "par": 4,
+          "length": 186.0,
+          "throws": 6
+        },
+        {
+          "number": 12,
+          "par": 3,
+          "length": 120.0,
+          "throws": 4
+        },
+        {
+          "number": 13,
+          "par": 3,
+          "length": 64.0,
+          "throws": 3
+        },
+        {
+          "number": 14,
+          "par": 3,
+          "length": 90.0,
+          "throws": 3
+        },
+        {
+          "number": 15,
+          "par": 4,
+          "length": 200.0,
+          "throws": 5
+        },
+        {
+          "number": 16,
+          "par": 4,
+          "length": 143.0,
+          "throws": 5
+        },
+        {
+          "number": 17,
+          "par": 3,
+          "length": 105.0,
+          "throws": 4
+        },
+        {
+          "number": 18,
+          "par": 3,
+          "length": 150.0,
+          "throws": 3
+        }
+      ],
+      "recorded_at": "2026-10-10T16:56:56.994768+00:00"
+    },
+    {
+      "id": "c8a1ce7d126e40158ddb280de78437ac",
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "bedfa0a89cab40aba797c54be68a8bb8",
+      "layout_id": "c171e6445d2343f1b1fc5f1a2d73c53b",
+      "round_number": 1,
+      "category": "MA3",
+      "handicap": 0.0,
+      "total": 78,
+      "par": 60,
+      "holes": [
+        {
+          "number": 1,
+          "par": 4,
+          "length": 133.0,
+          "throws": 5
+        },
+        {
+          "number": 2,
+          "par": 3,
+          "length": 98.0,
+          "throws": 4
+        },
+        {
+          "number": 3,
+          "par": 3,
+          "length": 80.0,
+          "throws": 4
+        },
+        {
+          "number": 4,
+          "par": 3,
+          "length": 53.0,
+          "throws": 2
+        },
+        {
+          "number": 5,
+          "par": 3,
+          "length": 85.0,
+          "throws": 4
+        },
+        {
+          "number": 6,
+          "par": 3,
+          "length": 95.0,
+          "throws": 4
+        },
+        {
+          "number": 7,
+          "par": 3,
+          "length": 85.0,
+          "throws": 3
+        },
+        {
+          "number": 8,
+          "par": 3,
+          "length": 86.0,
+          "throws": 4
+        },
+        {
+          "number": 9,
+          "par": 5,
+          "length": 220.0,
+          "throws": 7
+        },
+        {
+          "number": 10,
+          "par": 3,
+          "length": 70.0,
+          "throws": 3
+        },
+        {
+          "number": 11,
+          "par": 4,
+          "length": 186.0,
+          "throws": 9
+        },
+        {
+          "number": 12,
+          "par": 3,
+          "length": 120.0,
+          "throws": 4
+        },
+        {
+          "number": 13,
+          "par": 3,
+          "length": 64.0,
+          "throws": 3
+        },
+        {
+          "number": 14,
+          "par": 3,
+          "length": 90.0,
+          "throws": 5
+        },
+        {
+          "number": 15,
+          "par": 4,
+          "length": 200.0,
+          "throws": 3
+        },
+        {
+          "number": 16,
+          "par": 4,
+          "length": 143.0,
+          "throws": 6
+        },
+        {
+          "number": 17,
+          "par": 3,
+          "length": 105.0,
+          "throws": 4
+        },
+        {
+          "number": 18,
+          "par": 3,
+          "length": 150.0,
+          "throws": 4
+        }
+      ],
+      "recorded_at": "2026-10-10T16:56:56.994934+00:00"
+    },
+    {
+      "id": "2143384f80f44e709c52423d3aac2f62",
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "67837b0d75444fc0b45892fc0fb72df3",
+      "layout_id": "c171e6445d2343f1b1fc5f1a2d73c53b",
+      "round_number": 1,
+      "category": "MA3",
+      "handicap": 0.0,
+      "total": 83,
+      "par": 60,
+      "holes": [
+        {
+          "number": 1,
+          "par": 4,
+          "length": 133.0,
+          "throws": 5
+        },
+        {
+          "number": 2,
+          "par": 3,
+          "length": 98.0,
+          "throws": 4
+        },
+        {
+          "number": 3,
+          "par": 3,
+          "length": 80.0,
+          "throws": 3
+        },
+        {
+          "number": 4,
+          "par": 3,
+          "length": 53.0,
+          "throws": 3
+        },
+        {
+          "number": 5,
+          "par": 3,
+          "length": 85.0,
+          "throws": 4
+        },
+        {
+          "number": 6,
+          "par": 3,
+          "length": 95.0,
+          "throws": 4
+        },
+        {
+          "number": 7,
+          "par": 3,
+          "length": 85.0,
+          "throws": 4
+        },
+        {
+          "number": 8,
+          "par": 3,
+          "length": 86.0,
+          "throws": 4
+        },
+        {
+          "number": 9,
+          "par": 5,
+          "length": 220.0,
+          "throws": 8
+        },
+        {
+          "number": 10,
+          "par": 3,
+          "length": 70.0,
+          "throws": 4
+        },
+        {
+          "number": 11,
+          "par": 4,
+          "length": 186.0,
+          "throws": 5
+        },
+        {
+          "number": 12,
+          "par": 3,
+          "length": 120.0,
+          "throws": 4
+        },
+        {
+          "number": 13,
+          "par": 3,
+          "length": 64.0,
+          "throws": 4
+        },
+        {
+          "number": 14,
+          "par": 3,
+          "length": 90.0,
+          "throws": 4
+        },
+        {
+          "number": 15,
+          "par": 4,
+          "length": 200.0,
+          "throws": 7
+        },
+        {
+          "number": 16,
+          "par": 4,
+          "length": 143.0,
+          "throws": 6
+        },
+        {
+          "number": 17,
+          "par": 3,
+          "length": 105.0,
+          "throws": 5
+        },
+        {
+          "number": 18,
+          "par": 3,
+          "length": 150.0,
+          "throws": 5
+        }
+      ],
+      "recorded_at": "2026-10-10T16:56:56.995098+00:00"
+    },
+    {
+      "id": "aeca6d98765d4406b7f0be9bb6a55532",
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "b98bb607faa4484d847443270f778377",
+      "layout_id": "c171e6445d2343f1b1fc5f1a2d73c53b",
+      "round_number": 1,
+      "category": "MA3",
+      "handicap": 0.0,
+      "total": 85,
+      "par": 60,
+      "holes": [
+        {
+          "number": 1,
+          "par": 4,
+          "length": 133.0,
+          "throws": 5
+        },
+        {
+          "number": 2,
+          "par": 3,
+          "length": 98.0,
+          "throws": 5
+        },
+        {
+          "number": 3,
+          "par": 3,
+          "length": 80.0,
+          "throws": 4
+        },
+        {
+          "number": 4,
+          "par": 3,
+          "length": 53.0,
+          "throws": 4
+        },
+        {
+          "number": 5,
+          "par": 3,
+          "length": 85.0,
+          "throws": 4
+        },
+        {
+          "number": 6,
+          "par": 3,
+          "length": 95.0,
+          "throws": 4
+        },
+        {
+          "number": 7,
+          "par": 3,
+          "length": 85.0,
+          "throws": 4
+        },
+        {
+          "number": 8,
+          "par": 3,
+          "length": 86.0,
+          "throws": 4
+        },
+        {
+          "number": 9,
+          "par": 5,
+          "length": 220.0,
+          "throws": 8
+        },
+        {
+          "number": 10,
+          "par": 3,
+          "length": 70.0,
+          "throws": 4
+        },
+        {
+          "number": 11,
+          "par": 4,
+          "length": 186.0,
+          "throws": 8
+        },
+        {
+          "number": 12,
+          "par": 3,
+          "length": 120.0,
+          "throws": 5
+        },
+        {
+          "number": 13,
+          "par": 3,
+          "length": 64.0,
+          "throws": 4
+        },
+        {
+          "number": 14,
+          "par": 3,
+          "length": 90.0,
+          "throws": 3
+        },
+        {
+          "number": 15,
+          "par": 4,
+          "length": 200.0,
+          "throws": 4
+        },
+        {
+          "number": 16,
+          "par": 4,
+          "length": 143.0,
+          "throws": 7
+        },
+        {
+          "number": 17,
+          "par": 3,
+          "length": 105.0,
+          "throws": 4
+        },
+        {
+          "number": 18,
+          "par": 3,
+          "length": 150.0,
+          "throws": 4
+        }
+      ],
+      "recorded_at": "2026-10-10T16:56:56.995254+00:00"
+    },
+    {
+      "id": "905449c737174b738a7db1ed8662976d",
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "689fdf24aad74442a6c20029e9a5749a",
+      "layout_id": "c171e6445d2343f1b1fc5f1a2d73c53b",
+      "round_number": 1,
+      "category": "MA3",
+      "handicap": 0.0,
+      "total": 100,
+      "par": 60,
+      "holes": [
+        {
+          "number": 1,
+          "par": 4,
+          "length": 133.0,
+          "throws": 7
+        },
+        {
+          "number": 2,
+          "par": 3,
+          "length": 98.0,
+          "throws": 4
+        },
+        {
+          "number": 3,
+          "par": 3,
+          "length": 80.0,
+          "throws": 5
+        },
+        {
+          "number": 4,
+          "par": 3,
+          "length": 53.0,
+          "throws": 5
+        },
+        {
+          "number": 5,
+          "par": 3,
+          "length": 85.0,
+          "throws": 4
+        },
+        {
+          "number": 6,
+          "par": 3,
+          "length": 95.0,
+          "throws": 5
+        },
+        {
+          "number": 7,
+          "par": 3,
+          "length": 85.0,
+          "throws": 3
+        },
+        {
+          "number": 8,
+          "par": 3,
+          "length": 86.0,
+          "throws": 6
+        },
+        {
+          "number": 9,
+          "par": 5,
+          "length": 220.0,
+          "throws": 8
+        },
+        {
+          "number": 10,
+          "par": 3,
+          "length": 70.0,
+          "throws": 5
+        },
+        {
+          "number": 11,
+          "par": 4,
+          "length": 186.0,
+          "throws": 6
+        },
+        {
+          "number": 12,
+          "par": 3,
+          "length": 120.0,
+          "throws": 6
+        },
+        {
+          "number": 13,
+          "par": 3,
+          "length": 64.0,
+          "throws": 6
+        },
+        {
+          "number": 14,
+          "par": 3,
+          "length": 90.0,
+          "throws": 5
+        },
+        {
+          "number": 15,
+          "par": 4,
+          "length": 200.0,
+          "throws": 6
+        },
+        {
+          "number": 16,
+          "par": 4,
+          "length": 143.0,
+          "throws": 7
+        },
+        {
+          "number": 17,
+          "par": 3,
+          "length": 105.0,
+          "throws": 6
+        },
+        {
+          "number": 18,
+          "par": 3,
+          "length": 150.0,
+          "throws": 6
+        }
+      ],
+      "recorded_at": "2026-10-10T16:56:56.995408+00:00"
     }
   ],
   "registrations": [
@@ -8252,6 +10095,96 @@
     {
       "tournament_id": "86c00538f8e447beab3a2b3ec36ea407",
       "player_id": "67837b0d75444fc0b45892fc0fb72df3",
+      "category": "MA3",
+      "handicap": 0.0
+    },
+    {
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "389fdde1ba7640df814bebf11f174bef",
+      "category": "MPO",
+      "handicap": 0.0
+    },
+    {
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "619513652eeb422cb7f1e5fbd6cfecaa",
+      "category": "MPO",
+      "handicap": 0.0
+    },
+    {
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "2c8af13d5fbe420780b1ab1309c8ad84",
+      "category": "MPO",
+      "handicap": 0.0
+    },
+    {
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "fa3669fe22bd4c77ad2c436193e623f8",
+      "category": "FPO",
+      "handicap": 0.0
+    },
+    {
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "b9c9d464186a47f78b731a4758b0853a",
+      "category": "FPO",
+      "handicap": 0.0
+    },
+    {
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "ff9ee1e3899742b3bc8d165184307f03",
+      "category": "MA3",
+      "handicap": 0.0
+    },
+    {
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "d97d8ae0e3f34d8eb2e294dbaa8e8da9",
+      "category": "MA3",
+      "handicap": 0.0
+    },
+    {
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "e0cf1bdfd7b146ba9feccbc551abba1c",
+      "category": "MA3",
+      "handicap": 0.0
+    },
+    {
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "ca9c772d3677413aac9a2629d4a7b19d",
+      "category": "MA3",
+      "handicap": 0.0
+    },
+    {
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "09aaa555246640f1ae076332a246684b",
+      "category": "MA3",
+      "handicap": 0.0
+    },
+    {
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "73489b263fa748aa9e55a8c7bf34a36c",
+      "category": "MA3",
+      "handicap": 0.0
+    },
+    {
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "bedfa0a89cab40aba797c54be68a8bb8",
+      "category": "MA3",
+      "handicap": 0.0
+    },
+    {
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "67837b0d75444fc0b45892fc0fb72df3",
+      "category": "MA3",
+      "handicap": 0.0
+    },
+    {
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "b98bb607faa4484d847443270f778377",
+      "category": "MA3",
+      "handicap": 0.0
+    },
+    {
+      "tournament_id": "098dde3847bd4d20944ccdd42cbeb733",
+      "player_id": "689fdf24aad74442a6c20029e9a5749a",
       "category": "MA3",
       "handicap": 0.0
     }
