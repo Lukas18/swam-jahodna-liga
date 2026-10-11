@@ -150,17 +150,19 @@ def home():
         standings = home_standings(DATA, SETTINGS['active_league_id'], metric)
         medals = {1: '🥇 ', 2: '🥈 ', 3: '🥉 '}
         for category in DATA['categories']:
+
             rows = [r for r in standings if r['Category'] == category]
+            # print(rows)
             if rows:
                 st.subheader(category)
                 frame = pd.DataFrame([{'Place': label, 'Name': medals.get(r['Place'], '') + r['Player'],
                                        'Total points': r['Points'], 'Tournaments attended': r['Tournaments']} for r, label in zip(rows, place_labels(rows))])
                 frame = frame.rename(columns=translate)
-                styled = frame.style.set_properties(**{'color': '#3B2119'})
+                styled = frame.style.set_properties(**{'color': '#3B2119'}).hide(axis="index")
                 styled = styled.apply(lambda row: [
                     'background-color: #DED9C7' if row.name % 2 == 0 else 'background-color: #EAE4D0'
                 ] * len(row), axis=1)
-                styled = styled.set_properties(subset=[translate(c) for c in ['Place', 'Total points', 'Tournaments attended']], **{'color': '#16492F', 'font-weight': 'bold'})
+                styled = styled.set_properties(subset=[translate(c) for c in ['Place', 'Name', 'Total points', 'Tournaments attended']], **{'color': '#16492F', 'font-weight': 'bold'})
                 with st.container(key='leaderboard_home_' + category):
                     st.table(styled.format(escape='html'))
         if not standings:
