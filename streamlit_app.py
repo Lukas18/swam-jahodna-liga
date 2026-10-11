@@ -41,6 +41,29 @@ h1,h2,h3 {letter-spacing:-.025em;}
 :is([class*="st-key-leaderboard_"], .st-key-placement_points) table thead th:first-child,
 :is([class*="st-key-leaderboard_"], .st-key-placement_points) table tbody th {display:none;}
 [data-testid="stMetric"] {background:rgba(127,127,127,.08);border-radius:12px;padding:16px;}
+div[data-testid="stTable"] thead th {
+    display: table-cell !important;
+}
+/* Keep columns compact and prevent wrapping */
+div[data-testid="stTable"] th *,
+div[data-testid="stTable"] td {
+    display: table-cell !important;
+    white-space: nowrap !important;
+}
+
+/* Numeric columns: use minimum necessary width */
+div[data-testid="stTable"] th:not(:nth-child(2)),
+div[data-testid="stTable"] td:not(:nth-child(2)) {
+    width: 1%;
+    white-space: nowrap !important;
+}
+
+/* Player name: absorb remaining available width */
+div[data-testid="stTable"] th:nth-child(2),
+div[data-testid="stTable"] td:nth-child(2) {
+    width: auto;
+    text-align: left;
+}
 </style>''', unsafe_allow_html=True)
 
 
@@ -143,7 +166,7 @@ def navigate(page, selection_key, item_id):
 
 def home():
     st.title('🥏 ' + SETTINGS['site_title'])
-    st.caption('Local competition. Every round counts.')
+    st.caption('Fall Discgolf League SWAM Jahodna 2026')
     if SETTINGS['active_league_id']:
         st.subheader('Overall standings')
         metric = metric_picker('home_metric')

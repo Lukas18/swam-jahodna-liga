@@ -7,6 +7,7 @@ import streamlit
 # Translation keys remain English so switching languages never changes record IDs,
 # categories, navigation values, editor column keys or scoring rules.
 SK = {
+    'Fall Discgolf League SWAM Jahodna 2026':'Jesenna Discgolfova liga SWAM Jahodna 2026',
     'Language': 'Jazyk', 'Home': 'Domov', 'Leagues': 'Ligy', 'Tournaments': 'Turnaje',
     'Statistics': 'Štatistiky', 'Admin': 'Administrácia', 'Explore': 'Navigácia',
     'League leaderboard': 'Poradie ligy', 'Overall standings': 'Celkové poradie',
