@@ -1,14 +1,14 @@
-"""Small versioned JSON store, locally or in a separate GitHub data repository."""
-import base64
-import hashlib
+"""Versioned league store backed by Supabase PostgreSQL.
+
+Requires SQL function save_app_data defined in setup_supabase_store.sql.
+"""
+import copy
 import json
 import os
-from pathlib import Path
-import threading
-from urllib import request, error, parse
-from .domain import empty_data, validate_data
 
-LOCK = threading.Lock()
+from supabase import create_client
+
+from .domain import empty_data, validate_data
 
 
 class StorageError(Exception):
@@ -20,69 +20,143 @@ def encoded(data):
 
 
 class Store:
-    def __init__(self, path='data/league.json', github=None):
-        self.path = Path(path)
-        self.github = github
-        if github and (not github.get('repository') or not github.get('token')):
-            raise StorageError('GitHub repository and token are required together.')
-
-    def api(self, method, payload=None):
-        cfg = self.github
-        repo = '/'.join(parse.quote(part, safe='') for part in cfg['repository'].split('/'))
-        file_path = parse.quote(cfg.get('path', 'league.json'), safe='/')
-        url = f'https://api.github.com/repos/{repo}/contents/{file_path}'
-        if method == 'GET':
-            url += '?' + parse.urlencode({'ref': cfg.get('branch', 'main')})
-        req = request.Request(url, data=json.dumps(payload).encode() if payload else None, method=method,
-                              headers={'Authorization': f"Bearer {cfg['token']}", 'Accept': 'application/vnd.github+json',
-                                       'Content-Type': 'application/json', 'User-Agent': 'discgolf-league'})
-        try:
-            with request.urlopen(req, timeout=20) as response:
-                return json.load(response)
-        except error.HTTPError as exc:
-            if exc.code == 404 and method == 'GET':
-                raise StorageError('GitHub data file was not found. Upload your local league.json to the configured repository first.') from None
-            if exc.code in (409, 422):
-                raise StorageError('Data changed since this page loaded. Refresh and try again.') from None
-            raise StorageError(f'GitHub storage returned HTTP {exc.code}. Check repository access and configuration.') from None
-        except (error.URLError, TimeoutError):
-            raise StorageError('Could not reach GitHub storage. No changes were saved.') from None
+    def __init__(self, path='data/league.json', github=None, supabase=None):
+        # path and github are accepted for compatibility with existing callers.
+        # Neither is used by this Supabase-only implementation.
+        cfg = supabase or {}
+        url = cfg.get('url') or os.environ.get('SUPABASE_URL')
+        key = cfg.get('key') or os.environ.get('SUPABASE_KEY')
+        self.document_id = cfg.get('document_id', 'main')
+        if not url or not key:
+            raise StorageError('SUPABASE_URL and SUPABASE_KEY must be configured.')
+        self.db = create_client(url, key)
 
     def load(self):
-        if self.github:
-            obj = self.api('GET')
-            if 'content' not in obj:
-                raise StorageError('GitHub data file is too large for this simple store.')
-            raw = base64.b64decode(obj['content'])
-            version = obj['sha']
-        elif self.path.exists():
-            raw = self.path.read_bytes()
-            version = hashlib.sha256(raw).hexdigest()
-        else:
-            return empty_data(), None
         try:
-            return validate_data(json.loads(raw)), version
+            response = (self.db.table('app_data')
+                        .select('content')
+                        .eq('id', self.document_id)
+                        .limit(1)
+                        .execute())
+            if not response.data:
+                return empty_data(), None
+            data = validate_data(response.data[0]['content'])
+            # Version is the authoritative integer revision in the persisted JSON.
+            return data, str(data.get('revision', 0))
+        except StorageError:
+            raise
         except (ValueError, KeyError, TypeError) as exc:
-            raise StorageError(f'Invalid stored data: {exc}') from None
+            raise StorageError(f'Invalid stored data: {exc}') from exc
+        except Exception as exc:
+            raise StorageError(f'Could not load data from Supabase: {exc}') from exc
 
     def save(self, data, expected_version):
-        validate_data(data)
-        data['revision'] = data.get('revision', 0) + 1
-        raw = encoded(data)
-        if self.github and len(raw) >= 1_000_000:
-            raise StorageError('Data exceeds this simple GitHub store’s 1 MB limit. Export a backup and switch storage before adding more results.')
-        if self.github:
-            payload = {'message': f"Save league data revision {data['revision']}",
-                       'content': base64.b64encode(raw).decode(), 'branch': self.github.get('branch', 'main')}
-            if expected_version:
-                payload['sha'] = expected_version
-            self.api('PUT', payload)
-        else:
-            with LOCK:
-                current = hashlib.sha256(self.path.read_bytes()).hexdigest() if self.path.exists() else None
-                if current != expected_version:
-                    raise StorageError('Data changed since this page loaded. Refresh and try again.')
-                self.path.parent.mkdir(parents=True, exist_ok=True)
-                tmp = self.path.with_suffix('.tmp')
-                tmp.write_bytes(raw)
-                os.replace(tmp, self.path)
+        # A copy avoids incrementing the caller's revision on failed saves.
+        outgoing = copy.deepcopy(data)
+        validate_data(outgoing)
+        try:
+            # Round-trip via JSON to validate JSON compatibility before writing.
+            outgoing = json.loads(encoded(outgoing))
+        except (TypeError, ValueError) as exc:
+            raise StorageError(f'Data cannot be serialized as JSON: {exc}') from exc
+
+        # expected_version=None only applies when the document does not exist.
+        # For existing documents the PostgreSQL function performs atomic CAS.
+        expected = None if expected_version is None else int(expected_version)
+        outgoing['revision'] = (expected if expected is not None else 0) + 1
+        try:
+            response = self.db.rpc('save_app_data', {
+                'p_id': self.document_id,
+                'p_expected_revision': expected,
+                'p_content': outgoing,
+            }).execute()
+            if response.data is not True:
+                raise StorageError('Data changed since this page loaded. Refresh and try again.')
+        except StorageError:
+            raise
+        except Exception as exc:
+            raise StorageError(f'Could not save data to Supabase: {exc}') from exc
+        # Maintain previous behavior: update the caller after confirmed success.
+        data['revision'] = outgoing['revision']
+
+
+# """Versioned league store backed by Supabase PostgreSQL.
+#
+# Requires SQL function save_app_data defined in setup_supabase_store.sql.
+# """
+# import copy
+# import json
+# import os
+#
+# from supabase import create_client
+#
+# from .domain import empty_data, validate_data
+#
+#
+# class StorageError(Exception):
+#     pass
+#
+#
+# def encoded(data):
+#     return json.dumps(data, ensure_ascii=False, indent=2, allow_nan=False).encode('utf-8')
+#
+#
+# class Store:
+#     def __init__(self, path='data/league.json', github=None, supabase=None):
+#         # path and github are accepted for compatibility with existing callers.
+#         # Neither is used by this Supabase-only implementation.
+#         cfg = supabase or {}
+#         url = cfg.get('url') or os.environ.get('SUPABASE_URL')
+#         key = cfg.get('key') or os.environ.get('SUPABASE_KEY')
+#         self.document_id = cfg.get('document_id', 'main')
+#         if not url or not key:
+#             raise StorageError('SUPABASE_URL and SUPABASE_KEY must be configured.')
+#         self.db = create_client(url, key)
+#
+#     def load(self):
+#         try:
+#             response = (self.db.table('app_data')
+#                         .select('content')
+#                         .eq('id', self.document_id)
+#                         .limit(1)
+#                         .execute())
+#             if not response.data:
+#                 return empty_data(), None
+#             data = validate_data(response.data[0]['content'])
+#             # Version is the authoritative integer revision in the persisted JSON.
+#             return data, str(data.get('revision', 0))
+#         except StorageError:
+#             raise
+#         except (ValueError, KeyError, TypeError) as exc:
+#             raise StorageError(f'Invalid stored data: {exc}') from exc
+#         except Exception as exc:
+#             raise StorageError(f'Could not load data from Supabase: {exc}') from exc
+#
+#     def save(self, data, expected_version):
+#         # A copy avoids incrementing the caller's revision on failed saves.
+#         outgoing = copy.deepcopy(data)
+#         validate_data(outgoing)
+#         try:
+#             # Round-trip via JSON to validate JSON compatibility before writing.
+#             outgoing = json.loads(encoded(outgoing))
+#         except (TypeError, ValueError) as exc:
+#             raise StorageError(f'Data cannot be serialized as JSON: {exc}') from exc
+#
+#         # expected_version=None only applies when the document does not exist.
+#         # For existing documents the PostgreSQL function performs atomic CAS.
+#         expected = None if expected_version is None else int(expected_version)
+#         outgoing['revision'] = (expected if expected is not None else 0) + 1
+#         try:
+#             response = self.db.rpc('save_app_data', {
+#                 'p_id': self.document_id,
+#                 'p_expected_revision': expected,
+#                 'p_content': outgoing,
+#             }).execute()
+#             if response.data is not True:
+#                 raise StorageError('Data changed since this page loaded. Refresh and try again.')
+#         except StorageError:
+#             raise
+#         except Exception as exc:
+#             raise StorageError(f'Could not save data to Supabase: {exc}') from exc
+#         # Maintain previous behavior: update the caller after confirmed success.
+#         data['revision'] = outgoing['revision']

@@ -53,15 +53,17 @@ def secrets():
 
 CONFIG = secrets()
 try:
-    STORE = Store(os.environ.get('DISCGOLF_DATA_PATH', 'data/league.json'), CONFIG.get('github'))
+    STORE = Store()
     DATA, VERSION = STORE.load()
+    # STORE = Store(os.environ.get('DISCGOLF_DATA_PATH', 'data/league.json'), CONFIG.get('github'))
+    # DATA, VERSION = STORE.load()
 except (StorageError, OSError) as exc:
     st.error(str(exc))
     st.stop()
 
 
 SETTINGS = site_settings(DATA)
-st.set_page_config(page_title=SETTINGS['site_title'])
+# st.set_page_config(page_title=SETTINGS['site_title'])
 
 
 def admin():
@@ -681,10 +683,10 @@ def admin_page():
                     st.error('Incorrect password.')
         return
     st.success('Signed in. Manage all league data here.')
-    if not STORE.github:
-        st.info('Local JSON storage is active. Before cloud deployment, configure GitHub storage to preserve edits through restarts.')
-    else:
-        st.caption('Persistent GitHub JSON storage is active.')
+    # if not STORE.github:
+    #     st.info('Local JSON storage is active. Before cloud deployment, configure GitHub storage to preserve edits through restarts.')
+    # else:
+    #     st.caption('Persistent GitHub JSON storage is active.')
     section = st.radio('Manage', ['Players', 'Courses & layouts', 'Leagues', 'Tournaments & scores', 'Categories', 'Settings', 'Backup & restore'],
                        key='admin_section')
     if section == 'Players':
