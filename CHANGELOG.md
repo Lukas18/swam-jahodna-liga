@@ -189,3 +189,10 @@
 - Removed public read-only sidebar label and explanatory captions for Home standings, league points scope, tournament rankings, round averages, layout profiles and hole statistics (heat-map thresholds, combined weighting and per-category methodology). Retained section labels, event metadata, empty-state messages and admin form instructions.
 - Verified all 49 tests passed and actual Home/Statistics views no longer contain the removed captions. Saved clean-statistics-preview.jpg. Confirmed local admin password exists without exposing it; documented that cloud deployments require their own top-level admin_password in Streamlit Secrets. Authentication behaviour and business records remain unchanged.
 - Commit and push these changes to main in the private GitHub repository. Device Hub remains waived for this web application.
+
+
+## 2026-10-13T23:49:27+02:00 — Bulk create missing CSV players
+
+- Added import_players.py for username/name CSV pairs, Supabase document loading and a single atomic revision-checked save with --apply. Default mode previews only; optional --preview-json performs an offline preview. Credentials load from environment or an ignored secrets file and are never printed. Existing username/name matches and repeated rows are skipped without modifying players. New players use HCP 0, FPO for final name words ending ova/ová (case-insensitive and Unicode normalized), otherwise configurable MPO default. Missing fields/categories abort before saving.
+- Added four focused tests covering suffixes/diacritics/surname-only names, existing player preservation/idempotence, missing categories and BOM/delimiter/empty fields. All four pass. Supplied CSV dry run against local snapshot finds 27 additions and 19 skips; no app data written. Full 53-test suite attempted: 19 errors and one failure in existing storage/UI tests with current Supabase configuration (missing SUPABASE_URL/KEY).
+- Updated usage documentation. Preserve the pre-existing uncommitted streamlit_app.py edit. CLI behavior verified with tests and dry run; Device Hub remains waived for this web application.

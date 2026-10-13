@@ -104,3 +104,16 @@ Home and Tournament leaderboards use consistent 17 px text for headers and value
 Hole lengths display as whole metres in layout tables/editors, round scorecards and hole statistics; layout total length also has no decimals. Formatting preserves stored measurements. Tournament results omit the Complete/Dokončené column; the completed-players filter and completion rules remain available.
 
 Explanatory captions below result/statistics tables and the public read-only sidebar label are hidden. Calculation details remain documented here. On Community Cloud, configure the top-level `admin_password = "your-chosen-password"` in app Settings → Secrets, save it, then sign in under Administrácia. Local secrets are deliberately excluded from Git and must be configured separately for hosting.
+
+## Bulk player creation
+
+`import_players.py` reads UTF-8 CSV columns `username` and `name` (semicolon, comma or tab delimited). It defaults to the supplied unique_pairs.csv path and previews without saving:
+
+```bash
+.venv/bin/python import_players.py
+.venv/bin/python import_players.py --apply
+```
+
+Configure SUPABASE_URL and SUPABASE_KEY in the environment, or in the ignored `.streamlit/secrets.toml` (top-level keys or a `[supabase]` url/key section). Use `--secrets PATH` for another secrets file and `--document-id ID` for another app document. Existing players match case-insensitive uDisc usernames or normalized full names and remain unchanged, including their categories and handicaps. Repeated CSV users are skipped. New players receive handicap 0; final name words ending in ova/ová, including surname-only names, receive FPO. Other new players receive MPO (`--default-category MA3` overrides this default). Multiword names split at the final word; single-word names retain a blank surname. Invalid rows/categories abort the import. One version-checked Supabase save persists the entire batch; stale data conflicts abort instead of overwriting other edits.
+
+For an offline preview against a snapshot, use `.venv/bin/python import_players.py --preview-json data/league.json`. This mode cannot save and may differ from the current Supabase data. The script neither registers players for tournaments nor changes scores.
