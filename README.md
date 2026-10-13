@@ -117,3 +117,23 @@ Explanatory captions below result/statistics tables and the public read-only sid
 Configure SUPABASE_URL and SUPABASE_KEY in the environment, or in the ignored `.streamlit/secrets.toml` (top-level keys or a `[supabase]` url/key section). Use `--secrets PATH` for another secrets file and `--document-id ID` for another app document. Existing players match case-insensitive uDisc usernames or normalized full names and remain unchanged, including their categories and handicaps. Repeated CSV users are skipped. New players receive handicap 0; final name words ending in ova/ová, including surname-only names, receive FPO. Other new players receive MPO (`--default-category MA3` overrides this default). Multiword names split at the final word; single-word names retain a blank surname. Invalid rows/categories abort the import. One version-checked Supabase save persists the entire batch; stale data conflicts abort instead of overwriting other edits.
 
 For an offline preview against a snapshot, use `.venv/bin/python import_players.py --preview-json data/league.json`. This mode cannot save and may differ from the current Supabase data. The script neither registers players for tournaments nor changes scores.
+
+## Bulk tournament workbook import
+
+`import_tournaments.py` scans only `.xlsx` files directly in the supplied directory (not its backup subfolder). It reads the Event results sheet. Filenames ending YYYY-MM-DD supply the tournament date; numbered `sobotnajsie-discgolfove-turnaje-N-turnaj` events use Cervena and display `Sobotnajsie Discgolfove Turnaje (N. turnaj)`. Other filenames use a cervena/zelena token as the layout and remove that token from the title. Dates are stored in the application's ISO format YYYY-MM-DD.
+
+Example for the approved historical batch (preview by default; append `--apply` to save):
+
+```bash
+.venv/bin/python import_tournaments.py \
+  --league 2025=ff8e51ad521345b3b8661fcb1088e389 \
+  --create-league '2026=Discgolf Liga Jahodna 2026 Jar/Leto' \
+  --layout nedelny-turnaj-swam-jahodna-2026-06-28.xlsx=zelena \
+  --skip-name 'Martin Kellner' --unscored skip
+```
+
+The default directory is the supplied Jahodna DG Liga folder. A new league copies the points rules from the first existing `--league` assignment without changing the active league; an existing league with the requested name is reused. Use `--preview-json PATH` for an offline snapshot preview. Supabase credentials and document selection use the same options as import_players.py.
+
+Players must already exist and match by username. Valid division codes (MPO/FPO/MA3) become the event category; export divisions such as 0-18 and 19-54 fall back to each player's category. Relative scores are recalculated from the selected layout; spreadsheet relative scores are ignored. Hole throws must agree with absolute round totals. Imports automatically register scored players. Unknown usernames and invalid scores block the entire save; explicit `--skip-name` and `--unscored skip` exclusions are reported. `--unscored register` registers players without inventing a round.
+
+Existing tournaments match league, date and title. Identical rounds are preserved with their original IDs and par/length snapshots; different existing scores cause an error rather than an overwrite. Before a single revision-checked save the importer creates an ignored JSON backup in data/backups, then reads back the saved document to verify it. Re-running the same batch does not duplicate tournaments or rounds.
