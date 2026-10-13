@@ -395,7 +395,7 @@ def courses():
         frame = statistics_frame(stats)
         st.dataframe(frame.style.apply(hole_heat_styles, axis=1, theme=current_theme()), hide_index=True, width='stretch', column_config={
             **{c: st.column_config.NumberColumn(format='%.2f') for c in frame if c.startswith('Average') or c.endswith(' %')},
-            'Par': st.column_config.NumberColumn(format='%.2f' if cat == 'All' else '%.0f'),
+            'Par': st.column_config.NumberColumn(format='%.0f'),
             'Length (m)': st.column_config.NumberColumn(format='%.0f')})
         st.download_button('Download hole statistics', frame.to_csv(index=False), 'hole_statistics.csv', 'text/csv')
     else:
@@ -633,6 +633,11 @@ def tournaments():
 def statistics_frame(rows):
     """Keep full outcome calculations, but show only the requested statistics."""
     frame = pd.DataFrame(rows).drop(columns=['Course', 'Ace %', 'Albatross or better %'], errors='ignore')
+    if 'Par' in frame:
+        frame['Par'] = frame['Par'].map(whole_number).astype(int)
+    for column in frame:
+        if column.startswith('Average') or column.endswith(' %'):
+            frame[column] = frame[column].round(2)
     if 'Category' in frame and st.session_state.get('language', 'sk') == 'sk':
         frame['Category'] = frame['Category'].replace({'All': 'Celkovo'})
     return frame
@@ -655,7 +660,7 @@ def show_statistics(rounds, key, combine_categories=False):
         frame = statistics_frame(stats)
         st.dataframe(frame.style.apply(hole_heat_styles, axis=1, theme=current_theme()), hide_index=True, width='stretch', key=key + '_holes', column_config={
             **{c: st.column_config.NumberColumn(format='%.2f') for c in frame if c.startswith('Average') or c.endswith(' %')},
-            'Par': st.column_config.NumberColumn(format='%.2f' if combine_categories else '%.0f'),
+            'Par': st.column_config.NumberColumn(format='%.0f'),
             'Length (m)': st.column_config.NumberColumn(format='%.0f')})
         st.download_button('Download hole statistics', frame.to_csv(index=False), 'hole_statistics.csv', 'text/csv', key=key + '_holes_csv')
     else:
