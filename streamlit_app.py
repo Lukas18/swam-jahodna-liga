@@ -768,7 +768,7 @@ def category_settings():
         value = st.text_input('New category code', placeholder='MJ15')
         if st.form_submit_button('Add category'):
             value = value.strip().upper()
-            if not re.fullmatch(r'[A-Z][A-Z0-9_-]{0,19}', value):
+            if not re.fullmatch(r'[A-Z0-9][A-Z0-9_-]{0,19}', value):
                 st.error('Use a category code of up to 20 letters, numbers, underscores or hyphens.')
             elif value in DATA['categories']:
                 st.error('Category already exists.')
