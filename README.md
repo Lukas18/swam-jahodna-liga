@@ -170,12 +170,9 @@ Successful app saves and **Refresh results / Obnoviť výsledky** immediately in
 No extra Supabase table or migration is required for this optimization. Profiling showed the full-document download and repeated relational reconstruction dominated the small trend calculation. On the existing 291-scorecard dataset, reconstruction fell from about 227 ms to 28 ms; a warm cached snapshot read took about 1.3 ms without a database request. These are local measurements, not an end-to-end rendering guarantee. A persisted SQL summary table can be introduced if dataset growth later warrants server-side aggregation.
 
 
-Hole-statistics headers use **Ø throws / Ø +/− par** (Slovak **Ø hody / Ø voči paru**). Only these score-average columns retain the heatmap. Eagle, Birdie, Par, Bogey, Double bogey and Triple bogey or worse percentages use neutral table colours.
+Hole-statistics headers use **Ø throws / Ø +/− par** (Slovak **Ø hody / Ø voči paru**); hover over a header for the full average label. Only these score-average columns retain the heatmap. Eagle, Birdie, Par, Bogey, Double bogey and Triple bogey or worse percentages use neutral table colours.
 
 The trend section has its own **Trend layout / Layout grafu** picker. It is independent of the hole-statistics layout at the top. Selected-layout mode uses this picker, while Whole course combines layouts within the picker's course. Tournament scope limits its choices to that event's layout; category, player and Top 3/Top 5 selection apply as before.
 
 
-Home standings label the latest handicap **Current HCP** / **HCP Aktuálne**. Rank, points, attendance and handicap columns fit their single-line headers; the player's name takes the remaining space. The league's placement-points legend is horizontal: places across the header and their corresponding points in one row, with its generated row index hidden.
-
-
-Display tables use **#** for place, centred text and single-line headers. Home, tournament results, hole statistics (public/tournament/Admin layout) and handicap history share static table header typography, spacing and neutral header shading, with horizontal scrolling on narrow screens. Hole-statistics/history rows are fully displayed rather than placed in an internally scrolling grid. Average heatmap colours, numeric precision and newest-first handicap history are preserved. League standings retain the sortable grid. Yellow decorative container outlines have been removed from leaderboards and the scoring legend.
+Home standings label the latest handicap **Current HCP** / **HCP Aktuálne**. Rank, points, attendance and handicap columns use compact widths; the player's name takes the remaining space, and multiword headers may wrap between words. The league's placement-points legend is horizontal: places across the header and their corresponding points in one row, with its generated row index hidden.
