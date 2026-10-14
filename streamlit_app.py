@@ -18,7 +18,7 @@ from league.domain import (new_id, find, profile, validate_holes, save_player, a
                            tournament_entries, register_player, score_grid, save_score_grid, site_settings, home_standings, place_labels)
 from league.presentation import category_styles
 from league.search import matching_players
-from league.handicaps import recalculate_handicaps
+from league.handicaps import recalculate_handicaps, handicap_method, METHODS
 from league.statistics import selected_rounds, summary, hole_statistics, hole_heat_styles, scoring_trend, top_trend_players
 from league.storage import Store, StorageError, encoded
 from league.imports import read_export, preview_import
@@ -288,7 +288,7 @@ def players():
         cat = st.selectbox('Default category', DATA['categories'], index=DATA['categories'].index(p['category']) if p else 0)
         hcp = st.number_input('Current handicap', value=int(p['handicap']) if p else 0, step=1, disabled=True)
         udisc = st.text_input('uDisc username', value=p['udisc'] if p else '', help='Used to match imported results. Matching ignores case and surrounding spaces.')
-        st.caption('Handicaps are calculated automatically from the last 10 completed tournaments.')
+        st.caption('Handicaps are calculated automatically using the method selected in Administration → Settings.')
         if st.form_submit_button('Save player'):
             draft = deepcopy(DATA)
             try:
@@ -844,19 +844,32 @@ def handicap_history_page():
         player = choose('Player', options, 'handicap_player', lambda p: f"{p['first_name']} {p['last_name']}".strip())
     if not player:
         return
-    current.metric('Current handicap', '—' if player.get('handicap_pending') else str(player['handicap']))
+    method = st.radio('Handicap method', METHODS, index=METHODS.index(handicap_method(DATA)),
+                      format_func=method_label, horizontal=True, key='history_handicap_method')
+    history = DATA.get('golf_handicap_history', []) if method == 'golf' else DATA.get('handicap_history', [])
+    history = sorted([h for h in history if h['player_id'] == player['id']],
+                     key=lambda h: (h['date'], h.get('event_order', 0)), reverse=True)
+    current.metric('Current handicap', str(history[0]['handicap_after']) if history else '—')
+    if method == 'golf':
+        st.caption('Golf-style estimate: best eligible rounds of the latest 20; recorded par, slope 113, no hole caps. Original handicap is provisional until three rounds are available.')
     tournaments = {t['id']: t for t in DATA['tournaments']}
+    count_label = 'Rounds used' if method == 'golf' else 'Tournaments in average'
     rows = [{'Date': h['date'], 'Tournament': tournaments[h['tournament_id']]['name'],
              'Score relative to par': float(h['event_score']), 'Handicap': h['handicap_used'],
-             'Next handicap': h['handicap_after'], 'Tournaments in average': h['sample_count']}
-            for h in sorted(DATA.get('handicap_history', []), key=lambda h: (h['date'], h.get('event_order', 0)), reverse=True) if h['player_id'] == player['id']]
+             'Next handicap': h['handicap_after'], count_label: h.get('selection_count', h['sample_count']),
+             **({'Status': 'Provisional' if h['provisional'] else 'Calculated'} if method == 'golf' else {})}
+            for h in history]
     if not rows:
         st.info('No completed tournaments yet.')
         return
     st.dataframe(pd.DataFrame(rows), hide_index=True, width='stretch', column_config={
         'Score relative to par': st.column_config.NumberColumn(format='%.2f'),
-        **{c: st.column_config.NumberColumn(format='%.0f') for c in ['Handicap', 'Next handicap', 'Tournaments in average']}})
+        **{c: st.column_config.NumberColumn(format='%.0f') for c in ['Handicap', 'Next handicap', count_label]}})
     st.download_button('Download CSV', pd.DataFrame(rows).to_csv(index=False), 'handicap_history.csv', 'text/csv')
+
+
+def method_label(method):
+    return 'Golf-style · best rounds' if method == 'golf' else 'Original · last 10 tournaments'
 
 
 def application_settings():
@@ -868,13 +881,25 @@ def application_settings():
                               index=choices.index(SETTINGS['active_league_id']) if choices else 0,
                               format_func=lambda x: find(DATA, 'leagues', x)['name'] if x else 'No leagues yet')
         st.caption('Home shows standings for this league. Only one league is active at a time.')
+        method = st.selectbox('Active handicap method', METHODS,
+            index=METHODS.index(handicap_method(DATA)), format_func=method_label, key='admin_handicap_method')
+        st.caption('Both handicap histories are kept. Switching changes displayed handicaps and handicap-adjusted results; original stored handicap values remain intact.')
         if st.form_submit_button('Save settings'):
             if not title.strip():
                 st.error('Enter an application title.')
             else:
                 draft = deepcopy(DATA)
-                draft['settings'] = {'site_title': title.strip(), 'active_league_id': active}
+                draft.setdefault('settings', {}).update(site_title=title.strip(), active_league_id=active, handicap_method=method)
                 persist(draft)
+    st.subheader('Handicap comparison')
+    originals = {h['player_id']: h['handicap_after'] for h in sorted(DATA.get('handicap_history', []),
+                 key=lambda h: (h['date'], h.get('event_order', 0)))}
+    comparison = [{'Player': (p['first_name'] + ' ' + p['last_name']).strip(),
+                   'Original HCP': originals.get(p['id']), 'Golf-style HCP': p.get('golf_handicap') if not p.get('golf_handicap_pending') else None,
+                   'Status': 'Provisional' if p.get('golf_provisional', True) else 'Calculated'}
+                  for p in sorted(DATA['players'], key=lambda p: (p['last_name'], p['first_name']))]
+    st.dataframe(pd.DataFrame(comparison), hide_index=True, width='stretch',
+        column_config={c: st.column_config.NumberColumn(format='%.0f') for c in ['Original HCP', 'Golf-style HCP']})
 
 
 def category_settings():

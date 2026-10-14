@@ -151,6 +151,42 @@ class ScreensTest(unittest.TestCase):
         frame = next(x.value for x in app.dataframe if 'Average throws' in x.value)
         self.assertEqual(set(frame['Layout']), {'Other'})
 
+    def test_admin_switches_handicap_method_and_keeps_both_histories(self):
+        from test_dual_handicaps import golf_fixture
+        from league.handicaps import recalculate_handicaps
+        data = recalculate_handicaps(golf_fixture([1,2,3,10]))
+        data['settings']['active_league_id'] = 'lg'
+        self.path.write_bytes(encoded(data))
+        app = self.administrator('Settings')
+        app.selectbox(key='admin_handicap_method').set_value('golf')
+        app.button(key='FormSubmitter:application_settings-Save settings').click().run()
+        self.assertFalse(app.exception)
+        stored = Store(self.path).load()[0]
+        self.assertEqual(stored['settings']['handicap_method'], 'golf')
+        self.assertEqual(stored['players'][0]['handicap'], 4)
+        self.assertEqual(stored['players'][0]['golf_handicap'], 0)
+        app.sidebar.radio[0].set_value('Home').run()
+        home = next(x.value for x in app.table if 'Current HCP' in x.value)
+        self.assertEqual(home.iloc[0]['Current HCP'], 0)
+        app.sidebar.radio[0].set_value('Handicap history').run()
+        self.assertEqual(app.radio(key='history_handicap_method').value, 'golf')
+        history = app.dataframe[0].value
+        self.assertEqual(history['Next handicap'].tolist(), [0,-1,2,1])
+        self.assertEqual(history['Status'].tolist(), ['Calculated','Calculated','Provisional','Provisional'])
+        app.radio(key='history_handicap_method').set_value('legacy').run()
+        self.assertFalse(app.exception)
+        self.assertEqual(app.dataframe[0].value['Next handicap'].tolist(), [4,2,2,1])
+        app.sidebar.radio[0].set_value('Admin').run()
+        app.radio(key='admin_section').set_value('Settings').run()
+        app.selectbox(key='admin_handicap_method').set_value('legacy')
+        app.button(key='FormSubmitter:application_settings-Save settings').click().run()
+        self.assertFalse(app.exception)
+        after = Store(self.path).load()[0]
+        self.assertEqual(after['handicap_history'], stored['handicap_history'])
+        self.assertEqual(after['golf_handicap_history'], stored['golf_handicap_history'])
+        app.sidebar.radio[0].set_value('Home').run()
+        self.assertEqual(next(x.value for x in app.table if 'Current HCP' in x.value).iloc[0]['Current HCP'],4)
+
     def test_admin_login_edit_and_logout(self):
         app = english_app().run(timeout=20)
         app.sidebar.radio[0].set_value('Admin').run()
@@ -389,7 +425,7 @@ class ScreensTest(unittest.TestCase):
         next(x for x in app.selectbox if x.label == 'Active league').set_value('lg2')
         app.button(key='FormSubmitter:application_settings-Save settings').click().run()
         self.assertFalse(app.exception)
-        self.assertEqual(Store(self.path).load()[0]['settings'], {'site_title': 'My local league', 'active_league_id': 'lg2'})
+        self.assertEqual(Store(self.path).load()[0]['settings'], {'site_title': 'My local league', 'active_league_id': 'lg2', 'handicap_method': 'legacy'})
         app.sidebar.radio[0].set_value('Home').run()
         self.assertTrue(any(x.value == '🥏 My local league' for x in app.title))
         self.assertFalse(any('Total points' in x.value for x in app.table))

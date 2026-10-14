@@ -274,6 +274,22 @@ SK.update({'Trend category': 'Kategória trendu', 'Trend layout': 'Layout grafu'
            'Ø throws': 'Ø hody', 'Ø +/− par': 'Ø voči paru', 'Current HCP': 'HCP Aktuálne'})
 
 
+SK.update({
+    'Handicap method': 'Metóda výpočtu hendikepu', 'Active handicap method': 'Používaná metóda hendikepu',
+    'Golf-style · best rounds': 'Golfový model · najlepšie kolá',
+    'Original · last 10 tournaments': 'Pôvodný model · posledných 10 turnajov',
+    'Rounds used': 'Započítané kolá', 'Handicap comparison': 'Porovnanie hendikepov',
+    'Original HCP': 'Pôvodný HCP', 'Golf-style HCP': 'Golfový HCP',
+    'Provisional': 'Dočasný', 'Calculated': 'Vypočítaný',
+    'Handicaps are calculated automatically using the method selected in Administration → Settings.':
+        'Hendikepy sa počítajú automaticky podľa metódy zvolenej v Administrácia → Nastavenia.',
+    'Both handicap histories are kept. Switching changes displayed handicaps and handicap-adjusted results; original stored handicap values remain intact.':
+        'Obe histórie hendikepov zostávajú zachované. Prepnutie mení zobrazené hendikepy a výsledky upravené o hendikep; pôvodné uložené hodnoty zostávajú zachované.',
+    'Golf-style estimate: best eligible rounds of the latest 20; recorded par, slope 113, no hole caps. Original handicap is provisional until three rounds are available.':
+        'Golfový odhad: najlepšie vyhovujúce kolá z posledných 20; zapísaný par, slope 113, bez limitov skóre jamiek. Do troch kôl sa dočasne používa pôvodný hendikep.'
+})
+
+
 class LocalizedUI:
     """Localize presentation only; widget values and DataFrame keys stay stable."""
     TEXT = {'title', 'subheader', 'header', 'caption', 'write', 'info', 'warning', 'error', 'success',

@@ -37,7 +37,7 @@ COLLECTIONS = {'players':'players','courses':'courses','layouts':'layouts','leag
 
 def to_records(data):
     payload = {table:[] for table in TABLES}
-    root_keys = {'categories','settings','schema_version','revision','handicap_run'} | set(COLLECTIONS.values())
+    root_keys = {'categories','settings','schema_version','revision','handicap_run','golf_handicap_run','golf_handicap_history'} | set(COLLECTIONS.values())
     payload['root'] = {'schema_version':data['schema_version'],'extra':{k:deepcopy(v) for k,v in data.items() if k not in root_keys}}
     def pack(table, obj, exclude=()):
         obj = deepcopy(obj)
@@ -62,6 +62,8 @@ def to_records(data):
         for obj in data.get(collection,[]):
             skip = {'layouts':['profiles'],'leagues':['points'],'tournaments':['categories'],'scorecards':['holes'],'handicap_history':['sources']}.get(table,[])
             pack(table,obj,skip)
+    for h in data.get('golf_handicap_history', []):
+        pack('handicap_history', h, ['sources'])
     for layout in data['layouts']:
         for key,holes in layout['profiles'].items():
             pack('layout_profiles',{'layout_id':layout['id'],'profile_key':key,'category_code':None if key=='default' else key})
@@ -72,9 +74,10 @@ def to_records(data):
         for i,code in enumerate(t['categories']):pack('tournament_categories',{'tournament_id':t['id'],'category_code':code,'position':i})
     for r in data['rounds']:
         for h in r['holes']:pack('hole_scores',{'scorecard_id':r['id'],**h})
-    for h in data.get('handicap_history',[]):
+    for h in data.get('handicap_history',[]) + data.get('golf_handicap_history',[]):
         for i,source in enumerate(h['sources']):pack('handicap_sources',{'snapshot_id':h['id'],'position':i,**source})
     if data.get('handicap_run'):pack('handicap_runs',data['handicap_run'])
+    if data.get('golf_handicap_run'):pack('handicap_runs',data['golf_handicap_run'])
     pack('app_settings',data.get('settings',{}))
     return payload
 
@@ -132,5 +135,12 @@ def from_records(payload, revision):
         h['sources'] = [{'tournament_id': r['tournament_id'], 'score': str(r['score'])}
                         for r in sources.get((h['id'],), [])]
     result['settings']=unpack('app_settings',payload['app_settings'][0]) if payload['app_settings'] else {}
-    result['handicap_run']=unpack('handicap_runs',payload['handicap_runs'][0]) if payload['handicap_runs'] else {}
+    from .golf import GOLF_ALGORITHM
+    runs = [unpack('handicap_runs', r) for r in payload['handicap_runs']]
+    golf = next((r for r in runs if r['algorithm'] == GOLF_ALGORITHM), None)
+    result['handicap_run'] = next((r for r in runs if r['algorithm'] != GOLF_ALGORITHM), {})
+    if golf:
+        result['golf_handicap_run'] = golf
+        result['golf_handicap_history'] = [h for h in result['handicap_history'] if h['run_id'] == golf['id']]
+        result['handicap_history'] = [h for h in result['handicap_history'] if h['run_id'] != golf['id']]
     return result

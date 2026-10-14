@@ -6,6 +6,31 @@ import hashlib
 import json
 
 ALGORITHM = 'relative-par-last-10-ceiling-v1'
+METHODS = ['legacy', 'golf']
+
+
+def handicap_method(data):
+    method = data.get('settings', {}).get('handicap_method', 'legacy')
+    if method not in METHODS:
+        raise ValueError('Invalid handicap method.')
+    return method
+
+
+def project_handicaps(data):
+    """Display the selected method; stored core columns always remain legacy."""
+    draft = deepcopy(data)
+    if handicap_method(draft) == 'golf':
+        for r in draft['players'] + draft.get('registrations', []) + draft['rounds']:
+            r['handicap'] = r['golf_handicap']
+            r['handicap_pending'] = r['golf_handicap_pending']
+            r['handicap_snapshot_id'] = r['golf_handicap_snapshot_id']
+    return draft
+
+
+def handicaps_current(data):
+    from .golf import GOLF_ALGORITHM
+    return (data.get('handicap_run', {}).get('algorithm') == ALGORITHM
+            and data.get('golf_handicap_run', {}).get('algorithm') == GOLF_ALGORITHM)
 
 
 def ceil_handicap(value):
@@ -19,6 +44,7 @@ def recalculate_handicaps(data):
     uses the debut result; later events use only earlier completed events. Registering
     for a future event never consumes a history slot. Source scores retain precision.
     """
+    handicap_method(data)
     draft = deepcopy(data)
     tournaments = {t['id']: t for t in draft['tournaments']}
     grouped = defaultdict(list)
@@ -104,4 +130,5 @@ def recalculate_handicaps(data):
                             'status': 'pending_formula', 'calculation_version': None,
                             'handicap_snapshot_id': sid, 'source_run_id': run_id})
     draft['stableford_results'] = results
-    return draft
+    from .golf import add_golf_handicaps
+    return add_golf_handicaps(draft)

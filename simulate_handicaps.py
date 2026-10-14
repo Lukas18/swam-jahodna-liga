@@ -14,16 +14,7 @@ import json
 from pathlib import Path
 
 
-def selection_rule(count):
-    """Rule 5.2 score count and initial adjustment, using at most 20 scores."""
-    if count < 3:
-        return 0, Decimal(0)
-    for maximum, used, adjustment in [(3, 1, -2), (4, 1, -1), (5, 1, 0),
-            (6, 2, -1), (8, 2, 0), (11, 3, 0), (14, 4, 0),
-            (16, 5, 0), (18, 6, 0), (19, 7, 0)]:
-        if count <= maximum:
-            return used, Decimal(adjustment)
-    return 8, Decimal(0)
+from league.golf import selection_rule
 
 
 def completed_events(data):

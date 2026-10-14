@@ -1,14 +1,14 @@
 """Shared, bounded read cache. Saves and manual refresh invalidate immediately."""
 import streamlit as st
-from .handicaps import ALGORITHM, recalculate_handicaps
+from .handicaps import handicaps_current, recalculate_handicaps, project_handicaps
 from .statistics import trend_observations
 
 
 def _load(store):
     data, version = store.load()
-    if data.get('handicap_run', {}).get('algorithm') != ALGORITHM:
+    if not handicaps_current(data):
         data = recalculate_handicaps(data)
-    return data, version, trend_observations(data)
+    return project_handicaps(data), version, trend_observations(data)
 
 
 @st.cache_data(ttl=10, max_entries=8, show_spinner=False)
