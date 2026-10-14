@@ -45,8 +45,10 @@ h1,h2,h3 {letter-spacing:-.025em;}
 :is([class*="st-key-leaderboard_"], .st-key-placement_points) table tbody th.row_heading {display:none;}
 [class*="st-key-leaderboard_home_"] table :is(.col0, .col2, .col3, .col4) {width:1%;}
 [class*="st-key-leaderboard_home_"] table td:is(.col0, .col2, .col3, .col4) {white-space:nowrap;}
-[class*="st-key-leaderboard_home_"] table thead th,
-[class*="st-key-leaderboard_home_"] table thead th * {word-break:normal;overflow-wrap:normal;white-space:nowrap;}
+[class*="st-key-leaderboard_home_"] table {table-layout:auto !important;}
+[class*="st-key-leaderboard_home_"] table thead * {
+    white-space:nowrap !important;word-break:normal !important;overflow-wrap:normal !important;
+}
 [class*="st-key-leaderboard_home_"] table :is(td.col1, th.col1) {width:auto;}
 [class*="st-key-leaderboard_home_"] table :is(td.col0, th.col0),
 [class*="st-key-leaderboard_home_"] table :is(td.col0, th.col0) * {text-align:center !important;}
@@ -171,14 +173,14 @@ def home():
         st.subheader('Overall standings')
         metric = metric_picker('home_metric')
         standings = home_standings(DATA, SETTINGS['active_league_id'], metric)
-        medals = {1: '🥇 ', 2: '🥈 ', 3: '🥉 '}
+        medals = {1: '🥇', 2: '🥈', 3: '🥉'}
         for category in DATA['categories']:
 
             rows = [r for r in standings if r['Category'] == category]
             # print(rows)
             if rows:
                 st.subheader(category)
-                frame = pd.DataFrame([{'Place': label, 'Name': medals.get(r['Place'], '') + r['Player'],
+                frame = pd.DataFrame([{'Place': medals.get(r['Place'], label), 'Name': r['Player'],
                                        'Total points': r['Points'], 'Tournaments attended': r['Tournaments'], 'Current HCP': r['Current handicap']} for r, label in zip(rows, place_labels(rows))])
                 # Static table headers parse Markdown, so escape the rank symbol.
                 home_label = lambda c: r'\#' if c == 'Place' else translate(c)
@@ -844,14 +846,14 @@ def handicap_history_page():
         player = choose('Player', options, 'handicap_player', lambda p: f"{p['first_name']} {p['last_name']}".strip())
     if not player:
         return
-    method = st.radio('Handicap method', METHODS, index=METHODS.index(handicap_method(DATA)),
-                      format_func=method_label, horizontal=True, key='history_handicap_method')
+    method = handicap_method(DATA)
+    if admin():
+        method = st.radio('Handicap method', METHODS, index=METHODS.index(method),
+                          format_func=method_label, horizontal=True, key='history_handicap_method')
     history = DATA.get('golf_handicap_history', []) if method == 'golf' else DATA.get('handicap_history', [])
     history = sorted([h for h in history if h['player_id'] == player['id']],
                      key=lambda h: (h['date'], h.get('event_order', 0)), reverse=True)
     current.metric('Current handicap', str(history[0]['handicap_after']) if history else '—')
-    if method == 'golf':
-        st.caption('Golf-style estimate: best eligible rounds of the latest 20; recorded par, slope 113, no hole caps. Original handicap is provisional until three rounds are available.')
     tournaments = {t['id']: t for t in DATA['tournaments']}
     count_label = 'Rounds used' if method == 'golf' else 'Tournaments in average'
     rows = [{'Date': h['date'], 'Tournament': tournaments[h['tournament_id']]['name'],

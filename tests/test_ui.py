@@ -187,6 +187,32 @@ class ScreensTest(unittest.TestCase):
         app.sidebar.radio[0].set_value('Home').run()
         self.assertEqual(next(x.value for x in app.table if 'Current HCP' in x.value).iloc[0]['Current HCP'],4)
 
+    def test_public_history_uses_active_method_without_controls_or_explanation(self):
+        from test_dual_handicaps import golf_fixture
+        from league.handicaps import recalculate_handicaps
+        data = recalculate_handicaps(golf_fixture([1,2,3,10]))
+        data['settings']['handicap_method'] = 'golf'
+        self.path.write_bytes(encoded(data))
+        original = self.path.read_bytes()
+        app = english_app().run(timeout=20)
+        app.session_state['history_handicap_method'] = 'legacy'  # A previous admin choice.
+        app.sidebar.radio[0].set_value('Handicap history').run()
+        self.assertFalse(app.exception)
+        self.assertFalse(any(r.key == 'history_handicap_method' for r in app.radio))
+        self.assertEqual(app.dataframe[0].value['Next handicap'].tolist(), [0,-1,2,1])
+        self.assertFalse(any('slope' in c.value or 'Golf-style estimate:' in c.value for c in app.caption))
+        app.session_state['admin_expires'] = time.time() + 100
+        app.run()
+        self.assertTrue(any(r.key == 'history_handicap_method' for r in app.radio))
+        app.radio(key='history_handicap_method').set_value('legacy').run()
+        self.assertEqual(app.dataframe[0].value['Next handicap'].tolist(), [4,2,2,1])
+        app.session_state['admin_expires'] = 0
+        app.run()
+        self.assertFalse(app.exception)
+        self.assertFalse(any(r.key == 'history_handicap_method' for r in app.radio))
+        self.assertEqual(app.dataframe[0].value['Next handicap'].tolist(), [0,-1,2,1])
+        self.assertEqual(self.path.read_bytes(), original)
+
     def test_admin_login_edit_and_logout(self):
         app = english_app().run(timeout=20)
         app.sidebar.radio[0].set_value('Admin').run()
@@ -372,7 +398,8 @@ class ScreensTest(unittest.TestCase):
         self.assertEqual(len(standings), 2)
         for frame in standings:
             self.assertEqual(list(frame.columns), [r'\#', 'Name', 'Total points', 'Tournaments attended', 'Current HCP'])
-            self.assertTrue(frame.iloc[0]['Name'].startswith('🥇'))
+            self.assertEqual(frame.iloc[0][r'\#'], '🥇')
+            self.assertFalse(any(icon in name for name in frame['Name'] for icon in ['🥇','🥈','🥉']))
         app.sidebar.radio[0].set_value('Tournaments').run()
         selector = app.selectbox(key='tournament_stats_category_t')
         self.assertIn('All', selector.options)
@@ -443,7 +470,7 @@ class ScreensTest(unittest.TestCase):
         app = english_app().run(timeout=20)
         self.assertFalse(app.exception)
         frame = next(x.value for x in app.table if 'Total points' in x.value)
-        self.assertEqual(frame[r'\#'].tolist(), ['1', '2', 'T3', 'T3', '5'])
+        self.assertEqual(frame[r'\#'].tolist(), ['🥇', '🥈', '🥉', '🥉', '5'])
         app.sidebar.radio[0].set_value('Leagues').run()
         self.assertFalse(app.exception)
         self.assertEqual(next(x.value for x in app.dataframe if 'Player' in x.value)['Place'].tolist(), ['1', '2', 'T3', 'T3', '5'])
