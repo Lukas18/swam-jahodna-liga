@@ -175,4 +175,7 @@ Hole-statistics headers use **Ø throws / Ø +/− par** (Slovak **Ø hody / Ø 
 The trend section has its own **Trend layout / Layout grafu** picker. It is independent of the hole-statistics layout at the top. Selected-layout mode uses this picker, while Whole course combines layouts within the picker's course. Tournament scope limits its choices to that event's layout; category, player and Top 3/Top 5 selection apply as before.
 
 
-Home standings label the latest handicap **Current HCP** / **HCP Aktuálne**. Rank, points, attendance and handicap columns use compact widths; the player's name takes the remaining space, and multiword headers may wrap between words. The league's placement-points legend is horizontal: places across the header and their corresponding points in one row, with its generated row index hidden.
+Home standings label the latest handicap **Current HCP** / **HCP Aktuálne**. Rank, points, attendance and handicap columns use compact widths; the player's name takes the remaining space, and numeric headers stay on one line. The league's placement-points legend is horizontal: places across the header and their corresponding points in one row, with its generated row index hidden.
+
+
+Home uses **#** for the place header and centres only that column; other column alignments remain unchanged. Numeric columns fit their unwrapped headers, with names filling the remaining width. Yellow decorative outlines have been removed from Home/League/Tournament leaderboard containers and the placement-points legend. Hole statistics and handicap history keep their existing grid renderers and formatting.

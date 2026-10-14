@@ -335,7 +335,7 @@ class ScreensTest(unittest.TestCase):
         standings = [x.value for x in app.table if 'Total points' in x.value]
         self.assertEqual(len(standings), 2)
         for frame in standings:
-            self.assertEqual(list(frame.columns), ['Place', 'Name', 'Total points', 'Tournaments attended', 'Current HCP'])
+            self.assertEqual(list(frame.columns), [r'\#', 'Name', 'Total points', 'Tournaments attended', 'Current HCP'])
             self.assertTrue(frame.iloc[0]['Name'].startswith('🥇'))
         app.sidebar.radio[0].set_value('Tournaments').run()
         selector = app.selectbox(key='tournament_stats_category_t')
@@ -407,7 +407,7 @@ class ScreensTest(unittest.TestCase):
         app = english_app().run(timeout=20)
         self.assertFalse(app.exception)
         frame = next(x.value for x in app.table if 'Total points' in x.value)
-        self.assertEqual(frame['Place'].tolist(), ['1', '2', 'T3', 'T3', '5'])
+        self.assertEqual(frame[r'\#'].tolist(), ['1', '2', 'T3', 'T3', '5'])
         app.sidebar.radio[0].set_value('Leagues').run()
         self.assertFalse(app.exception)
         self.assertEqual(next(x.value for x in app.dataframe if 'Player' in x.value)['Place'].tolist(), ['1', '2', 'T3', 'T3', '5'])
@@ -425,7 +425,7 @@ class ScreensTest(unittest.TestCase):
         self.assertEqual(app.sidebar.radio[0].options, ['Domov', 'Ligy', 'Turnaje', 'Štatistiky', 'História hendikepu', 'Administrácia'])
         self.assertEqual(len(app.metric), 0)
         self.assertFalse(any(x.label == 'Zobrazenie výsledkov' for x in app.selectbox))
-        self.assertIn('Poradie', app.table[0].value.columns)
+        self.assertIn(r'\#', app.table[0].value.columns)
         self.assertIn('HCP Aktuálne', app.table[0].value.columns)
         self.assertEqual(len(app.get('download_button')), 0)
         self.assertTrue(any('Download as CSV' in m.value and 'display:none' in m.value for m in app.markdown))

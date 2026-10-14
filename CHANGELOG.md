@@ -319,3 +319,11 @@
 - User requested reverting the most recent table presentation change. Restored streamlit_app.py, tests/test_ui.py and README.md exactly to the preceding commit 14bae58, reversing 1b87bd8 while retaining the full historical change log. Restored Poradie/Place headers, earlier alignment/wrapping/outlines, and grid renderers for hole statistics and handicap history.
 - Preserved earlier features including independent trend layout/category selection, Ø average labels, outcome-percentage heatmap removal, compact Home numeric columns and HCP Aktuálne/Current HCP, horizontal placement points, sorting and all database/handicap logic. No Supabase writes.
 - All 83 tests passed; git diff --check clean; the three restored files exactly match 14bae58. Browser verified restored Home styling and saved restored-tables-preview.jpg. Preserved the user's unrelated uncommitted league/domain.py debug edit and excluded it from this revert commit. Device Hub remains waived for this web app.
+
+
+## 2026-10-14T19:05:11+02:00 — Focused Home rank/width and leaderboard outline changes
+
+- Applied only the narrower requested presentation changes after the previous styling revert. Home placement header now renders as # (escaped for static-table Markdown) and only its header/data column is centred. Name remains left-aligned and numeric values remain right-aligned. Numeric column widths fit their complete, unwrapped headers while Name fills the remaining space.
+- Removed decorative yellow borders from shared Home/League/Tournament leaderboard containers and the placement-points wrapper. Kept existing table renderers, fonts, general alignment, hole-statistics grids, handicap-history grids and earlier features unchanged. Updated README and existing English/Slovak Home/tied-rank UI expectations.
+- All 83 tests passed and git diff --check is clean. Browser verified the literal #, centred rank cells, original alignments elsewhere, no-wrap headers and a 0px decorative border; saved focused-home-tables-preview.jpg. No database writes. Preserve and exclude the user's separate uncommitted league/domain.py edit. Device Hub remains waived for this web app.
+- Also browser-verified the League and Tournament leaderboard wrappers each report 0px decorative borders. Returned the app to Home for review.
