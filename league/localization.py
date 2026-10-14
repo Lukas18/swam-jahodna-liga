@@ -7,6 +7,13 @@ import streamlit
 # Translation keys remain English so switching languages never changes record IDs,
 # categories, navigation values, editor column keys or scoring rules.
 SK = {
+    'Standings calculation': 'Výpočet poradia',
+    'Hole difficulty': 'Náročnosť jamiek', 'Priority': 'Priorita',
+    'Save difficulty': 'Uložiť náročnosť',
+    'Recalculate difficulty snapshots for tournaments': 'Prepočítať náročnosť a Stableford vo vybraných turnajoch',
+    'Priorities must be unique positive integers.': 'Priority musia byť jedinečné kladné celé čísla.',
+    'Lower priority means harder. Matching par and length share a difficulty rating across layouts; stroke indices are assigned within each layout. Saved tournaments retain their snapshots unless explicitly selected below.': 'Nižšia priorita znamená ťažšiu jamku. Zhodný par a dĺžka zdieľajú náročnosť naprieč layoutmi; poradie náročnosti sa určuje v každom layoute. Uložené turnaje si ponechajú svoju náročnosť, pokiaľ ich nižšie nevyberiete na prepočet.',
+
     'Fall Discgolf League SWAM Jahodna 2026':'Jesenna Discgolfova liga SWAM Jahodna 2026',
     'Language': 'Jazyk', 'Home': 'Domov', 'Leagues': 'Ligy', 'Tournaments': 'Turnaje',
     'Statistics': 'Štatistiky', 'Admin': 'Administrácia', 'Explore': 'Navigácia',

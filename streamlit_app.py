@@ -16,7 +16,9 @@ st = LocalizedUI(streamlit, lambda: admin())
 from league.domain import (new_id, find, profile, validate_holes, save_player, add_round,
                            tournament_results, league_results, hole_stats, validate_data, resize_holes, whole_number,
                            tournament_entries, register_player, score_grid, save_score_grid, site_settings, home_standings, place_labels)
-from league.presentation import category_styles
+from league.stableford import (enabled as stableford_enabled, league_standings as stableford_league,
+                               tournament_standings as stableford_tournament, digest, difficulty_rows)
+from league.presentation import category_styles, percentage_value, percentage_label
 from league.search import matching_players
 from league.handicaps import recalculate_handicaps, handicap_method, METHODS
 from league.statistics import selected_rounds, summary, hole_statistics, hole_heat_styles, scoring_trend, top_trend_players
@@ -172,7 +174,7 @@ def home():
     if SETTINGS['active_league_id']:
         st.subheader('Overall standings')
         metric = metric_picker('home_metric')
-        standings = home_standings(DATA, SETTINGS['active_league_id'], metric)
+        standings = (stableford_league(DATA, SETTINGS['active_league_id']) if stableford_picker(SETTINGS['active_league_id'], 'home_scoring') else home_standings(DATA, SETTINGS['active_league_id'], metric))
         medals = {1: '🥇', 2: '🥈', 3: '🥉'}
         for category in DATA['categories']:
 
@@ -239,7 +241,7 @@ def league_editor(league=None):
                     st.error('Enter a name and a whole-number points value for every place.')
                 else:
                     draft = deepcopy(DATA)
-                    obj = {'id': key if league else new_id(), 'name': name.strip(), 'points': points['Points'].astype(int).tolist(),
+                    obj = {**deepcopy(league or {}), 'id': key if league else new_id(), 'name': name.strip(), 'points': points['Points'].astype(int).tolist(),
                            'points_scope': 'category' if scope.startswith('Within') else 'overall',
                            'tie_mode': 'shared' if ties.startswith('Share') else 'same'}
                     draft['leagues'] = [x for x in draft['leagues'] if x['id'] != obj['id']] + [obj]
@@ -253,7 +255,8 @@ def leagues():
         return
     cat = category_filter('league_cat')
     metric = metric_picker('league_rank')
-    table(league_results(DATA, league['id'], cat, metric), 'league_table', sortable=True)
+    stableford = stableford_picker(league['id'], 'league_scoring')
+    table(stableford_league(DATA, league['id'], cat) if stableford else league_results(DATA, league['id'], cat, metric), 'league_table', sortable=True)
     st.caption('Placement points')
     points = pd.DataFrame([{translate('Place'): translate('Points'),
                             **{str(place): whole_number(value) for place, value in enumerate(league['points'], 1)}}])
@@ -398,9 +401,9 @@ def courses():
     stats = hole_statistics(DATA, rounds, combine_categories=cat == 'All')
     if stats:
         frame = statistics_frame(stats)
-        st.dataframe(frame.style.apply(hole_heat_styles, axis=1, theme=current_theme()), hide_index=True, width='stretch', column_config={
+        st.dataframe(statistics_style(frame), hide_index=True, width='stretch', column_config={
             **{c: st.column_config.NumberColumn(label={'Average throws': 'Ø throws', 'Average +/− par': 'Ø +/− par'}[c], help=c, format='%.2f') for c in frame if c.startswith('Average')},
-            **{c: st.column_config.NumberColumn(format='%.0f') for c in frame if c.endswith(' %')},
+            **{c: st.column_config.NumberColumn() for c in frame if c.endswith(' %')},
             'Par': st.column_config.NumberColumn(format='%.0f'),
             'Length (m)': st.column_config.NumberColumn(format='%.0f')})
         st.download_button('Download hole statistics', frame.to_csv(index=False), 'hole_statistics.csv', 'text/csv')
@@ -436,7 +439,7 @@ def tournament_editor(t=None):
                     st.error('Enter a name and select at least one category.')
                 else:
                     draft = deepcopy(DATA)
-                    obj = {'id': t['id'] if t else new_id(), 'name': name.strip(), 'date': day.isoformat(),
+                    obj = {**deepcopy(t or {}), 'id': t['id'] if t else new_id(), 'name': name.strip(), 'date': day.isoformat(),
                            'league_id': lid, 'layout_id': layout_id, 'num_rounds': rounds, 'categories': cats, 'event_order': event_order}
                     draft['tournaments'] = [x for x in draft['tournaments'] if x['id'] != obj['id']] + [obj]
                     persist(draft)
@@ -624,7 +627,8 @@ def tournaments():
     metric = metric_picker('tournament_metric')
     st.caption(f"{len(tournament_entries(DATA, t['id']))} registered players")
     complete = st.checkbox('Completed players only', value=True)
-    table(tournament_results(DATA, t['id'], cat, metric, complete), 'tournament_table')
+    stableford = stableford_picker(t['league_id'], 'tournament_scoring')
+    table(stableford_tournament(DATA, t['id'], cat) if stableford else tournament_results(DATA, t['id'], cat, metric, complete), 'tournament_table')
     with st.expander('Round scorecards'):
         records = sorted([r for r in DATA['rounds'] if r['tournament_id'] == t['id'] and (cat == 'All' or r['category'] == cat)],
                          key=lambda r: (r['player_id'], r['round_number']))
@@ -642,6 +646,53 @@ def tournaments():
     show_statistics(selected_rounds(DATA, tournament_id=t['id'], layout_id=t['layout_id'], category=stats_cat), 'tournament_stats', stats_cat == 'All')
 
 
+def statistics_style(frame):
+    return frame.style.apply(hole_heat_styles, axis=1, theme=current_theme()).format({
+        c: percentage_label
+        for c in frame if c.endswith(' %')})
+
+
+def stableford_picker(league_id, key):
+    if not stableford_enabled(DATA, league_id):
+        return False
+    return st.radio('Standings calculation', ['Score relative to par', 'Stableford'],
+                    horizontal=True, key=key) == 'Stableford'
+
+
+def difficulty_settings():
+    st.subheader('Hole difficulty')
+    course = choose('Course', DATA['courses'], 'difficulty_course')
+    if not course:
+        return
+    config = course.get('stableford_difficulty')
+    rows = config['rows'] if config else difficulty_rows(DATA, course['id'])
+    st.caption('Lower priority means harder. Matching par and length share a difficulty rating across layouts; stroke indices are assigned within each layout. Saved tournaments retain their snapshots unless explicitly selected below.')
+    display = pd.DataFrame(rows).rename(columns={'priority': 'Priority', 'holes': 'Holes', 'par': 'Par', 'length': 'Length (m)', 'average': 'Average +/− par', 'samples': 'Scores'})
+    with st.form('difficulty_edit'):
+        edited = st.data_editor(display, hide_index=True, width='stretch',
+                                disabled=[c for c in display if c != 'Priority'],
+                                column_config={'id': None, 'Priority': st.column_config.NumberColumn(min_value=1, step=1, required=True),
+                                               'Average +/− par': st.column_config.NumberColumn(format='%.2f')})
+        events = [t for t in DATA['tournaments'] if stableford_enabled(DATA, t['league_id'])]
+        recalculate = st.multiselect('Recalculate difficulty snapshots for tournaments', [t['id'] for t in events],
+                                    format_func=lambda tid: find(DATA, 'tournaments', tid)['date'] + ' · ' + find(DATA, 'tournaments', tid)['name'])
+        if st.form_submit_button('Save difficulty'):
+            try:
+                new_rows = deepcopy(rows)
+                priorities = dict(zip(edited['id'], edited['Priority']))
+                if any(pd.isna(v) or int(v) != v or v < 1 for v in priorities.values()) or len(set(priorities.values())) != len(priorities):
+                    raise ValueError('Priorities must be unique positive integers.')
+                for row in new_rows:
+                    row['priority'] = int(priorities[row['id']])
+                draft = deepcopy(DATA)
+                find(draft, 'courses', course['id'])['stableford_difficulty'] = {**(config or {}), 'rows': new_rows, 'version': digest(new_rows)}
+                for tid in recalculate:
+                    find(draft, 'tournaments', tid).pop('stableford_difficulty', None)
+                persist(draft)
+            except ValueError as exc:
+                st.error(str(exc))
+
+
 def statistics_frame(rows):
     """Keep full outcome calculations, but show only the requested statistics."""
     frame = pd.DataFrame(rows).drop(columns=['Course', 'Ace %', 'Albatross or better %'], errors='ignore')
@@ -651,7 +702,7 @@ def statistics_frame(rows):
         if column.startswith('Average'):
             frame[column] = frame[column].round(2)
         elif column.endswith(' %'):
-            frame[column] = frame[column].map(whole_number).astype(int)
+            frame[column] = frame[column].map(percentage_value)
     if 'Category' in frame and st.session_state.get('language', 'sk') == 'sk':
         frame['Category'] = frame['Category'].replace({'All': 'Celkovo'})
     return frame
@@ -672,9 +723,9 @@ def show_statistics(rounds, key, combine_categories=False):
     stats = hole_statistics(DATA, rounds, combine_categories=combine_categories)
     if stats:
         frame = statistics_frame(stats)
-        st.dataframe(frame.style.apply(hole_heat_styles, axis=1, theme=current_theme()), hide_index=True, width='stretch', key=key + '_holes', column_config={
+        st.dataframe(statistics_style(frame), hide_index=True, width='stretch', key=key + '_holes', column_config={
             **{c: st.column_config.NumberColumn(label={'Average throws': 'Ø throws', 'Average +/− par': 'Ø +/− par'}[c], help=c, format='%.2f') for c in frame if c.startswith('Average')},
-            **{c: st.column_config.NumberColumn(format='%.0f') for c in frame if c.endswith(' %')},
+            **{c: st.column_config.NumberColumn() for c in frame if c.endswith(' %')},
             'Par': st.column_config.NumberColumn(format='%.0f'),
             'Length (m)': st.column_config.NumberColumn(format='%.0f')})
         st.download_button('Download hole statistics', frame.to_csv(index=False), 'hole_statistics.csv', 'text/csv', key=key + '_holes_csv')
@@ -807,7 +858,7 @@ def admin_page():
     #     st.info('Local JSON storage is active. Before cloud deployment, configure GitHub storage to preserve edits through restarts.')
     # else:
     #     st.caption('Persistent GitHub JSON storage is active.')
-    section = st.radio('Manage', ['Players', 'Courses & layouts', 'Leagues', 'Tournaments & scores', 'Categories', 'Settings', 'Backup & restore'],
+    section = st.radio('Manage', ['Players', 'Courses & layouts', 'Leagues', 'Tournaments & scores', 'Categories', 'Hole difficulty', 'Settings', 'Backup & restore'],
                        key='admin_section')
     if section == 'Players':
         players()
@@ -830,6 +881,8 @@ def admin_page():
                 manual_scores(t)
             else:
                 import_scores(t)
+    elif section == 'Hole difficulty':
+        difficulty_settings()
     elif section == 'Settings':
         application_settings()
     elif section == 'Categories':

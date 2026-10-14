@@ -192,3 +192,7 @@ The app now keeps both original last-10 and golf-style best-of-20 histories. **A
 
 
 Home table header cells and their content explicitly disable wrapping, so points, attendance and current HCP headers stay on one line even when a theme supplies its own table styles. The table uses automatic column sizing and horizontal scrolling where needed on narrow screens.
+
+### Stableford
+
+Jesenna SWAM Liga now offers a separate net Stableford view on Home, League and Tournament screens. Configure frozen hole difficulty under Administration → Hole difficulty. [Rules, snapshots and safe backfill](docs/STABLEFORD.md). Stats percentages below 1% show two decimal places. Reboot Streamlit after deploying new Python modules.

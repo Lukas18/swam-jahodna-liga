@@ -1,4 +1,4 @@
-"""Chronological, versioned handicap snapshots; no Stableford formula is assumed."""
+"""Chronological, versioned handicap snapshots and subsequent Stableford calculation."""
 from collections import defaultdict
 from copy import deepcopy
 from decimal import Decimal, ROUND_CEILING
@@ -24,7 +24,8 @@ def project_handicaps(data):
             r['handicap'] = r['golf_handicap']
             r['handicap_pending'] = r['golf_handicap_pending']
             r['handicap_snapshot_id'] = r['golf_handicap_snapshot_id']
-    return draft
+    from .stableford import project_stablefords
+    return project_stablefords(draft, handicap_method(draft))
 
 
 def handicaps_current(data):
@@ -131,4 +132,5 @@ def recalculate_handicaps(data):
                             'handicap_snapshot_id': sid, 'source_run_id': run_id})
     draft['stableford_results'] = results
     from .golf import add_golf_handicaps
-    return add_golf_handicaps(draft)
+    from .stableford import calculate_stablefords
+    return calculate_stablefords(add_golf_handicaps(draft))

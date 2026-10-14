@@ -91,6 +91,32 @@ class ScreensTest(unittest.TestCase):
         self.assertFalse(app.exception)
         self.assertEqual(len(app.dataframe), 0)
 
+    def test_stableford_views_and_admin_difficulty_editor(self):
+        data = fixture()
+        data['leagues'][0]['name'] = 'Jesenna SWAM Liga'
+        data['settings']['active_league_id'] = 'lg'
+        add_round(data, 't', 'a', 1, 'MPO', 1, {1: 4, 2: 4})
+        add_round(data, 't', 'b', 1, 'MPO', 0, {1: 3, 2: 4})
+        self.path.write_bytes(encoded(data))
+        app = english_app().run(timeout=20)
+        app.radio(key='home_scoring').set_value('Stableford').run()
+        self.assertFalse(app.exception)
+        app.sidebar.radio[0].set_value('Leagues').run()
+        app.radio(key='league_scoring').set_value('Stableford').run()
+        self.assertFalse(app.exception)
+        frame = next(x.value for x in app.dataframe if 'Stableford' in x.value)
+        self.assertEqual(set(frame['Stableford']), {4})
+        self.assertEqual(set(frame['Points']), {8})
+        app.sidebar.radio[0].set_value('Tournaments').run()
+        app.radio(key='tournament_scoring').set_value('Stableford').run()
+        self.assertFalse(app.exception)
+        app.session_state['admin_expires'] = time.time() + 100
+        app.sidebar.radio[0].set_value('Admin').run()
+        app.radio(key='admin_section').set_value('Hole difficulty').run()
+        self.assertFalse(app.exception)
+        self.assertTrue(any('Save difficulty' == b.label for b in app.button))
+        self.assertEqual(self.path.read_bytes(), encoded(data))  # All view changes are read-only.
+
     def test_trend_modes_and_whole_percentage_data(self):
         data = fixture()
         add_round(data, 't', 'a', 1, 'MPO', 1, {1: 3, 2: 4})
