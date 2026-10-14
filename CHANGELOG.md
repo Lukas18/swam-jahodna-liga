@@ -282,3 +282,9 @@
 - Moved the hole-statistics summary/table above the evolution-of-scores graph on the public Stats page, keeping existing layout, category and tournament filters. Verified the new section order in the live browser; saved stats-order-preview.jpg.
 - All 82 tests passed, Python source compilation passed using a temporary bytecode cache, and git diff --check is clean. Scanned the 29 changed/new files for private-key/JWT/GitHub/Supabase secret patterns: no matches. Ignored real secrets, database backups and browser screenshots remain outside Git.
 - User explicitly authorized committing and pushing everything, superseding the earlier review hold. Include all accumulated relational-schema/migration, handicap history, search, statistics/trend/cache, importer preprocessing, documentation and test changes in this release. No Supabase writes for this reorder or release. Device Hub remains waived for this web app.
+
+
+## 2026-10-14T15:54:01+02:00 — Keep the Place header visible across Streamlit table versions
+
+- Found broad CSS hiding the first header cell in every leaderboard/placement table. Local Streamlit 1.50 renders a blank index header before Poradie; newer Streamlit defaults may omit a default RangeIndex, making Poradie the first header and exposing the selector bug. Replaced positional/header-wide selectors with explicit Pandas blank/index-heading classes, preserving data headers and data row headings.
+- All 82 tests pass and git diff --check is clean. Browser verified the blank index header remains hidden and Poradie has computed display table-cell; saved place-header-preview.jpg. The public deployment was not inspected directly. No database or secrets changes. Commit/push under the user's standing instruction; Device Hub remains waived for this web app.

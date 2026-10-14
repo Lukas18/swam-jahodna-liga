@@ -41,8 +41,8 @@ h1,h2,h3 {letter-spacing:-.025em;}
 }
 :is([class*="st-key-leaderboard_"], .st-key-placement_points) [data-testid="stMarkdownContainer"],
 :is([class*="st-key-leaderboard_"], .st-key-placement_points) table p {margin:0 !important;}
-:is([class*="st-key-leaderboard_"], .st-key-placement_points) table thead th:first-child,
-:is([class*="st-key-leaderboard_"], .st-key-placement_points) table tbody th {display:none;}
+:is([class*="st-key-leaderboard_"], .st-key-placement_points) table thead th.blank,
+:is([class*="st-key-leaderboard_"], .st-key-placement_points) table tbody th.row_heading {display:none;}
 [data-testid="stMetric"] {background:rgba(127,127,127,.08);border-radius:12px;padding:16px;}
 </style>''', unsafe_allow_html=True)
 
