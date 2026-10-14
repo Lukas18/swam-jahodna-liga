@@ -173,3 +173,6 @@ No extra Supabase table or migration is required for this optimization. Profilin
 Hole-statistics headers use **Ø throws / Ø +/− par** (Slovak **Ø hody / Ø voči paru**); hover over a header for the full average label. Only these score-average columns retain the heatmap. Eagle, Birdie, Par, Bogey, Double bogey and Triple bogey or worse percentages use neutral table colours.
 
 The trend section has its own **Trend layout / Layout grafu** picker. It is independent of the hole-statistics layout at the top. Selected-layout mode uses this picker, while Whole course combines layouts within the picker's course. Tournament scope limits its choices to that event's layout; category, player and Top 3/Top 5 selection apply as before.
+
+
+Home standings label the latest handicap **Current HCP** / **HCP Aktuálne**. Rank, points, attendance and handicap columns use compact widths; the player's name takes the remaining space, and multiword headers may wrap between words. The league's placement-points legend is horizontal: places across the header and their corresponding points in one row, with its generated row index hidden.

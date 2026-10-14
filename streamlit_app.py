@@ -28,7 +28,7 @@ st.markdown('''<style>
 .block-container {padding-top:2rem;max-width:1250px;}
 h1,h2,h3 {letter-spacing:-.025em;}
 [class*="st-key-leaderboard_"] {border:2px solid #DCCEAB;border-radius:12px;padding:4px 6px 8px;overflow-x:auto;}
-.st-key-placement_points {max-width:240px;padding:4px 6px 8px;border:1px solid rgba(220,206,171,.35);border-radius:8px;}
+.st-key-placement_points {width:fit-content;max-width:100%;overflow-x:auto;padding:4px 6px 8px;border:1px solid rgba(220,206,171,.35);border-radius:8px;}
 :is([class*="st-key-leaderboard_"], .st-key-placement_points) table {width:100%;border-collapse:collapse;}
 :is([class*="st-key-leaderboard_"], .st-key-placement_points) table td,
 :is([class*="st-key-leaderboard_"], .st-key-placement_points) table thead th {
@@ -43,6 +43,13 @@ h1,h2,h3 {letter-spacing:-.025em;}
 :is([class*="st-key-leaderboard_"], .st-key-placement_points) table p {margin:0 !important;}
 :is([class*="st-key-leaderboard_"], .st-key-placement_points) table thead th.blank,
 :is([class*="st-key-leaderboard_"], .st-key-placement_points) table tbody th.row_heading {display:none;}
+[class*="st-key-leaderboard_home_"] table :is(.col0, .col2, .col3, .col4) {width:1%;}
+[class*="st-key-leaderboard_home_"] table td:is(.col0, .col2, .col3, .col4) {white-space:nowrap;}
+[class*="st-key-leaderboard_home_"] table thead th,
+[class*="st-key-leaderboard_home_"] table thead th * {word-break:normal;overflow-wrap:normal;}
+[class*="st-key-leaderboard_home_"] table :is(td.col1, th.col1) {width:auto;}
+.st-key-placement_points table {width:auto;}
+.st-key-placement_points table :is(th, td) {white-space:nowrap;padding:6px 10px !important;}
 [data-testid="stMetric"] {background:rgba(127,127,127,.08);border-radius:12px;padding:16px;}
 </style>''', unsafe_allow_html=True)
 
@@ -169,7 +176,7 @@ def home():
             if rows:
                 st.subheader(category)
                 frame = pd.DataFrame([{'Place': label, 'Name': medals.get(r['Place'], '') + r['Player'],
-                                       'Total points': r['Points'], 'Tournaments attended': r['Tournaments'], 'Current handicap': r['Current handicap']} for r, label in zip(rows, place_labels(rows))])
+                                       'Total points': r['Points'], 'Tournaments attended': r['Tournaments'], 'Current HCP': r['Current handicap']} for r, label in zip(rows, place_labels(rows))])
                 frame = frame.rename(columns=translate)
                 styled = frame.style.set_properties(**{'color': '#3B2119'}).hide(axis="index")
                 styled = styled.apply(lambda row: [
@@ -177,7 +184,7 @@ def home():
                 ] * len(row), axis=1)
                 styled = styled.set_properties(subset=[translate(c) for c in ['Place', 'Name', 'Total points', 'Tournaments attended']], **{'color': '#16492F', 'font-weight': 'bold'})
                 with st.container(key='leaderboard_home_' + category):
-                    st.table(styled.format({translate('Current handicap'): '{:.0f}'}, na_rep='—', escape='html'))
+                    st.table(styled.format({translate('Current HCP'): '{:.0f}'}, na_rep='—', escape='html'))
         if not standings:
             st.info('Standings will appear after the first recorded round.')
     st.subheader('Recent tournaments')
@@ -241,10 +248,10 @@ def leagues():
     metric = metric_picker('league_rank')
     table(league_results(DATA, league['id'], cat, metric), 'league_table', sortable=True)
     st.caption('Placement points')
-    points = pd.DataFrame({translate('Place'): list(range(1, len(league['points']) + 1)),
-                           translate('Points'): [whole_number(p) for p in league['points']]})
+    points = pd.DataFrame([{translate('Place'): translate('Points'),
+                            **{str(place): whole_number(value) for place, value in enumerate(league['points'], 1)}}])
     with st.container(key='placement_points'):
-        st.table(points)
+        st.table(points.style.hide(axis='index'))
     st.subheader('League tournaments')
     ts = [t for t in DATA['tournaments'] if t['league_id'] == league['id']]
     for t in sorted(ts, key=lambda x: x['date']):

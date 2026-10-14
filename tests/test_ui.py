@@ -335,7 +335,7 @@ class ScreensTest(unittest.TestCase):
         standings = [x.value for x in app.table if 'Total points' in x.value]
         self.assertEqual(len(standings), 2)
         for frame in standings:
-            self.assertEqual(list(frame.columns), ['Place', 'Name', 'Total points', 'Tournaments attended', 'Current handicap'])
+            self.assertEqual(list(frame.columns), ['Place', 'Name', 'Total points', 'Tournaments attended', 'Current HCP'])
             self.assertTrue(frame.iloc[0]['Name'].startswith('🥇'))
         app.sidebar.radio[0].set_value('Tournaments').run()
         selector = app.selectbox(key='tournament_stats_category_t')
@@ -426,6 +426,7 @@ class ScreensTest(unittest.TestCase):
         self.assertEqual(len(app.metric), 0)
         self.assertFalse(any(x.label == 'Zobrazenie výsledkov' for x in app.selectbox))
         self.assertIn('Poradie', app.table[0].value.columns)
+        self.assertIn('HCP Aktuálne', app.table[0].value.columns)
         self.assertEqual(len(app.get('download_button')), 0)
         self.assertTrue(any('Download as CSV' in m.value and 'display:none' in m.value for m in app.markdown))
         app.session_state['home_metric'] = 'Handicap adjusted'
@@ -448,8 +449,8 @@ class ScreensTest(unittest.TestCase):
         app = AppTest.from_file(APP).run(timeout=20)
         app.sidebar.radio[0].set_value('Leagues').run()
         self.assertFalse(app.exception)
-        points = next(x.value for x in app.table if list(x.value.columns) == ['Poradie', 'Body'])
-        self.assertEqual(points['Body'].tolist(), [10, 6, 3])
+        points = next(x.value for x in app.table if list(x.value.columns) == ['Poradie', '1', '2', '3'])
+        self.assertEqual(points.iloc[0].tolist(), ['Body', 10, 6, 3])
         self.assertTrue(any(x.value == 'Bodovanie podľa umiestnenia' for x in app.caption))
         self.assertFalse(any('Ties share occupied' in c.value or 'Players changing category' in c.value for c in app.caption))
         app.button(key='league_tournament_t').click().run()
