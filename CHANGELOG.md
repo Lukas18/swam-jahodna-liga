@@ -288,3 +288,12 @@
 
 - Found broad CSS hiding the first header cell in every leaderboard/placement table. Local Streamlit 1.50 renders a blank index header before Poradie; newer Streamlit defaults may omit a default RangeIndex, making Poradie the first header and exposing the selector bug. Replaced positional/header-wide selectors with explicit Pandas blank/index-heading classes, preserving data headers and data row headings.
 - All 82 tests pass and git diff --check is clean. Browser verified the blank index header remains hidden and Poradie has computed display table-cell; saved place-header-preview.jpg. The public deployment was not inspected directly. No database or secrets changes. Commit/push under the user's standing instruction; Device Hub remains waived for this web app.
+
+
+## 2026-10-14T17:08:59+02:00 — Compact hole-statistics headers and independent trend layouts
+
+- Removed heatmap styling from Eagle/Birdie/Bogey/Double bogey/Triple bogey or worse percentage columns (Par percentages remain neutral). Retained the three-step below/above-par heatmap solely for score averages across public, tournament and Admin layout tables.
+- Shortened displayed average headers to Ø throws / Ø +/− par, localized as Ø hody / Ø voči paru, with full-label hover help. Internal statistic keys and export precision remain unchanged.
+- Added a localized, independent Layout grafu selector inside the scoring-trend section. It no longer receives or reuses the hole table's selected layout. Selected-layout mode uses the graph picker; Whole course uses its course; tournament scope restricts layouts to the selected event. Existing category, individual-player and Top 3/Top 5 filters remain active.
+- Added a UI regression that switches graph/table layouts independently and checks the fitted chart's available dates and table scope. Updated heatmap tests to ensure outcome percentages are neutral in both themes. All 83 tests passed; git diff --check clean. No database writes. Device Hub remains waived for this web app.
+- Live browser verified compact Ø headings and neutral outcome percentage cells. Changed Layout grafu to Jahodna / Zelena while the upper hole-statistics picker/table remained Cervena; saved compact-hole-stats-preview.jpg and retained the app tab.

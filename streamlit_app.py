@@ -385,7 +385,7 @@ def courses():
     if stats:
         frame = statistics_frame(stats)
         st.dataframe(frame.style.apply(hole_heat_styles, axis=1, theme=current_theme()), hide_index=True, width='stretch', column_config={
-            **{c: st.column_config.NumberColumn(format='%.2f') for c in frame if c.startswith('Average')},
+            **{c: st.column_config.NumberColumn(label={'Average throws': 'Ø throws', 'Average +/− par': 'Ø +/− par'}[c], help=c, format='%.2f') for c in frame if c.startswith('Average')},
             **{c: st.column_config.NumberColumn(format='%.0f') for c in frame if c.endswith(' %')},
             'Par': st.column_config.NumberColumn(format='%.0f'),
             'Length (m)': st.column_config.NumberColumn(format='%.0f')})
@@ -659,7 +659,7 @@ def show_statistics(rounds, key, combine_categories=False):
     if stats:
         frame = statistics_frame(stats)
         st.dataframe(frame.style.apply(hole_heat_styles, axis=1, theme=current_theme()), hide_index=True, width='stretch', key=key + '_holes', column_config={
-            **{c: st.column_config.NumberColumn(format='%.2f') for c in frame if c.startswith('Average')},
+            **{c: st.column_config.NumberColumn(label={'Average throws': 'Ø throws', 'Average +/− par': 'Ø +/− par'}[c], help=c, format='%.2f') for c in frame if c.startswith('Average')},
             **{c: st.column_config.NumberColumn(format='%.0f') for c in frame if c.endswith(' %')},
             'Par': st.column_config.NumberColumn(format='%.0f'),
             'Length (m)': st.column_config.NumberColumn(format='%.0f')})
@@ -702,8 +702,14 @@ def draw_scoring_trend(rows, key):
     st.altair_chart(chart, use_container_width=True, key=key)
 
 
-def trend_controls(rounds, layout, tournament_id=None, category='All'):
+def trend_controls(tournament_id=None, category='All'):
     st.subheader('Scoring trend')
+    event = find(DATA, 'tournaments', tournament_id) if tournament_id else None
+    layouts = [l for l in DATA['layouts'] if event is None or l['id'] == event['layout_id']]
+    layout = choose('Trend layout', layouts, 'trend_layout',
+                    lambda l: find(DATA, 'courses', l['course_id'])['name'] + ' / ' + l['name'])
+    if not layout:
+        return
     course = find(DATA, 'courses', layout['course_id'])
     trend_scope = st.radio('Trend scope', ['Selected layout', 'Whole course'], horizontal=True, key='trend_scope')
     if 'trend_category' not in st.session_state:
@@ -755,7 +761,7 @@ def statistics_page():
     rounds = selected_rounds(DATA, tournament_id, None,
                              layout['id'], category)
     show_statistics(rounds, 'public_stats', category == 'All')
-    trend_controls(rounds, layout, tournament_id, category)
+    trend_controls(tournament_id, category)
 
 
 def admin_page():

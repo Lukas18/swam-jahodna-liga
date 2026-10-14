@@ -72,7 +72,7 @@ def hole_statistics(data, rounds, combine_categories=False):
 
 
 def hole_heat_styles(row, theme='dark'):
-    """Three solid contrast steps per direction; neutral samples retain native colours."""
+    """Three contrast steps for score averages; outcome percentages remain neutral."""
     def tint(value, green, thresholds):
         if value <= thresholds[0]:
             return ''
@@ -85,13 +85,9 @@ def hole_heat_styles(row, theme='dark'):
         return f'background-color: {palette[level]}; color: #17251F'
     styles = []
     deviation = row['Average +/− par']
-    below = {'Ace %', 'Albatross or better %', 'Eagle %', 'Birdie %'}
-    above = {'Bogey %', 'Double bogey %', 'Triple bogey or worse %'}
     for column in row.keys():
         if column in ['Average throws', 'Average +/− par']:
             styles.append(tint(abs(deviation), deviation < 0, (0.25, 0.75, 1.5)))
-        elif column in below | above:
-            styles.append(tint(row[column], column in below, (0, 25, 50)))
         else:
             styles.append('')
     return styles

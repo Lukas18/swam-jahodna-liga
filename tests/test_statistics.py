@@ -90,10 +90,13 @@ class StatisticsTest(unittest.TestCase):
             self.assertIn('color: #17251F', hole_heat_styles({'Average +/− par': -deviation})[0])
         row = {'Average +/− par': 0, 'Birdie %': 25, 'Bogey %': 50, 'Ace %': 75, 'Par %': 10}
         styles = hole_heat_styles(row)
-        self.assertIn('#B6DFCD', styles[1])
-        self.assertIn('#DFAD82', styles[2])
-        self.assertIn('#48A680', styles[3])
-        self.assertEqual(styles[4], '')
+        self.assertEqual(styles, [''] * len(row))
+        outcomes = {'Average +/− par': 2, 'Eagle %': 25, 'Birdie %': 50, 'Bogey %': 75,
+                    'Double bogey %': 50, 'Triple bogey or worse %': 25}
+        for theme in ['light', 'dark']:
+            styles = hole_heat_styles(outcomes, theme)
+            self.assertIn('background-color:', styles[0])
+            self.assertEqual(styles[1:], [''] * 5)
 
     def test_home_attendance_incomplete_events_and_league_isolation(self):
         from league.domain import home_standings, site_settings, validate_data

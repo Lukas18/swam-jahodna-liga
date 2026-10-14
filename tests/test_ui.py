@@ -125,6 +125,32 @@ class ScreensTest(unittest.TestCase):
         self.assertEqual(len(app.get('arrow_vega_lite_chart')), 1)
 
 
+    def test_trend_layout_is_independent_of_hole_statistics_layout(self):
+        data = fixture()
+        data['layouts'].append(dict(data['layouts'][0], id='second', name='Other'))
+        data['tournaments'].append(dict(data['tournaments'][0], id='later', date='2026-10-09'))
+        data['tournaments'].append(dict(data['tournaments'][0], id='other', layout_id='second', date='2026-10-10'))
+        add_round(data, 't', 'a', 1, 'MPO', 1, {1: 3, 2: 4})
+        add_round(data, 'later', 'a', 1, 'MPO', 1, {1: 4, 2: 5})
+        add_round(data, 'other', 'a', 1, 'MPO', 1, {1: 5, 2: 6})
+        self.path.write_bytes(encoded(data))
+        app = english_app().run(timeout=20)
+        app.sidebar.radio[0].set_value('Statistics').run()
+        self.assertEqual(len(app.get('arrow_vega_lite_chart')), 1)
+        app.selectbox(key='trend_layout').set_value('second').run()
+        self.assertFalse(app.exception)
+        self.assertEqual(app.selectbox(key='stats_layout_alltime').value, 'l')
+        self.assertEqual(len(app.get('arrow_vega_lite_chart')), 0)  # Only one date on this layout.
+        frame = next(x.value for x in app.dataframe if 'Average throws' in x.value)
+        self.assertEqual(set(frame['Layout']), {'Main'})
+        app.selectbox(key='stats_layout_alltime').set_value('second').run()
+        app.selectbox(key='trend_layout').set_value('l').run()
+        self.assertFalse(app.exception)
+        self.assertEqual(app.selectbox(key='stats_layout_alltime').value, 'second')
+        self.assertEqual(len(app.get('arrow_vega_lite_chart')), 1)
+        frame = next(x.value for x in app.dataframe if 'Average throws' in x.value)
+        self.assertEqual(set(frame['Layout']), {'Other'})
+
     def test_admin_login_edit_and_logout(self):
         app = english_app().run(timeout=20)
         app.sidebar.radio[0].set_value('Admin').run()

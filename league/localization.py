@@ -270,7 +270,8 @@ SK.update({'Trend scope': 'Rozsah grafu', 'Selected layout': 'Vybraný layout', 
 
 SK.update({'At least two tournament dates are needed to show a trend.': 'Na zobrazenie trendu sú potrebné aspoň dva dátumy turnajov.', 'Estimated score relative to par': 'Odhadované skóre voči paru'})
 
-SK['Trend category'] = 'Kategória trendu'
+SK.update({'Trend category': 'Kategória trendu', 'Trend layout': 'Layout grafu',
+           'Ø throws': 'Ø hody', 'Ø +/− par': 'Ø voči paru'})
 
 
 class LocalizedUI:
