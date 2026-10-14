@@ -48,3 +48,16 @@ Deploy the new application code and reboot Streamlit so all imported modules ref
 ```
 
 Preview is read-only. Apply saves owner-only before/after backups with checksum sidecars under ignored `data/backups/`, verifies existing values, saves using the loaded revision (atomic conflict protection), then loads back and compares the entire canonical document. Repeating a completed backfill makes no write. By default the backfill retains the current method. Initial deployment keeps the original active; select Golf-style in Admin when ready. `--activate legacy` selects the original method while retaining golf calculations. Normal app result edits then maintain both histories automatically. The simulator and SQL schema are unchanged except that the offline simulator now shares the selection-rule helper.
+
+
+## Live backfill status — 14 October 2026
+
+The verified backfill completed at normalized revision **3**. There are **291 original** and **291 golf-style** current snapshots, covering 50 players: **26 calculated** and **24 provisional**. The original method remains active. Original numerical handicap/history values and all scores were preserved; the legacy `app_data` row was verified byte-for-field unchanged. A read-only second calculation exactly matched the saved document.
+
+Owner-only ignored backups with SHA-256 sidecars:
+
+- `data/backups/before-dual-handicaps-20261014-223821-566635.json` (normalized and legacy source).
+- `data/backups/before-golf-backfill-20261014-224938-357424.json` (canonical original document).
+- `data/backups/after-golf-backfill-20261014-224943-131328.json` (verified dual-method document).
+
+Reboot the public Streamlit app once to reload changed imported modules. Then select **Administrácia → Nastavenia → Používaná metóda hendikepu → Golfový model · najlepšie kolá**, and save. Select **Pôvodný model · posledných 10 turnajov** and save to switch back. The public deployment itself was not browser-verified because its URL was not supplied; the running localhost app's authenticated Admin controls and comparison were verified.
