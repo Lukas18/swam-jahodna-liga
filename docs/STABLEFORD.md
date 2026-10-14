@@ -27,3 +27,7 @@ Existing normalized `league_v2.stableford_results` stores one result per tournam
 `backfill_stableford.py` previews by default. `--apply` saves owner-only checksummed before/after backups, checks that every original entity/score/handicap remains unchanged, uses atomic revision comparison, and verifies exact readback. Other leagues' result rows are preserved exactly. Backups are ignored by Git.
 
 After deploying, **reboot the Streamlit application** so Python reloads the new calculation module and imports.
+
+## Verified rollout — 2026-10-15T00:00:40+02:00
+
+Application implementation: `657adab`. Supabase main revision **5** has **75 calculated results across five target tournaments**. Both handicap histories, original scores, other leagues and the active golf method were preserved exactly. Full application suite: **104 passing tests**, plus PostgreSQL RPC/constraint verification. Checksummed owner-only before/after snapshots are in ignored `data/backups`; no new SQL step is necessary.

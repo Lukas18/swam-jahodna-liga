@@ -16,9 +16,9 @@ def fixture(scores):
 class StablefordTests(unittest.TestCase):
     def test_rare_percentages_keep_two_decimals_and_numeric_values(self):
         from league.presentation import percentage_value, percentage_label
-        raw = [0, 0.004, 0.2378, 0.999, 1, 1.6, 25]
+        raw = [0, 0.004, 0.2378, 0.5, 0.999, 1, 1.6, 25]
         self.assertEqual([percentage_label(percentage_value(v)) for v in raw],
-                         ['0', '0.00', '0.24', '1.00', '1', '2', '25'])
+                         ['0', '0.00', '0.24', '0.50', '1.00', '1', '2', '25'])
 
     def test_golf_points_and_full_handicap_allocation(self):
         self.assertEqual([hole_points(n, 4, 0) for n in [1,2,3,4,5,6,8]], [5,4,3,2,1,0,0])
@@ -44,13 +44,23 @@ class StablefordTests(unittest.TestCase):
         self.assertEqual(recalculate_handicaps(view)['stableford_results'][-1]['points'],row['methods']['legacy']['points'])
 
     def test_difficulty_frozen_until_explicit_reset_and_shared_across_numbers(self):
-        data=fixture([5,8]);out=recalculate_handicaps(data)
+        data=fixture([5,8])
+        data['layouts'][0]['profiles']['default'][-1]['length']=20
+        for r in data['rounds']:
+            r['holes'][-1]['length']=20
+        out=recalculate_handicaps(data)
         snapshot=deepcopy(out['tournaments'][0]['stableford_difficulty'])
         layout=out['layouts'][0];h=layout['profiles']['default'][0]
         self.assertEqual(hole_identity(layout,h),hole_identity({**layout,'id':'other'},{**h,'number':99}))
-        out['courses'][0]['stableford_difficulty']['rows'][0]['priority']=99
+        easiest=hole_identity(layout,layout['profiles']['default'][-1])
+        for row in out['courses'][0]['stableford_difficulty']['rows']:
+            row['priority']=1 if row['id']==easiest else 2
         again=recalculate_handicaps(out)
         self.assertEqual(again['tournaments'][0]['stableford_difficulty'],snapshot)
+        again['tournaments'][0].pop('stableford_difficulty')
+        reset=recalculate_handicaps(again)
+        reset_holes=next(iter(reset['tournaments'][0]['stableford_difficulty'].values()))['holes']
+        self.assertEqual(next(h['stroke_index'] for h in reset_holes if h['number']==18),1)
         self.assertEqual(len(next(iter(snapshot.values()))['holes']),18)
         self.assertEqual({r['stroke_index'] for r in next(iter(snapshot.values()))['holes']},set(range(1,19)))
 
