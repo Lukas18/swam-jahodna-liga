@@ -27,29 +27,31 @@ st.set_page_config(page_title='SWAM Jahodna liga', page_icon='🥏', layout='wid
 st.markdown('''<style>
 .block-container {padding-top:2rem;max-width:1250px;}
 h1,h2,h3 {letter-spacing:-.025em;}
-[class*="st-key-leaderboard_"] {border:2px solid #DCCEAB;border-radius:12px;padding:4px 6px 8px;overflow-x:auto;}
-.st-key-placement_points {width:fit-content;max-width:100%;overflow-x:auto;padding:4px 6px 8px;border:1px solid rgba(220,206,171,.35);border-radius:8px;}
-:is([class*="st-key-leaderboard_"], .st-key-placement_points) table {width:100%;border-collapse:collapse;}
-:is([class*="st-key-leaderboard_"], .st-key-placement_points) table td,
-:is([class*="st-key-leaderboard_"], .st-key-placement_points) table thead th {
+[class*="st-key-leaderboard_"], [class*="st-key-results_"] {overflow-x:auto;}
+.st-key-placement_points {width:fit-content;max-width:100%;overflow-x:auto;}
+:is([class*="st-key-leaderboard_"], [class*="st-key-results_"], .st-key-placement_points) table {width:100%;border-collapse:collapse;}
+:is([class*="st-key-leaderboard_"], [class*="st-key-results_"], .st-key-placement_points) table :is(td, thead th) {
     font-size:17px !important;line-height:1.5 !important;padding:10px 12px !important;
-    height:48px !important;vertical-align:middle !important;white-space:normal;
+    height:48px !important;vertical-align:middle !important;text-align:center !important;white-space:nowrap;
 }
-:is([class*="st-key-leaderboard_"], .st-key-placement_points) table td *,
-:is([class*="st-key-leaderboard_"], .st-key-placement_points) table th * {
+:is([class*="st-key-leaderboard_"], [class*="st-key-results_"], .st-key-placement_points) table :is(td, th) * {
     font-size:inherit !important;line-height:inherit !important;font-weight:inherit !important;
+    text-align:center !important;white-space:nowrap;word-break:normal;overflow-wrap:normal;
 }
-:is([class*="st-key-leaderboard_"], .st-key-placement_points) [data-testid="stMarkdownContainer"],
-:is([class*="st-key-leaderboard_"], .st-key-placement_points) table p {margin:0 !important;}
-:is([class*="st-key-leaderboard_"], .st-key-placement_points) table thead th.blank,
-:is([class*="st-key-leaderboard_"], .st-key-placement_points) table tbody th.row_heading {display:none;}
+:is([class*="st-key-leaderboard_"], [class*="st-key-results_"], .st-key-placement_points) table thead th {
+    font-weight:600 !important;background-color:rgba(127,127,127,.08);
+}
+:is([class*="st-key-leaderboard_"], [class*="st-key-results_"], .st-key-placement_points) [data-testid="stMarkdownContainer"],
+:is([class*="st-key-leaderboard_"], [class*="st-key-results_"], .st-key-placement_points) table p {margin:0 !important;}
+:is([class*="st-key-leaderboard_"], [class*="st-key-results_"], .st-key-placement_points) table thead th.blank,
+:is([class*="st-key-leaderboard_"], [class*="st-key-results_"], .st-key-placement_points) table tbody th.row_heading {display:none;}
 [class*="st-key-leaderboard_home_"] table :is(.col0, .col2, .col3, .col4) {width:1%;}
-[class*="st-key-leaderboard_home_"] table td:is(.col0, .col2, .col3, .col4) {white-space:nowrap;}
-[class*="st-key-leaderboard_home_"] table thead th,
-[class*="st-key-leaderboard_home_"] table thead th * {word-break:normal;overflow-wrap:normal;}
 [class*="st-key-leaderboard_home_"] table :is(td.col1, th.col1) {width:auto;}
+.st-key-results_handicap_history table :is(.col0, .col2, .col3, .col4, .col5) {width:1%;}
+.st-key-results_handicap_history table td.col1,
+.st-key-results_handicap_history table td.col1 * {white-space:normal;overflow-wrap:normal;}
 .st-key-placement_points table {width:auto;}
-.st-key-placement_points table :is(th, td) {white-space:nowrap;padding:6px 10px !important;}
+.st-key-placement_points table :is(th, td) {padding:6px 10px !important;}
 [data-testid="stMetric"] {background:rgba(127,127,127,.08);border-radius:12px;padding:16px;}
 </style>''', unsafe_allow_html=True)
 
@@ -99,6 +101,24 @@ def persist(draft):
     st.rerun()
 
 
+def column_label(column, markdown=False):
+    # Static tables parse Markdown; escape a lone # so it stays visible text.
+    return (r'\#' if markdown else '#') if column == 'Place' else translate(column)
+
+
+def result_table(frame, key, formats=None, heatmap=False):
+    """Use the Home table typography for full-height read-only results."""
+    labels = {c: column_label({'Average throws': 'Ø throws', 'Average +/− par': 'Ø +/− par'}.get(c, c), markdown=True) for c in frame}
+    display = frame.rename(columns=labels)
+    styled = display.style.hide(axis='index').set_properties(**{'text-align': 'center'})
+    if heatmap:
+        original = {label: column for column, label in labels.items()}
+        styled = styled.apply(lambda row: hole_heat_styles(row.rename(index=original), current_theme()), axis=1)
+    styled = styled.format({labels[c]: value for c, value in (formats or {}).items()}, na_rep='—', escape='html')
+    with st.container(key='results_' + key):
+        st.table(styled)
+
+
 def table(rows, key=None, sortable=False):
     if not rows:
         st.info('No results yet.')
@@ -110,7 +130,7 @@ def table(rows, key=None, sortable=False):
     cols = [c for c in ['Place', 'Player', 'Category', 'Points', 'Tournaments', 'Rounds'] if c in df]
     cols += [c for c in df if c not in cols + hidden]
     colors = category_styles(DATA['categories'], current_theme())
-    display = df[cols].rename(columns=translate)
+    display = df[cols].rename(columns=lambda c: column_label(c, markdown=not sortable))
     styled = display.style.apply(lambda row: [colors.get(row[translate('Category')], 'background-color: #D8DED9; color: #17251F')] * len(row), axis=1)
     styled = styled.format({translate(c): '{:.0f}' for c in ['Points', 'HCP adjusted', 'Handicap', 'Current handicap', 'Stableford'] if c in df}, na_rep='—', escape='html')
     with st.container(key='leaderboard_' + (key or 'results')):
@@ -177,12 +197,12 @@ def home():
                 st.subheader(category)
                 frame = pd.DataFrame([{'Place': label, 'Name': medals.get(r['Place'], '') + r['Player'],
                                        'Total points': r['Points'], 'Tournaments attended': r['Tournaments'], 'Current HCP': r['Current handicap']} for r, label in zip(rows, place_labels(rows))])
-                frame = frame.rename(columns=translate)
+                frame = frame.rename(columns=lambda c: column_label(c, markdown=True))
                 styled = frame.style.set_properties(**{'color': '#3B2119'}).hide(axis="index")
                 styled = styled.apply(lambda row: [
                     'background-color: #DED9C7' if row.name % 2 == 0 else 'background-color: #EAE4D0'
                 ] * len(row), axis=1)
-                styled = styled.set_properties(subset=[translate(c) for c in ['Place', 'Name', 'Total points', 'Tournaments attended']], **{'color': '#16492F', 'font-weight': 'bold'})
+                styled = styled.set_properties(subset=[column_label(c, markdown=True) for c in ['Place', 'Name', 'Total points', 'Tournaments attended']], **{'color': '#16492F', 'font-weight': 'bold'})
                 with st.container(key='leaderboard_home_' + category):
                     st.table(styled.format({translate('Current HCP'): '{:.0f}'}, na_rep='—', escape='html'))
         if not standings:
@@ -248,7 +268,7 @@ def leagues():
     metric = metric_picker('league_rank')
     table(league_results(DATA, league['id'], cat, metric), 'league_table', sortable=True)
     st.caption('Placement points')
-    points = pd.DataFrame([{translate('Place'): translate('Points'),
+    points = pd.DataFrame([{column_label('Place', markdown=True): translate('Points'),
                             **{str(place): whole_number(value) for place, value in enumerate(league['points'], 1)}}])
     with st.container(key='placement_points'):
         st.table(points.style.hide(axis='index'))
@@ -391,11 +411,7 @@ def courses():
     stats = hole_statistics(DATA, rounds, combine_categories=cat == 'All')
     if stats:
         frame = statistics_frame(stats)
-        st.dataframe(frame.style.apply(hole_heat_styles, axis=1, theme=current_theme()), hide_index=True, width='stretch', column_config={
-            **{c: st.column_config.NumberColumn(label={'Average throws': 'Ø throws', 'Average +/− par': 'Ø +/− par'}[c], help=c, format='%.2f') for c in frame if c.startswith('Average')},
-            **{c: st.column_config.NumberColumn(format='%.0f') for c in frame if c.endswith(' %')},
-            'Par': st.column_config.NumberColumn(format='%.0f'),
-            'Length (m)': st.column_config.NumberColumn(format='%.0f')})
+        result_table(frame, 'layout_holes', {c: '{:.2f}' if c.startswith('Average') else '{:.0f}' for c in frame if c.startswith('Average') or c.endswith(' %') or c in ['Par', 'Length (m)']}, heatmap=True)
         st.download_button('Download hole statistics', frame.to_csv(index=False), 'hole_statistics.csv', 'text/csv')
     else:
         st.info('No hole-by-hole scores recorded for this layout and category yet.')
@@ -665,11 +681,7 @@ def show_statistics(rounds, key, combine_categories=False):
     stats = hole_statistics(DATA, rounds, combine_categories=combine_categories)
     if stats:
         frame = statistics_frame(stats)
-        st.dataframe(frame.style.apply(hole_heat_styles, axis=1, theme=current_theme()), hide_index=True, width='stretch', key=key + '_holes', column_config={
-            **{c: st.column_config.NumberColumn(label={'Average throws': 'Ø throws', 'Average +/− par': 'Ø +/− par'}[c], help=c, format='%.2f') for c in frame if c.startswith('Average')},
-            **{c: st.column_config.NumberColumn(format='%.0f') for c in frame if c.endswith(' %')},
-            'Par': st.column_config.NumberColumn(format='%.0f'),
-            'Length (m)': st.column_config.NumberColumn(format='%.0f')})
+        result_table(frame, key + '_holes', {c: '{:.2f}' if c.startswith('Average') else '{:.0f}' for c in frame if c.startswith('Average') or c.endswith(' %') or c in ['Par', 'Length (m)']}, heatmap=True)
         st.download_button('Download hole statistics', frame.to_csv(index=False), 'hole_statistics.csv', 'text/csv', key=key + '_holes_csv')
     else:
         st.info('These results have totals only. Import or enter hole scores to see hole averages and outcome percentages.')
@@ -848,9 +860,8 @@ def handicap_history_page():
     if not rows:
         st.info('No completed tournaments yet.')
         return
-    st.dataframe(pd.DataFrame(rows), hide_index=True, width='stretch', column_config={
-        'Score relative to par': st.column_config.NumberColumn(format='%.2f'),
-        **{c: st.column_config.NumberColumn(format='%.0f') for c in ['Handicap', 'Next handicap', 'Tournaments in average']}})
+    result_table(pd.DataFrame(rows), 'handicap_history', {'Score relative to par': '{:.2f}',
+        **{c: '{:.0f}' for c in ['Handicap', 'Next handicap', 'Tournaments in average']}})
     st.download_button('Download CSV', pd.DataFrame(rows).to_csv(index=False), 'handicap_history.csv', 'text/csv')
 
 
