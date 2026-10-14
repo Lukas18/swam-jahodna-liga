@@ -179,3 +179,8 @@ Home standings label the latest handicap **Current HCP** / **HCP Aktuálne**. Ra
 
 
 Home uses **#** for the place header and centres only that column; other column alignments remain unchanged. Numeric columns fit their unwrapped headers, with names filling the remaining width. Yellow decorative outlines have been removed from Home/League/Tournament leaderboard containers and the placement-points legend. Hole statistics and handicap history keep their existing grid renderers and formatting.
+
+
+## Read-only golf-style handicap comparison
+
+See [the 14 October 2026 simulation](docs/HANDICAP_SIMULATION_2026-10-14.md) for the six most active players (including an attendance tie). `simulate_handicaps.py LOCAL_SNAPSHOT --top 5` reproduces the best-score selection comparison without connecting to or writing to the database. It assumes Course Rating = recorded par, Slope = 113 and PCC = 0; uncapped scores and omitted WHS safeguards mean these are illustrative estimates, not official golf indexes. The production last-10/ceiling algorithm is unchanged.
