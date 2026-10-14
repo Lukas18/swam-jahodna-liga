@@ -5,7 +5,8 @@ import time
 import unittest
 from unittest.mock import patch
 from streamlit.testing.v1 import AppTest
-from league.storage import encoded, Store
+from league.storage import encoded
+from snapshot_store import SnapshotStore as Store
 from league.domain import add_round, register_player
 from test_league import fixture
 
@@ -25,8 +26,11 @@ class ScreensTest(unittest.TestCase):
         self.path.write_bytes(encoded(fixture()))
         self.env = patch.dict(os.environ, {'DISCGOLF_DATA_PATH': str(self.path), 'DISCGOLF_ADMIN_PASSWORD': 'test-only-password'})
         self.env.start()
+        self.store_patch = patch('league.database.get_store', lambda: Store(self.path))
+        self.store_patch.start()
 
     def tearDown(self):
+        self.store_patch.stop()
         self.env.stop()
         self.tmp.cleanup()
 
@@ -40,7 +44,7 @@ class ScreensTest(unittest.TestCase):
 
     def test_public_screens_have_no_edit_forms_even_for_admin(self):
         app = english_app().run(timeout=20)
-        self.assertEqual(app.sidebar.radio[0].options, ['Home', 'Leagues', 'Tournaments', 'Statistics', 'Admin'])
+        self.assertEqual(app.sidebar.radio[0].options, ['Home', 'Leagues', 'Tournaments', 'Statistics', 'Handicap history', 'Admin'])
         for signed_in in [False, True]:
             if signed_in:
                 app.session_state['admin_expires'] = time.time() + 100
@@ -49,6 +53,77 @@ class ScreensTest(unittest.TestCase):
                 self.assertFalse(app.exception, page)
                 self.assertFalse(any(b.label.startswith(('Save ', 'Create ', 'Confirm import')) for b in app.button), page)
                 self.assertEqual(len(app.text_input), 0)
+
+    def test_handicap_history_and_tournament_handicap_are_visible(self):
+        data = fixture()
+        add_round(data, 't', 'a', 1, 'MPO', 1, {1: 4, 2: 5})
+        self.path.write_bytes(encoded(data))
+        app = english_app().run(timeout=20)
+        app.sidebar.radio[0].set_value('Handicap history').run()
+        self.assertFalse(app.exception)
+        rows = app.dataframe[0].value
+        self.assertEqual(rows.iloc[0]['Handicap'], 2)
+        self.assertEqual(rows.iloc[0]['Next handicap'], 2)
+        app.sidebar.radio[0].set_value('Tournaments').run()
+        result = next(x.value for x in app.table if 'Player' in x.value)
+        self.assertIn('Handicap', result)
+        self.assertIn('Stableford', result)
+        self.assertTrue(result['Stableford'].isna().all())
+
+    def test_newest_handicap_first_and_accent_insensitive_search(self):
+        from league.domain import save_player
+        data = fixture()
+        save_player(data, 'a', 'Mário', 'Haško', 'MPO', 1, 'Alice')
+        add_round(data, 't', 'a', 1, 'MPO', 1, {1: 3, 2: 4})
+        data['tournaments'].append(dict(data['tournaments'][0], id='later', date='2026-10-09'))
+        add_round(data, 'later', 'a', 1, 'MPO', 1, {1: 4, 2: 5})
+        self.path.write_bytes(encoded(data))
+        app = english_app().run(timeout=20)
+        app.sidebar.radio[0].set_value('Handicap history').run()
+        app.text_input(key='handicap_player_search').set_value('Mar').run()
+        self.assertFalse(app.exception)
+        self.assertEqual(app.selectbox(key='handicap_player').options, ['Mário Haško'])
+        rows = app.dataframe[0].value
+        self.assertEqual(rows['Date'].tolist(), ['2026-10-09', '2026-10-08'])
+        app.text_input(key='handicap_player_search').set_value('Már').run()
+        self.assertEqual(app.selectbox(key='handicap_player').options, ['Mário Haško'])
+        app.text_input(key='handicap_player_search').set_value('no match').run()
+        self.assertFalse(app.exception)
+        self.assertEqual(len(app.dataframe), 0)
+
+    def test_trend_modes_and_whole_percentage_data(self):
+        data = fixture()
+        add_round(data, 't', 'a', 1, 'MPO', 1, {1: 3, 2: 4})
+        add_round(data, 't', 'b', 1, 'MPO', 0, {1: 2, 2: 4})
+        add_round(data, 't', 'j', 1, 'MJ15', 0, {1: 3})
+        data['tournaments'].append(dict(data['tournaments'][0], id='later', date='2026-10-09'))
+        add_round(data, 'later', 'a', 1, 'MPO', 1, {1: 3, 2: 4})
+        self.path.write_bytes(encoded(data))
+        app = english_app().run(timeout=20)
+        app.sidebar.radio[0].set_value('Statistics').run()
+        for mode in ['All players', 'Top 3', 'Top 5', 'Specific player']:
+            app.radio(key='trend_mode').set_value(mode).run()
+            self.assertFalse(app.exception, mode)
+            self.assertEqual(len(app.get('arrow_vega_lite_chart')), 1)
+        app.radio(key='trend_scope').set_value('Whole course').run()
+        self.assertFalse(app.exception)
+        self.assertEqual(len(app.get('arrow_vega_lite_chart')), 1)
+        frame = next(x.value for x in app.dataframe if 'Average throws' in x.value)
+        self.assertEqual(frame.iloc[0]['Birdie %'], 25)
+        self.assertTrue(str(frame['Birdie %'].dtype).startswith('int'))
+        self.assertEqual(frame.iloc[0]['Average throws'], 2.75)
+        # Graph category is independent of the hole-table filter and restricts its cohort.
+        app.selectbox(key='trend_category').set_value('MJ15').run()
+        app.radio(key='trend_mode').set_value('Top 3').run()
+        self.assertFalse(app.exception)
+        self.assertEqual(len(app.get('arrow_vega_lite_chart')), 0)  # Junior has just one date.
+        self.assertEqual(app.selectbox(key='stats_category').value, 'All')
+        app.radio(key='trend_mode').set_value('Specific player').run()
+        self.assertEqual(app.selectbox(key='trend_player').options, ['Junior Player'])
+        app.selectbox(key='trend_category').set_value('MPO').run()
+        self.assertFalse(app.exception)
+        self.assertEqual(len(app.get('arrow_vega_lite_chart')), 1)
+
 
     def test_admin_login_edit_and_logout(self):
         app = english_app().run(timeout=20)
@@ -61,9 +136,9 @@ class ScreensTest(unittest.TestCase):
         app.button(key='FormSubmitter:login-Sign in').click().run()
         self.assertFalse(app.exception)
         self.assertGreater(app.session_state['admin_expires'], time.time())
-        app.text_input[0].set_value('New')
-        app.text_input[1].set_value('Player')
-        app.text_input[2].set_value('new-udisc')
+        next(x for x in app.text_input if x.label == 'First name').set_value('New')
+        next(x for x in app.text_input if x.label == 'Last name').set_value('Player')
+        next(x for x in app.text_input if x.label == 'uDisc username').set_value('new-udisc')
         app.button(key='FormSubmitter:player_new-Save player').click().run()
         self.assertFalse(app.exception)
         self.assertEqual(len(Store(self.path).load()[0]['players']), 4)
@@ -93,7 +168,8 @@ class ScreensTest(unittest.TestCase):
         self.assertTrue(app.error)
         self.assertEqual(Store(self.path).load()[0]['rounds'], [])
         # Verify a registered existing round renders and still contributes to stats.
-        add_round(data, 't', 'a', 1, 'MPO', 1, {1: 3, 2: 4})
+        hcp = next(e['handicap'] for e in data['registrations'] if e['player_id'] == 'a')
+        add_round(data, 't', 'a', 1, 'MPO', hcp, {1: 3, 2: 4})
         self.path.write_bytes(encoded(data))
         app.run()
         grid = next(frame.value for frame in app.dataframe if 'Save' in frame.value)
@@ -137,9 +213,9 @@ class ScreensTest(unittest.TestCase):
             self.assertFalse(app.exception)
             self.assertFalse(any(x.label == 'Leaderboard view' for x in app.selectbox))
             self.assertFalse(any(x.value in ['Course overview', 'Layout overview'] for x in app.subheader))
-            self.assertEqual(len(app.get('arrow_vega_lite_chart')), 0)
+            self.assertEqual(len(app.get('arrow_vega_lite_chart')), 0)  # One event cannot define a time trend.
             for element in list(app.dataframe) + list(app.table):
-                self.assertTrue({'Course', 'Ace %', 'Albatross or better %', 'HCP adjusted'}.isdisjoint(element.value.columns))
+                self.assertTrue({'Course', 'Ace %', 'Albatross or better %'}.isdisjoint(element.value.columns))
         app.sidebar.radio[0].set_value('Leagues').run()
         leaderboard = next(x for x in app.dataframe if 'Player' in x.value)
         self.assertEqual(leaderboard.value['Player'].tolist(), ['Alice Player', 'Bob Player'])
@@ -233,7 +309,7 @@ class ScreensTest(unittest.TestCase):
         standings = [x.value for x in app.table if 'Total points' in x.value]
         self.assertEqual(len(standings), 2)
         for frame in standings:
-            self.assertEqual(list(frame.columns), ['Place', 'Name', 'Total points', 'Tournaments attended'])
+            self.assertEqual(list(frame.columns), ['Place', 'Name', 'Total points', 'Tournaments attended', 'Current handicap'])
             self.assertTrue(frame.iloc[0]['Name'].startswith('🥇'))
         app.sidebar.radio[0].set_value('Tournaments').run()
         selector = app.selectbox(key='tournament_stats_category_t')
@@ -320,7 +396,7 @@ class ScreensTest(unittest.TestCase):
         app = AppTest.from_file(APP).run(timeout=20)
         self.assertFalse(app.exception)
         self.assertEqual(app.selectbox(key='language').value, 'sk')
-        self.assertEqual(app.sidebar.radio[0].options, ['Domov', 'Ligy', 'Turnaje', 'Štatistiky', 'Administrácia'])
+        self.assertEqual(app.sidebar.radio[0].options, ['Domov', 'Ligy', 'Turnaje', 'Štatistiky', 'História hendikepu', 'Administrácia'])
         self.assertEqual(len(app.metric), 0)
         self.assertFalse(any(x.label == 'Zobrazenie výsledkov' for x in app.selectbox))
         self.assertIn('Poradie', app.table[0].value.columns)
@@ -386,9 +462,9 @@ class ScreensTest(unittest.TestCase):
         app.text_input[0].set_value('test-only-password')
         next(b for b in app.button if b.label == 'Prihlásiť sa').click().run()
         self.assertFalse(app.exception)
-        app.text_input[0].set_value('Ján')
-        app.text_input[1].set_value('Novák')
-        app.text_input[2].set_value('jan-udisc')
+        next(x for x in app.text_input if x.label == 'Meno').set_value('Ján')
+        next(x for x in app.text_input if x.label == 'Priezvisko').set_value('Novák')
+        next(x for x in app.text_input if x.label == 'Používateľské meno uDisc').set_value('jan-udisc')
         next(b for b in app.button if b.label == 'Uložiť hráča').click().run()
         self.assertFalse(app.exception)
         player = next(p for p in Store(self.path).load()[0]['players'] if p['udisc'] == 'jan-udisc')

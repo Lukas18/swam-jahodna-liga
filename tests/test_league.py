@@ -302,30 +302,33 @@ class ImportTest(unittest.TestCase):
 
 
 class StorageTest(unittest.TestCase):
-    def test_atomic_local_and_conflict(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            store = Store(Path(tmp)/'data.json')
-            d, version = store.load()
-            store.save(d, version)
-            loaded, current = store.load()
-            self.assertEqual(loaded['revision'], 1)
-            with self.assertRaises(StorageError):
-                store.save(loaded, version)
-            self.assertEqual(store.load()[1], current)
-
-    def test_github_uses_sha_and_roundtrips(self):
+    def test_json_store_uses_atomic_rpc_and_preserves_failed_revision(self):
+        from unittest.mock import Mock
+        from types import SimpleNamespace
+        client = Mock()
+        with patch('league.storage.create_client', return_value=client):
+            store = Store(supabase={'url': 'https://example.invalid', 'key': 'test', 'model': 'json'})
         d = fixture()
-        store = Store(github={'repository': 'me/data', 'token': 'fake'})
-        raw = encoded(d)
-        with patch.object(store, 'api', return_value={'content': base64.b64encode(raw).decode(), 'sha': 'abc'}):
-            loaded, sha = store.load()
-            self.assertEqual(sha, 'abc')
-        with patch.object(store, 'api', return_value={}) as api:
-            store.save(loaded, sha)
-            payload = api.call_args.args[1]
-            self.assertEqual(payload['sha'], 'abc')
-            self.assertEqual(payload['branch'], 'main')
-            self.assertEqual(base64.b64decode(payload['content']), encoded(loaded))
+        client.rpc.return_value.execute.return_value = SimpleNamespace(data=False)
+        with self.assertRaises(StorageError):
+            store.save(d, '0')
+        self.assertEqual(d['revision'], 0)
+        client.rpc.return_value.execute.return_value = SimpleNamespace(data=True)
+        store.save(d, '0')
+        self.assertEqual(d['revision'], 1)
+        self.assertEqual(client.rpc.call_args.args[0], 'save_app_data')
+        self.assertEqual(client.rpc.call_args.args[1]['p_expected_revision'], 0)
+
+    def test_json_store_loads_authoritative_revision(self):
+        from unittest.mock import Mock
+        from types import SimpleNamespace
+        client = Mock()
+        with patch('league.storage.create_client', return_value=client):
+            store = Store(supabase={'url': 'https://example.invalid', 'key': 'test', 'model': 'json'})
+        client.table.return_value.select.return_value.eq.return_value.limit.return_value.execute.return_value = SimpleNamespace(data=[{'content': fixture()}])
+        data, revision = store.load()
+        self.assertEqual(data, fixture())
+        self.assertEqual(revision, '0')
 
 
 if __name__ == '__main__':

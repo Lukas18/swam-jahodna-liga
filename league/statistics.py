@@ -95,3 +95,57 @@ def hole_heat_styles(row, theme='dark'):
         else:
             styles.append('')
     return styles
+
+
+def trend_observations(data):
+    """Compact player/event/layout/category summaries, rebuilt after result edits."""
+    groups = {}
+    for r in data['rounds']:
+        key = (r['player_id'], r['tournament_id'], r['layout_id'], r['category'])
+        row = groups.setdefault(key, dict(zip(
+            ['player_id', 'tournament_id', 'layout_id', 'category'], key),
+            total=0, par=0, round_count=0))
+        row['total'] += r['total']
+        row['par'] += r['par']
+        row['round_count'] += 1
+    return list(groups.values())
+
+
+def scoring_trend(data, rounds, player_ids=None):
+    """Per-event mean relative-to-par per round, equal weight per player.
+
+    Scopes are supplied by the caller. Layouts always remain separate. Every
+    recorded player event contributes once, including totals-only scorecards.
+    """
+    tournaments = {t['id']: t for t in data['tournaments']}
+    layouts = {layout['id']: layout for layout in data['layouts']}
+    courses = {course['id']: course for course in data['courses']}
+    events = defaultdict(lambda: defaultdict(list))
+    chosen = None if player_ids is None else set(player_ids)
+    for r in rounds:
+        if chosen is None or r['player_id'] in chosen:
+            events[(r['layout_id'], r['tournament_id'])][r['player_id']].append((r['total'] - r['par'], r.get('round_count', 1)))
+    rows = []
+    for (layout_id, tid), players in events.items():
+        means = [sum(value for value, _ in scores) / sum(count for _, count in scores) for scores in players.values()]
+        t, layout = tournaments[tid], layouts[layout_id]
+        rows.append({'tournament_id': tid, 'Date': t['date'], 'Tournament': t['name'],
+                     'event_order': t.get('event_order', 0), 'layout_id': layout_id,
+                     'Course': courses[layout['course_id']]['name'], 'Layout': layout['name'],
+                     'Average +/− par': sum(means) / len(means), 'Players': len(means)})
+    return sorted(rows, key=lambda r: (r['Date'], r['event_order'], r['tournament_id'], r['layout_id']))
+
+
+def top_trend_players(data, rounds, count):
+    """Fixed cohort: lowest mean event score per round within the current scope."""
+    from fractions import Fraction
+    by_event = defaultdict(list)
+    for r in rounds:
+        by_event[(r['player_id'], r['tournament_id'])].append((r['total'] - r['par'], r.get('round_count', 1)))
+    by_player = defaultdict(list)
+    for (pid, _), scores in by_event.items():
+        by_player[pid].append(Fraction(sum(value for value, _ in scores), sum(count for _, count in scores)))
+    players = {p['id']: p for p in data['players']}
+    ranking = sorted(by_player, key=lambda pid: (sum(by_player[pid]) / len(by_player[pid]),
+                     (players[pid]['first_name'] + ' ' + players[pid]['last_name']).casefold(), pid))
+    return ranking[:count]

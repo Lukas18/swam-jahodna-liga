@@ -258,6 +258,21 @@ def translate(value, language=None):
     return value
 
 
+SK.update({'Order on the same date': 'Poradie v rovnaký deň', 'Use different order numbers when a player plays two tournaments on the same date.': 'Ak hráč hrá dva turnaje v rovnaký deň, nastavte im odlišné poradie.', 'Handicap': 'Hendikep', 'Handicap history': 'História hendikepu', 'Current handicap': 'Aktuálny hendikep', 'Next handicap': 'Ďalší hendikep', 'Tournaments in average': 'Turnaje v priemere', 'Stableford': 'Stableford', 'No completed tournaments yet.': 'Zatiaľ bez dokončených turnajov.', 'Handicaps are calculated automatically from the last 10 completed tournaments.': 'Hendikep sa počíta automaticky z posledných 10 dokončených turnajov.'})
+
+SK.update({'Search players': 'Hľadať hráčov', 'Name or surname': 'Meno alebo priezvisko', 'Search ignores accents.': 'Vyhľadávanie nerozlišuje diakritiku.', 'No players match this search.': 'Vyhľadávaniu nezodpovedá žiadny hráč.'})
+
+SK.update({'Scoring trend': 'Vývoj skóre', 'Players in trend': 'Hráči v grafe', 'All players': 'Všetci hráči', 'Specific player': 'Konkrétny hráč', 'Top 3': 'Top 3', 'Top 5': 'Top 5', 'Players included': 'Zahrnutí hráči'})
+
+SK.update({'Top players have the lowest average score relative to par in the selected filters. The same players are used throughout the trend.': 'Najlepší hráči majú najnižší priemer skóre voči paru vo vybraných filtroch. V celom grafe sa používa rovnaká skupina hráčov.'})
+
+SK.update({'Trend scope': 'Rozsah grafu', 'Selected layout': 'Vybraný layout', 'Whole course': 'Celé ihrisko'})
+
+SK.update({'At least two tournament dates are needed to show a trend.': 'Na zobrazenie trendu sú potrebné aspoň dva dátumy turnajov.', 'Estimated score relative to par': 'Odhadované skóre voči paru'})
+
+SK['Trend category'] = 'Kategória trendu'
+
+
 class LocalizedUI:
     """Localize presentation only; widget values and DataFrame keys stay stable."""
     TEXT = {'title', 'subheader', 'header', 'caption', 'write', 'info', 'warning', 'error', 'success',

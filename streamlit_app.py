@@ -9,6 +9,7 @@ import os
 import re
 import time
 import pandas as pd
+import altair as alt
 import streamlit as streamlit
 from league.localization import LocalizedUI, translate
 st = LocalizedUI(streamlit, lambda: admin())
@@ -16,7 +17,9 @@ from league.domain import (new_id, find, profile, validate_holes, save_player, a
                            tournament_results, league_results, hole_stats, validate_data, resize_holes, whole_number,
                            tournament_entries, register_player, score_grid, save_score_grid, site_settings, home_standings, place_labels)
 from league.presentation import category_styles
-from league.statistics import selected_rounds, summary, hole_statistics, hole_heat_styles
+from league.search import matching_players
+from league.handicaps import recalculate_handicaps
+from league.statistics import selected_rounds, summary, hole_statistics, hole_heat_styles, scoring_trend, top_trend_players
 from league.storage import Store, StorageError, encoded
 from league.imports import read_export, preview_import
 
@@ -41,29 +44,6 @@ h1,h2,h3 {letter-spacing:-.025em;}
 :is([class*="st-key-leaderboard_"], .st-key-placement_points) table thead th:first-child,
 :is([class*="st-key-leaderboard_"], .st-key-placement_points) table tbody th {display:none;}
 [data-testid="stMetric"] {background:rgba(127,127,127,.08);border-radius:12px;padding:16px;}
-div[data-testid="stTable"] thead th {
-    display: table-cell !important;
-}
-/* Keep columns compact and prevent wrapping */
-div[data-testid="stTable"] th *,
-div[data-testid="stTable"] td {
-    display: table-cell !important;
-    white-space: nowrap !important;
-}
-
-/* Numeric columns: use minimum necessary width */
-div[data-testid="stTable"] th:not(:nth-child(2)),
-div[data-testid="stTable"] td:not(:nth-child(2)) {
-    width: 1%;
-    white-space: nowrap !important;
-}
-
-/* Player name: absorb remaining available width */
-div[data-testid="stTable"] th:nth-child(2),
-div[data-testid="stTable"] td:nth-child(2) {
-    width: auto;
-    text-align: left;
-}
 </style>''', unsafe_allow_html=True)
 
 
@@ -76,10 +56,10 @@ def secrets():
 
 CONFIG = secrets()
 try:
-    STORE = Store()
-    DATA, VERSION = STORE.load()
-    # STORE = Store(os.environ.get('DISCGOLF_DATA_PATH', 'data/league.json'), CONFIG.get('github'))
-    # DATA, VERSION = STORE.load()
+    from league.database import get_store
+    STORE = get_store()
+    from league.cache import load_view_state, clear_view_cache
+    DATA, VERSION, TREND_OBSERVATIONS = load_view_state(STORE)
 except (StorageError, OSError) as exc:
     st.error(str(exc))
     st.stop()
@@ -104,6 +84,7 @@ def persist(draft):
         st.stop()
     try:
         STORE.save(draft, VERSION)
+        clear_view_cache()
     except (ValueError, KeyError, StorageError, OSError) as exc:
         st.error(str(exc))
         return
@@ -118,27 +99,36 @@ def table(rows, key=None, sortable=False):
     df = pd.DataFrame(rows)
     if 'Place' in df:
         df['Place'] = place_labels(rows)
-    hidden = ['player_id', 'HCP adjusted', 'Handicap', 'Complete']
+    hidden = ['player_id', 'Complete']
     cols = [c for c in ['Place', 'Player', 'Category', 'Points', 'Tournaments', 'Rounds'] if c in df]
     cols += [c for c in df if c not in cols + hidden]
     colors = category_styles(DATA['categories'], current_theme())
     display = df[cols].rename(columns=translate)
     styled = display.style.apply(lambda row: [colors.get(row[translate('Category')], 'background-color: #D8DED9; color: #17251F')] * len(row), axis=1)
-    styled = styled.format({translate(c): '{:.0f}' for c in ['Points', 'HCP adjusted'] if c in df}, escape='html')
+    styled = styled.format({translate(c): '{:.0f}' for c in ['Points', 'HCP adjusted', 'Handicap', 'Current handicap', 'Stableford'] if c in df}, na_rep='—', escape='html')
     with st.container(key='leaderboard_' + (key or 'results')):
         if sortable:
             st.dataframe(styled, hide_index=True, width='stretch', row_height=48,
-                         height=(len(display) + 1) * 48 + 8, key=key)
+                         height=(len(display) + 1) * 48 + 8, key=key, column_config={translate(c): st.column_config.NumberColumn(format='%.0f') for c in ['Handicap', 'Current handicap', 'HCP adjusted', 'Stableford'] if c in df})
         else:
             st.table(styled)
     st.download_button('Download CSV', df[cols].to_csv(index=False).encode('utf-8'),
                        'results.csv', 'text/csv', key=(key or 'results') + '_csv')
 
 
+def search_players(items, key):
+    query = st.text_input('Search players', key=key, placeholder='Name or surname', help='Search ignores accents.')
+    return matching_players(items, query, include_username=admin())
+
+
 def choose(label, items, key, text=lambda x: x['name']):
+    if label == 'Player':
+        items = search_players(items, key + '_search')
     if not items:
-        st.info(f'No {label.lower()} available yet.')
+        st.info('No players match this search.' if label == 'Player' else f'No {label.lower()} available yet.')
         return None
+    if st.session_state.get(key) not in {x['id'] for x in items}:
+        st.session_state.pop(key, None)
     selected = st.selectbox(label, [x['id'] for x in items], format_func=lambda value: text(next(x for x in items if x['id'] == value)), key=key)
     return next(x for x in items if x['id'] == selected)
 
@@ -179,7 +169,7 @@ def home():
             if rows:
                 st.subheader(category)
                 frame = pd.DataFrame([{'Place': label, 'Name': medals.get(r['Place'], '') + r['Player'],
-                                       'Total points': r['Points'], 'Tournaments attended': r['Tournaments']} for r, label in zip(rows, place_labels(rows))])
+                                       'Total points': r['Points'], 'Tournaments attended': r['Tournaments'], 'Current handicap': r['Current handicap']} for r, label in zip(rows, place_labels(rows))])
                 frame = frame.rename(columns=translate)
                 styled = frame.style.set_properties(**{'color': '#3B2119'}).hide(axis="index")
                 styled = styled.apply(lambda row: [
@@ -187,7 +177,7 @@ def home():
                 ] * len(row), axis=1)
                 styled = styled.set_properties(subset=[translate(c) for c in ['Place', 'Name', 'Total points', 'Tournaments attended']], **{'color': '#16492F', 'font-weight': 'bold'})
                 with st.container(key='leaderboard_home_' + category):
-                    st.table(styled.format(escape='html'))
+                    st.table(styled.format({translate('Current handicap'): '{:.0f}'}, na_rep='—', escape='html'))
         if not standings:
             st.info('Standings will appear after the first recorded round.')
     st.subheader('Recent tournaments')
@@ -265,16 +255,17 @@ def leagues():
 
 def players():
     st.title('Players')
+    matches = search_players(DATA['players'], 'admin_player_search')
     rows = []
-    for p in sorted(DATA['players'], key=lambda p: (p['last_name'], p['first_name'])):
-        row = {'Player': f"{p['first_name']} {p['last_name']}", 'Category': p['category'], 'Handicap': p['handicap']}
+    for p in sorted(matches, key=lambda p: (p['last_name'], p['first_name'])):
+        row = {'Player': f"{p['first_name']} {p['last_name']}", 'Category': p['category'], 'Current handicap': None if p.get('handicap_pending') else p['handicap']}
         if admin():
             row['uDisc username'] = p['udisc']
         rows.append(row)
-    st.dataframe(pd.DataFrame(rows), hide_index=True, width='stretch')
+    st.dataframe(pd.DataFrame(rows), hide_index=True, width='stretch', column_config={'Current handicap': st.column_config.NumberColumn(format='%.0f')})
     if not admin():
         return
-    options = ['new'] + [p['id'] for p in DATA['players']]
+    options = ['new'] + [p['id'] for p in matches]
     pid = st.selectbox('Edit player', options, format_func=lambda x: 'Add new player' if x == 'new' else
                        f"{find(DATA, 'players', x)['first_name']} {find(DATA, 'players', x)['last_name']}")
     p = find(DATA, 'players', pid) if pid != 'new' else None
@@ -283,9 +274,9 @@ def players():
         first = c1.text_input('First name', value=p['first_name'] if p else '')
         last = c2.text_input('Last name', value=p['last_name'] if p else '', help='Optional for players using a single name.')
         cat = st.selectbox('Default category', DATA['categories'], index=DATA['categories'].index(p['category']) if p else 0)
-        hcp = st.number_input('Handicap per round', value=float(p['handicap']) if p else 0.0, step=0.5)
+        hcp = st.number_input('Current handicap', value=int(p['handicap']) if p else 0, step=1, disabled=True)
         udisc = st.text_input('uDisc username', value=p['udisc'] if p else '', help='Used to match imported results. Matching ignores case and surrounding spaces.')
-        st.caption('Handicap adjusted score = throws − par − handicap. Defaults apply to new results; saved rounds retain their recorded values.')
+        st.caption('Handicaps are calculated automatically from the last 10 completed tournaments.')
         if st.form_submit_button('Save player'):
             draft = deepcopy(DATA)
             try:
@@ -394,7 +385,8 @@ def courses():
     if stats:
         frame = statistics_frame(stats)
         st.dataframe(frame.style.apply(hole_heat_styles, axis=1, theme=current_theme()), hide_index=True, width='stretch', column_config={
-            **{c: st.column_config.NumberColumn(format='%.2f') for c in frame if c.startswith('Average') or c.endswith(' %')},
+            **{c: st.column_config.NumberColumn(format='%.2f') for c in frame if c.startswith('Average')},
+            **{c: st.column_config.NumberColumn(format='%.0f') for c in frame if c.endswith(' %')},
             'Par': st.column_config.NumberColumn(format='%.0f'),
             'Length (m)': st.column_config.NumberColumn(format='%.0f')})
         st.download_button('Download hole statistics', frame.to_csv(index=False), 'hole_statistics.csv', 'text/csv')
@@ -414,6 +406,7 @@ def tournament_editor(t=None):
         with st.form('tournament_' + key):
             name = st.text_input('Tournament name', value=t['name'] if t else '')
             day = st.date_input('Date', value=date.fromisoformat(t['date']) if t else date.today())
+            event_order = st.number_input('Order on the same date', min_value=0, value=int(t.get('event_order', 0)) if t else 0, step=1, help='Use different order numbers when a player plays two tournaments on the same date.')
             league_ids = [x['id'] for x in DATA['leagues']]
             lid = st.selectbox('League', league_ids, index=league_ids.index(t['league_id']) if t else 0,
                                format_func=lambda x: find(DATA, 'leagues', x)['name'])
@@ -430,7 +423,7 @@ def tournament_editor(t=None):
                 else:
                     draft = deepcopy(DATA)
                     obj = {'id': t['id'] if t else new_id(), 'name': name.strip(), 'date': day.isoformat(),
-                           'league_id': lid, 'layout_id': layout_id, 'num_rounds': rounds, 'categories': cats}
+                           'league_id': lid, 'layout_id': layout_id, 'num_rounds': rounds, 'categories': cats, 'event_order': event_order}
                     draft['tournaments'] = [x for x in draft['tournaments'] if x['id'] != obj['id']] + [obj]
                     persist(draft)
 
@@ -441,12 +434,15 @@ def tournament_registration(t):
     rows = []
     for e in entries:
         p = find(DATA, 'players', e['player_id'])
-        rows.append({'Player': f"{p['first_name']} {p['last_name']}", 'Category': e['category'], 'Handicap': e['handicap']})
+        rows.append({'Player': f"{p['first_name']} {p['last_name']}", 'Category': e['category'], 'Handicap': None if e.get('handicap_pending') else e['handicap']})
     if rows:
-        st.dataframe(pd.DataFrame(rows), hide_index=True, width='stretch')
+        st.dataframe(pd.DataFrame(rows), hide_index=True, width='stretch', column_config={'Handicap': st.column_config.NumberColumn(format='%.0f')})
     enrolled = {e['player_id'] for e in entries}
     available = [p for p in DATA['players'] if p['id'] not in enrolled]
     if available:
+        matches = search_players(available, 'register_player_search_' + t['id'])
+        selected_ids = set(st.session_state.get('register_players_' + t['id'], []))
+        available = [p for p in available if p in matches or p['id'] in selected_ids]
         selected = st.multiselect('Players to add', [p['id'] for p in available],
                                  format_func=lambda pid: f"{find(DATA, 'players', pid)['first_name']} {find(DATA, 'players', pid)['last_name']}",
                                  key='register_players_' + t['id'])
@@ -464,14 +460,16 @@ def tournament_registration(t):
         st.caption('All players are registered. Add more players under Admin → Players.')
     if entries:
         with st.expander('Edit or remove a tournament registration'):
-            pid = st.selectbox('Registered player', [e['player_id'] for e in entries],
-                               format_func=lambda pid: f"{find(DATA, 'players', pid)['first_name']} {find(DATA, 'players', pid)['last_name']}",
-                               key='edit_registration_' + t['id'])
+            candidates = [find(DATA, 'players', e['player_id']) for e in entries]
+            player = choose('Player', candidates, 'edit_registration_' + t['id'], lambda p: f"{p['first_name']} {p['last_name']}")
+            if not player:
+                return
+            pid = player['id']
             entry = next(e for e in entries if e['player_id'] == pid)
             scored = any(r['tournament_id'] == t['id'] and r['player_id'] == pid for r in DATA['rounds'])
             with st.form('registration_edit_' + t['id'] + '_' + pid):
                 cat = st.selectbox('Tournament category', t['categories'], index=t['categories'].index(entry['category']), disabled=scored)
-                hcp = st.number_input('Tournament handicap', value=float(entry['handicap']), step=0.5, disabled=scored)
+                hcp = st.number_input('Tournament handicap', value=int(entry['handicap']), step=1, disabled=True)
                 if st.form_submit_button('Save registration', disabled=scored):
                     draft = deepcopy(DATA)
                     register_player(draft, t['id'], pid, cat, hcp)
@@ -636,8 +634,10 @@ def statistics_frame(rows):
     if 'Par' in frame:
         frame['Par'] = frame['Par'].map(whole_number).astype(int)
     for column in frame:
-        if column.startswith('Average') or column.endswith(' %'):
+        if column.startswith('Average'):
             frame[column] = frame[column].round(2)
+        elif column.endswith(' %'):
+            frame[column] = frame[column].map(whole_number).astype(int)
     if 'Category' in frame and st.session_state.get('language', 'sk') == 'sk':
         frame['Category'] = frame['Category'].replace({'All': 'Celkovo'})
     return frame
@@ -659,12 +659,75 @@ def show_statistics(rounds, key, combine_categories=False):
     if stats:
         frame = statistics_frame(stats)
         st.dataframe(frame.style.apply(hole_heat_styles, axis=1, theme=current_theme()), hide_index=True, width='stretch', key=key + '_holes', column_config={
-            **{c: st.column_config.NumberColumn(format='%.2f') for c in frame if c.startswith('Average') or c.endswith(' %')},
+            **{c: st.column_config.NumberColumn(format='%.2f') for c in frame if c.startswith('Average')},
+            **{c: st.column_config.NumberColumn(format='%.0f') for c in frame if c.endswith(' %')},
             'Par': st.column_config.NumberColumn(format='%.0f'),
             'Length (m)': st.column_config.NumberColumn(format='%.0f')})
         st.download_button('Download hole statistics', frame.to_csv(index=False), 'hole_statistics.csv', 'text/csv', key=key + '_holes_csv')
     else:
         st.info('These results have totals only. Import or enter hole scores to see hole averages and outcome percentages.')
+
+
+def draw_scoring_trend(rows, key):
+    if not rows:
+        st.info('No recorded results match these filters.')
+        return
+    frame = pd.DataFrame(rows)
+    frame['Date'] = pd.to_datetime(frame['Date'])
+    # A trend needs distinct dates. Multiple events on the same day contribute
+    # their mean to the fit, without changing event statistics or rankings.
+    frame = frame.groupby('Date', as_index=False)['Average +/− par'].mean()
+    if len(frame) < 2:
+        st.info('At least two tournament dates are needed to show a trend.')
+        return
+    base = alt.Chart(frame).transform_calculate(Time='toNumber(toDate(datum.Date))')
+    if len(frame) < 5:
+        fit = base.transform_regression('Time', 'Average +/− par', as_=['Time', 'Trend'])
+    else:
+        fit = base.transform_loess('Time', 'Average +/− par', bandwidth=0.6, as_=['Time', 'Trend'])
+    line = fit.mark_line(
+        color='#DCCEAB' if current_theme() == 'dark' else '#245E42',
+        strokeWidth=3, interpolate='basis'
+    ).encode(
+        x=alt.X('Time:T', title=translate('Date'), axis=alt.Axis(format='%d.%m.%Y', tickCount=6, labelFlush=True, labelOverlap='greedy')),
+        y=alt.Y('Trend:Q', title=translate('Average +/− par per round'), scale=alt.Scale(zero=True)),
+        tooltip=[alt.Tooltip('Time:T', title=translate('Date'), format='%d.%m.%Y'),
+                 alt.Tooltip('Trend:Q', title=translate('Estimated score relative to par'), format='+.2f')])
+    zero = alt.Chart(pd.DataFrame({'Par': [0]})).mark_rule(color='#888888', strokeDash=[4,4]).encode(y='Par:Q')
+    # Reserve space inside the responsive chart for titles and edge tick labels.
+    chart = (zero + line).properties(
+        height=350, padding={'left': 18, 'right': 28, 'top': 16, 'bottom': 24},
+        autosize=alt.AutoSizeParams(type='fit', contains='padding', resize=True)
+    ).configure_axis(labelPadding=8, titlePadding=14, titleLimit=0)
+    st.altair_chart(chart, use_container_width=True, key=key)
+
+
+def trend_controls(rounds, layout, tournament_id=None, category='All'):
+    st.subheader('Scoring trend')
+    course = find(DATA, 'courses', layout['course_id'])
+    trend_scope = st.radio('Trend scope', ['Selected layout', 'Whole course'], horizontal=True, key='trend_scope')
+    if 'trend_category' not in st.session_state:
+        st.session_state['trend_category'] = category
+    category = statistics_category('trend_category', label='Trend category')
+    rounds = selected_rounds({**DATA, 'rounds': TREND_OBSERVATIONS},
+        tournament_id=tournament_id, course_id=course['id'],
+        layout_id=None if trend_scope == 'Whole course' else layout['id'], category=category)
+    context = course['name'] if trend_scope == 'Whole course' else f"{course['name']} / {layout['name']}"
+    st.write(context + ' · ' + translate(category))
+    mode = st.radio('Players in trend', ['All players', 'Specific player', 'Top 3', 'Top 5'], horizontal=True, key='trend_mode', help='Top players have the lowest average score relative to par in the selected filters. The same players are used throughout the trend.')
+    player_ids = None
+    if mode == 'Specific player':
+        ids = {r['player_id'] for r in rounds}
+        choices = sorted([p for p in DATA['players'] if p['id'] in ids], key=lambda p: (p['last_name'], p['first_name']))
+        player = choose('Player', choices, 'trend_player', lambda p: f"{p['first_name']} {p['last_name']}".strip())
+        if not player:
+            return
+        player_ids = [player['id']]
+    elif mode in ['Top 3', 'Top 5']:
+        player_ids = top_trend_players(DATA, rounds, 3 if mode == 'Top 3' else 5)
+        names = [f"{find(DATA, 'players', pid)['first_name']} {find(DATA, 'players', pid)['last_name']}".strip() for pid in player_ids]
+        st.write(translate('Players included') + ': ' + ', '.join(names))
+    draw_scoring_trend(scoring_trend(DATA, rounds, player_ids), 'scoring_trend')
 
 
 def statistics_page():
@@ -678,6 +741,12 @@ def statistics_page():
             return
         tournament_id = t['id']
     layouts = [l for l in DATA['layouts'] if tournament_id is None or l['id'] == t['layout_id']]
+    courses = [c for c in DATA['courses'] if any(l['course_id'] == c['id'] for l in layouts)]
+    if len(courses) > 1:
+        course = choose('Course', courses, 'stats_course')
+        if not course:
+            return
+        layouts = [l for l in layouts if l['course_id'] == course['id']]
     layout = choose('Layout', layouts, 'stats_layout_' + (tournament_id or 'alltime'))
     if not layout:
         return
@@ -686,6 +755,7 @@ def statistics_page():
     rounds = selected_rounds(DATA, tournament_id, None,
                              layout['id'], category)
     show_statistics(rounds, 'public_stats', category == 'All')
+    trend_controls(rounds, layout, tournament_id, category)
 
 
 def admin_page():
@@ -746,6 +816,29 @@ def admin_page():
         category_settings()
     else:
         backup_settings()
+
+
+def handicap_history_page():
+    st.title('Handicap history')
+    selector, current = st.columns([3, 1])
+    with selector:
+        options = sorted(DATA['players'], key=lambda p: (p['last_name'], p['first_name']))
+        player = choose('Player', options, 'handicap_player', lambda p: f"{p['first_name']} {p['last_name']}".strip())
+    if not player:
+        return
+    current.metric('Current handicap', '—' if player.get('handicap_pending') else str(player['handicap']))
+    tournaments = {t['id']: t for t in DATA['tournaments']}
+    rows = [{'Date': h['date'], 'Tournament': tournaments[h['tournament_id']]['name'],
+             'Score relative to par': float(h['event_score']), 'Handicap': h['handicap_used'],
+             'Next handicap': h['handicap_after'], 'Tournaments in average': h['sample_count']}
+            for h in sorted(DATA.get('handicap_history', []), key=lambda h: (h['date'], h.get('event_order', 0)), reverse=True) if h['player_id'] == player['id']]
+    if not rows:
+        st.info('No completed tournaments yet.')
+        return
+    st.dataframe(pd.DataFrame(rows), hide_index=True, width='stretch', column_config={
+        'Score relative to par': st.column_config.NumberColumn(format='%.2f'),
+        **{c: st.column_config.NumberColumn(format='%.0f') for c in ['Handicap', 'Next handicap', 'Tournaments in average']}})
+    st.download_button('Download CSV', pd.DataFrame(rows).to_csv(index=False), 'handicap_history.csv', 'text/csv')
 
 
 def application_settings():
@@ -811,14 +904,15 @@ if not admin():
 with st.sidebar:
     st.selectbox('Language', ['sk', 'en'], format_func=lambda code: {'sk': 'Slovenčina', 'en': 'English'}[code], key='language')
     st.title('🥏 ' + SETTINGS['site_title'])
-    page = st.radio('Explore', ['Home', 'Leagues', 'Tournaments', 'Statistics', 'Admin'], key='page')
+    page = st.radio('Explore', ['Home', 'Leagues', 'Tournaments', 'Statistics', 'Handicap history', 'Admin'], key='page')
     if admin():
         st.caption('Administrator · session expires after 8 hours')
         if st.button('Sign out'):
             st.session_state.pop('admin_expires', None)
             st.rerun()
     if st.button('Refresh results'):
+        clear_view_cache()
         st.rerun()
 if 'notice' in st.session_state:
     st.success(st.session_state.pop('notice'))
-{'Home': home, 'Leagues': leagues, 'Tournaments': tournaments, 'Statistics': statistics_page, 'Admin': admin_page}[page]()
+{'Home': home, 'Leagues': leagues, 'Tournaments': tournaments, 'Statistics': statistics_page, 'Handicap history': handicap_history_page, 'Admin': admin_page}[page]()

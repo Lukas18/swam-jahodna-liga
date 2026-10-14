@@ -42,7 +42,8 @@ def register_player(data, tournament_id, player_id, category=None, handicap=None
     scored = [r for r in data['rounds'] if r['tournament_id'] == tournament_id and r['player_id'] == player_id]
     if any(r['category'] != category or r['handicap'] != handicap for r in scored):
         raise ValueError('Category and handicap cannot change while this player has tournament scores.')
-    entry = {'tournament_id': tournament_id, 'player_id': player_id, 'category': category, 'handicap': handicap}
+    existing = next((e for e in data.get('registrations', []) if e['tournament_id'] == tournament_id and e['player_id'] == player_id), {})
+    entry = {**existing, 'tournament_id': tournament_id, 'player_id': player_id, 'category': category, 'handicap': handicap}
     data['registrations'] = [e for e in data.get('registrations', []) if not (e['tournament_id'] == tournament_id and e['player_id'] == player_id)] + [entry]
     return entry
 
@@ -147,7 +148,8 @@ def save_player(data, player_id, first, last, category, handicap, udisc):
         raise ValueError('Choose an active category.')
     if udisc.strip() and any(username(p['udisc']) == username(udisc) and p['id'] != player_id for p in data['players']):
         raise ValueError('This uDisc username already belongs to another player.')
-    p = {'id': player_id or new_id(), 'first_name': first.strip(), 'last_name': last.strip(),
+    existing = next((x for x in data['players'] if x['id'] == player_id), {})
+    p = {**existing, 'id': player_id or new_id(), 'first_name': first.strip(), 'last_name': last.strip(),
          'category': category, 'handicap': finite_number(handicap, 'Handicap'), 'udisc': udisc.strip()}
     data['players'] = [x for x in data['players'] if x['id'] != p['id']] + [p]
     return p
@@ -206,7 +208,9 @@ def tournament_results(data, tournament_id, category='All', metric='to_par', com
         player = find(data, 'players', pid)
         total, par = sum(r['total'] for r in rounds), sum(r['par'] for r in rounds)
         results.append({'player_id': pid, 'Player': f"{player['first_name']} {player['last_name']}",
-                        'Category': rounds[0]['category'], 'Rounds': len(rounds), 'Throws': total,
+                        'Category': rounds[0]['category'], 'Handicap': None if rounds[0].get('handicap_pending') else rounds[0]['handicap'],
+                        'Stableford': next((x['points'] for x in data.get('stableford_results', []) if x['tournament_id'] == tournament_id and x['player_id'] == pid), None),
+                        'Rounds': len(rounds), 'Throws': total,
                         '+/− par': total - par, 'HCP adjusted': whole_number(total - par - sum(r['handicap'] for r in rounds)),
                         'Complete': len(rounds) == t['num_rounds']})
     key = {'raw': 'Throws', 'to_par': '+/− par', 'handicap': 'HCP adjusted'}[metric]
@@ -276,7 +280,8 @@ def league_results(data, league_id, category='All', metric=None):
                 key = (row['player_id'], row['Category'])
                 if key not in standings:
                     standings[key] = {'player_id': row['player_id'], 'Player': row['Player'], 'Category': row['Category'], 'Tournaments': 0,
-                                      'Points': 0, 'Throws': 0, '+/− par': 0, 'HCP adjusted': 0}
+                                      'Points': 0, 'Throws': 0, '+/− par': 0, 'HCP adjusted': 0,
+                                      'Current handicap': None if find(data, 'players', row['player_id']).get('handicap_pending') else find(data, 'players', row['player_id'])['handicap']}
                 entry = standings[key]
                 entry['Tournaments'] += 1
                 for column in ['Points', 'Throws', '+/− par', 'HCP adjusted']:
@@ -335,7 +340,8 @@ def home_standings(data, league_id, metric='to_par'):
     for (pid, category), tournaments in attended.items():
         player = find(data, 'players', pid)
         rows.append({'player_id': pid, 'Player': player['first_name'] + ' ' + player['last_name'],
-                     'Category': category, 'Points': points.get((pid, category), 0), 'Tournaments': len(tournaments)})
+                     'Category': category, 'Points': points.get((pid, category), 0), 'Tournaments': len(tournaments),
+                     'Current handicap': None if player.get('handicap_pending') else player['handicap']})
     rows.sort(key=lambda r: (-r['Points'], r['Player']))
     rank_rows(rows, 'Points')
     return rows

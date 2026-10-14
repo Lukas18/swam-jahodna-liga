@@ -90,7 +90,8 @@ def load_store(secrets_path, document_id):
     key = os.environ.get('SUPABASE_KEY') or config.get('SUPABASE_KEY') or section.get('key')
     if not url or not key:
         raise ValueError('Set SUPABASE_URL and SUPABASE_KEY in the environment or secrets file.')
-    return Store(supabase={'url': url, 'key': key, 'document_id': document_id})
+    return Store(supabase={'url': url, 'key': key, 'document_id': document_id,
+        'model': os.environ.get('DISCGOLF_STORAGE_MODEL') or config.get('DISCGOLF_STORAGE_MODEL') or section.get('model', 'json')})
 
 
 def main(argv=None):

@@ -21,8 +21,8 @@ BACKUP = True  # keep a copy of each original in Liga/backup before editing
 
 # Map of values to replace (spaces of any kind, incl. non-breaking, are normalised)
 REPLACEMENTS = {
-    "0 18": "0-18",
-    "19 54": "19-54",
+    "HCP18": "0-18",
+    "HCP54": "19-54",
 }
 
 
@@ -71,25 +71,25 @@ def main():
             cols = find_columns(ws, {"division", "username", "name"})
 
             # 1) Fix division values
-            # if "division" in cols:
-            #     for row in range(2, ws.max_row + 1):
-            #         cell = ws.cell(row=row, column=cols["division"])
-            #         if cell.value is None:
-            #             continue
-            #         new = REPLACEMENTS.get(norm(cell.value))
-            #         if new is not None:
-            #             cell.value = new
-            #             file_changes += 1
-
-            # 2) Collect (username, name) pairs, row by row
-            if "username" in cols and "name" in cols:
+            if "division" in cols:
                 for row in range(2, ws.max_row + 1):
-                    u = ws.cell(row=row, column=cols["username"]).value
-                    n = ws.cell(row=row, column=cols["name"]).value
-                    u = norm(u) if u is not None else ""
-                    n = norm(n) if n is not None else ""
-                    if u or n:
-                        pairs.add((u, n))
+                    cell = ws.cell(row=row, column=cols["division"])
+                    if cell.value is None:
+                        continue
+                    new = REPLACEMENTS.get(norm(cell.value))
+                    if new is not None:
+                        cell.value = new
+                        file_changes += 1
+
+            # # 2) Collect (username, name) pairs, row by row
+            # if "username" in cols and "name" in cols:
+            #     for row in range(2, ws.max_row + 1):
+            #         u = ws.cell(row=row, column=cols["username"]).value
+            #         n = ws.cell(row=row, column=cols["name"]).value
+            #         u = norm(u) if u is not None else ""
+            #         n = norm(n) if n is not None else ""
+            #         if u or n:
+            #             pairs.add((u, n))
 
         if file_changes:
             wb.save(path)
