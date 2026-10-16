@@ -1,6 +1,6 @@
 # Stableford
 
-Implemented for **Jesenna SWAM Liga** only. Home, League and Tournament screens offer the original relative-to-par standings and a separate Stableford view. Other leagues and both existing handicap histories remain unchanged.
+Available across **all leagues and tournaments**, including 2025 and Spring/Summer 2026. Home, League and Tournament screens offer the original relative-to-par standings and a separate Stableford view. Both existing handicap histories remain unchanged; the same calculation and standings rules apply in every league.
 
 ## Scoring
 
@@ -24,7 +24,7 @@ Highest Stableford total wins each tournament; competition ties share places (1,
 
 Existing normalized `league_v2.stableford_results` stores one result per tournament/player. Its `points` column remains the original-method projection; the row's `extra.methods` retains both calculated methods and per-hole allocations. The app projects the active method, so switching handicap methods is reversible without recalculating raw scores. Difficulty configuration lives in the owning course's extra metadata, and frozen index lists live on each tournament. No SQL migration is needed; existing core entity tables, foreign keys and atomic revision checks remain in use.
 
-`backfill_stableford.py` previews by default. `--apply` saves owner-only checksummed before/after backups, checks that every original entity/score/handicap remains unchanged, uses atomic revision comparison, and verifies exact readback. Other leagues' result rows are preserved exactly. Backups are ignored by Git.
+`backfill_stableford.py` previews by default. `--apply` saves owner-only checksummed before/after backups, checks that every original entity/score/handicap remains unchanged, uses atomic revision comparison, and verifies exact readback. Previously calculated results and existing difficulty snapshots are preserved exactly during backfill; only pending results gain calculations. Backups are ignored by Git.
 
 After deploying, **reboot the Streamlit application** so Python reloads the new calculation module and imports.
 

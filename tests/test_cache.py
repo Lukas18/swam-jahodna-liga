@@ -64,6 +64,18 @@ class ViewCacheTests(unittest.TestCase):
             load_view_state(FakeStore())
             recalculate.assert_not_called()
 
+    def test_old_formula_marker_does_not_skip_earlier_pending_results(self):
+        store=FakeStore()
+        row=store.data['stableford_results'][0]
+        row.update(points=None,status='pending_formula',calculation_version=None)
+        row.pop('methods',None)
+        original=deepcopy(store.data)
+        with patch('league.cache.recalculate_handicaps', wraps=recalculate_handicaps) as recalculate:
+            data,_,_=load_view_state(store)
+            recalculate.assert_called_once()
+        self.assertEqual(data['stableford_results'][0]['status'],'calculated')
+        self.assertEqual(store.data,original)  # Viewing never writes a preview.
+
     def test_client_is_reused_but_configuration_changes_are_isolated(self):
         from league.database import get_store, _cached_store
         from types import SimpleNamespace

@@ -37,7 +37,7 @@ class HandicapTests(unittest.TestCase):
   self.assertEqual(new['handicap_history'][1]['handicap_used'],5)
   self.assertNotEqual(out['handicap_run']['id'],new['handicap_run']['id'])
   self.assertEqual(new['rounds'][1]['holes'],out['rounds'][1]['holes'])
-  self.assertTrue(all(r['points'] is None for r in new['stableford_results']))
+  self.assertTrue(all(r['status']=='calculated' for r in new['stableford_results']))
  def test_multi_round_event_is_one_sample_and_incomplete_excluded(self):
   d=fixture([10,14]);d['tournaments'][1]['num_rounds']=2
   out=recalculate_handicaps(d);self.assertEqual(len(out['handicap_history']),1)

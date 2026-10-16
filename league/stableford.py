@@ -7,7 +7,6 @@ import json
 from .domain import find, rank_rows, whole_number
 
 ALGORITHM = 'net-stableford-full-handicap-v1'
-TARGET_LEAGUE = 'Jesenna SWAM Liga'
 
 
 def digest(value):
@@ -16,7 +15,17 @@ def digest(value):
 
 def enabled(data, league_id):
     league = find(data, 'leagues', league_id)
-    return league.get('stableford_enabled', league['name'] == TARGET_LEAGUE)
+    return league.get('stableford_enabled', True)
+
+
+def stablefords_current(data):
+    """An existing formula marker alone does not guarantee every league is filled."""
+    eligible = {t['id'] for t in data['tournaments'] if enabled(data, t['league_id'])}
+    if eligible and data.get('stableford_version') != ALGORITHM:
+        return False
+    results = {(r['tournament_id'], r['player_id']): r for r in data.get('stableford_results', [])}
+    return all(results.get((e['tournament_id'], e['player_id']), {}).get('calculation_version') == ALGORITHM
+               for e in data.get('registrations', []) if e['tournament_id'] in eligible)
 
 
 def hole_identity(layout, hole):

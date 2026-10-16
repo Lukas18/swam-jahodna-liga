@@ -68,7 +68,7 @@ class ScreensTest(unittest.TestCase):
         result = next(x.value for x in app.table if 'Player' in x.value)
         self.assertIn('Handicap', result)
         self.assertIn('Stableford', result)
-        self.assertTrue(result['Stableford'].isna().all())
+        self.assertFalse(result['Stableford'].isna().any())
 
     def test_newest_handicap_first_and_accent_insensitive_search(self):
         from league.domain import save_player
@@ -93,7 +93,7 @@ class ScreensTest(unittest.TestCase):
 
     def test_stableford_views_and_admin_difficulty_editor(self):
         data = fixture()
-        data['leagues'][0]['name'] = 'Jesenna SWAM Liga'
+        data['leagues'][0]['name'] = 'Discgolf Liga Jahodna 2025'
         data['settings']['active_league_id'] = 'lg'
         add_round(data, 't', 'a', 1, 'MPO', 1, {1: 4, 2: 4})
         add_round(data, 't', 'b', 1, 'MPO', 0, {1: 3, 2: 4})

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Preview/backfill Jesenna SWAM Liga Stableford; preserve scores and both HCP histories."""
+"""Preview/backfill Stableford across all leagues; preserve scores and both HCP histories."""
 import argparse
 from copy import deepcopy
 from pathlib import Path
@@ -20,6 +20,13 @@ def verify_preserved(before, after):
         if set(old)!={r['id'] for r in stripped[collection]}:
             raise ValueError('Entity identities changed: '+collection)
         for row in stripped[collection]:
+            if field in old[row['id']]:
+                previous=old[row['id']][field]
+                current=row.get(field,{})
+                if collection=='courses' and current!=previous:
+                    raise ValueError('Existing course difficulty changed.')
+                if collection=='tournaments' and any(current.get(k)!=v for k,v in previous.items()):
+                    raise ValueError('Existing tournament difficulty snapshot changed.')
             row.pop(field,None)
             if field in old[row['id']]:row[field]=deepcopy(old[row['id']][field])
     if 'stableford_version' in before:stripped['stableford_version']=before['stableford_version']
@@ -31,7 +38,9 @@ def verify_preserved(before, after):
     target={t['id'] for t in before['tournaments'] if enabled(before,t['league_id'])}
     for result in after['stableford_results']:
         key=(result['tournament_id'],result['player_id'])
-        if key[0] not in target and result!=old[key]:raise ValueError('Other league results changed.')
+        if old[key].get('status')=='calculated' and result!=old[key]:
+            raise ValueError('Existing calculated Stableford result changed.')
+        if key[0] not in target and result!=old[key]:raise ValueError('Disabled league results changed.')
 
 
 def main():

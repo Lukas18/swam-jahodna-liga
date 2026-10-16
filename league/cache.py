@@ -6,9 +6,8 @@ from .statistics import trend_observations
 
 def _load(store):
     data, version = store.load()
-    from .stableford import ALGORITHM, enabled
-    needs_stableford = any(enabled(data, league['id']) for league in data['leagues']) and data.get('stableford_version') != ALGORITHM
-    if not handicaps_current(data) or needs_stableford:
+    from .stableford import stablefords_current
+    if not handicaps_current(data) or not stablefords_current(data):
         data = recalculate_handicaps(data)
     return project_handicaps(data), version, trend_observations(data)
 

@@ -4,7 +4,7 @@ from test_dual_handicaps import golf_fixture
 from league.handicaps import recalculate_handicaps, project_handicaps
 from league.relational import to_records, from_records
 from league.stableford import (strokes_received, hole_points, league_standings,
-                               tournament_standings, hole_identity, difficulty_rows)
+                               tournament_standings, hole_identity, difficulty_rows, stablefords_current)
 
 
 def fixture(scores):
@@ -64,14 +64,40 @@ class StablefordTests(unittest.TestCase):
         self.assertEqual(len(next(iter(snapshot.values()))['holes']),18)
         self.assertEqual({r['stroke_index'] for r in next(iter(snapshot.values()))['holes']},set(range(1,19)))
 
-    def test_other_leagues_and_incomplete_or_totals_only_results(self):
-        other=recalculate_handicaps(golf_fixture([1,2]))
+    def test_disabled_leagues_and_incomplete_or_totals_only_results(self):
+        data=golf_fixture([1,2])
+        data['leagues'][0]['stableford_enabled']=False
+        other=recalculate_handicaps(data)
         self.assertTrue(all(r['status']=='pending_formula' for r in other['stableford_results']))
         data=fixture([1,2]);data['rounds'][0]['holes']=[]
         data['tournaments'][1]['num_rounds']=2
         out=recalculate_handicaps(data)
         self.assertTrue(all(r['status']=='pending_inputs' and r['points'] is None for r in out['stableford_results']))
         self.assertEqual(tournament_standings(out,'0'),[])
+
+    def test_backfill_earlier_leagues_preserves_existing_results_and_snapshots(self):
+        from backfill_stableford import verify_preserved
+        data=golf_fixture([1,2,3,10])
+        data['leagues'].append({**data['leagues'][0], 'id':'fall', 'name':'Jesenna SWAM Liga'})
+        data['leagues'][0]['stableford_enabled']=False
+        data['tournaments'][-1]['league_id']='fall'
+        before=recalculate_handicaps(data)
+        # Model the previous application: older leagues had no opt-out flag,
+        # and a current formula marker despite pending historical results.
+        before['leagues'][0].pop('stableford_enabled')
+        self.assertFalse(stablefords_current(before))
+        after=recalculate_handicaps(before)
+        verify_preserved(before,after)
+        self.assertTrue(stablefords_current(after))
+        self.assertTrue(all(r['status']=='calculated' for r in after['stableford_results']))
+        self.assertEqual(before['stableford_results'][-1],after['stableford_results'][-1])
+        self.assertEqual(before['tournaments'][-1],after['tournaments'][-1])
+        self.assertEqual(after,recalculate_handicaps(after))
+        self.assertEqual(after,from_records(to_records(after),after['revision']))
+        broken=deepcopy(after);broken['rounds'][0]['total']+=1
+        with self.assertRaises(ValueError): verify_preserved(before,broken)
+        broken=deepcopy(after);broken['stableford_results'][-1]['points']+=1
+        with self.assertRaises(ValueError): verify_preserved(before,broken)
 
     def test_tied_stableford_places_and_existing_league_points(self):
         data=fixture([0]);data=recalculate_handicaps(data)
