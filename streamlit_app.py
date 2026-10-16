@@ -628,7 +628,7 @@ def tournaments():
     st.caption(f"{len(tournament_entries(DATA, t['id']))} registered players")
     complete = st.checkbox('Completed players only', value=True)
     stableford = stableford_picker(t['league_id'], 'tournament_scoring')
-    table(stableford_tournament(DATA, t['id'], cat) if stableford else tournament_results(DATA, t['id'], cat, metric, complete), 'tournament_table')
+    table(stableford_tournament(DATA, t['id'], cat) if stableford else tournament_results(DATA, t['id'], cat, metric, complete), 'tournament_table', sortable=True)
     with st.expander('Round scorecards'):
         records = sorted([r for r in DATA['rounds'] if r['tournament_id'] == t['id'] and (cat == 'All' or r['category'] == cat)],
                          key=lambda r: (r['player_id'], r['round_number']))

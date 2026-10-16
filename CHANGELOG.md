@@ -391,3 +391,9 @@
 - Pushed implementation 442f79a and applied the guarded backfill to Supabase main, revision 5 → 6. All 291 player/tournament results across 29 tournaments now have calculations for both handicap methods: 164 in the 2025 league, 52 in Spring/Summer 2026 and the unchanged 75 autumn results. Existing raw scores, players, registrations, league settings, both handicap histories and difficulty snapshots were verified preserved; no data deleted.
 - Owner-only checksummed backups: before-stableford-backfill-20261016-074628-094295.json and after-stableford-backfill-20261016-074635-975824.json under ignored data/backups. Exact normalized readback verified. No SQL migration required.
 - All 106 application tests and full PostgreSQL schema/RPC checks pass. Browser verified the 2025 league's Stableford picker and populated standings (Michal Kapec 86 placement points / 389 Stableford points). Screenshot: earlier-stableford-league-preview.jpg. Device Hub remains waived for the web app; retain the user's unrelated league/domain.py edit. Reboot public Streamlit after deployment to reload Python modules.
+
+
+## 2026-10-16T07:50:43+02:00 — Sortable tournament scores
+
+- Render Tournament score standings with the existing sortable dataframe grid used for League standings and hole statistics. Column-header sorting now works for both relative-to-par and Stableford views, preserving category colours, integer score formatting and existing category ranks.
+- Updated existing UI checks to inspect the interactive grid, including both scoring modes and row colours. All 106 tests pass. Browser verified player-name sorting (Andrea, Diana, Jiří …) on the tournament results. No Supabase writes or scoring changes. Preserve/exclude user's unrelated league/domain.py edit; Device Hub remains waived for this web app.

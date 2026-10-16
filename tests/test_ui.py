@@ -65,7 +65,7 @@ class ScreensTest(unittest.TestCase):
         self.assertEqual(rows.iloc[0]['Handicap'], 2)
         self.assertEqual(rows.iloc[0]['Next handicap'], 2)
         app.sidebar.radio[0].set_value('Tournaments').run()
-        result = next(x.value for x in app.table if 'Player' in x.value)
+        result = next(x.value for x in app.dataframe if 'Player' in x.value)
         self.assertIn('Handicap', result)
         self.assertIn('Stableford', result)
         self.assertFalse(result['Stableford'].isna().any())
@@ -108,8 +108,10 @@ class ScreensTest(unittest.TestCase):
         self.assertEqual(set(frame['Stableford']), {4})
         self.assertEqual(set(frame['Points']), {8})
         app.sidebar.radio[0].set_value('Tournaments').run()
+        self.assertTrue(any('Player' in x.value for x in app.dataframe))
         app.radio(key='tournament_scoring').set_value('Stableford').run()
         self.assertFalse(app.exception)
+        self.assertEqual(set(next(x.value for x in app.dataframe if 'Stableford' in x.value)['Stableford']), {4})
         app.session_state['admin_expires'] = time.time() + 100
         app.sidebar.radio[0].set_value('Admin').run()
         app.radio(key='admin_section').set_value('Hole difficulty').run()
@@ -408,9 +410,10 @@ class ScreensTest(unittest.TestCase):
         app = english_app().run(timeout=20)
         app.sidebar.radio[0].set_value('Tournaments').run()
         self.assertFalse(app.exception)
-        self.assertIn('background-color', app.table[0].proto.styler.styles)
-        self.assertIn('#82B99D', app.table[0].proto.styler.styles)
-        self.assertIn('#E0C27A', app.table[0].proto.styler.styles)
+        scores = next(x for x in app.dataframe if 'Player' in x.value)
+        self.assertIn('background-color', scores.proto.styler.styles)
+        self.assertIn('#82B99D', scores.proto.styler.styles)
+        self.assertIn('#E0C27A', scores.proto.styler.styles)
 
     def test_category_standings_and_exclusive_tournament_statistics(self):
         data = fixture()
