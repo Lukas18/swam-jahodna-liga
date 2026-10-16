@@ -31,3 +31,7 @@ After deploying, **reboot the Streamlit application** so Python reloads the new 
 ## Verified rollout — 2026-10-15T00:00:40+02:00
 
 Application implementation: `657adab`. Supabase main revision **5** has **75 calculated results across five target tournaments**. Both handicap histories, original scores, other leagues and the active golf method were preserved exactly. Full application suite: **104 passing tests**, plus PostgreSQL RPC/constraint verification. Checksummed owner-only before/after snapshots are in ignored `data/backups`; no new SQL step is necessary.
+
+## Earlier leagues enabled — 2026-10-16T07:46:55+02:00
+
+Implementation `442f79a`; Supabase main revision **6**. Added **216** earlier results (164 from 2025, 52 from Spring/Summer 2026), bringing the total to **291 results across 29 tournaments**. Autumn's 75 results, prior snapshots, original data and both handicap histories were preserved exactly. All **106 tests** and PostgreSQL RPC/constraint checks pass. Existing course difficulty priorities were reused for the new historical snapshots. No SQL migration is needed.
