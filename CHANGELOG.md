@@ -1,5 +1,11 @@
 # Change log
 
+## 2026-10-24 — Single golf-style handicap history
+
+- Removed the last-10 tournament handicap calculation and the parallel method selector. The best-of-20 golf-style result now occupies the canonical handicap run, history, player, entry and scorecard fields.
+- The player's original HCP is used provisionally until three eligible 18-hole rounds are complete. Stableford uses one historical handicap and one result per player/tournament.
+- Older dual-method relational records load only the golf history; a recalculation and save archive the former active runs and snapshots under existing SQL retention rules. Updated the backfill preview, documentation and regression tests.
+
 ## 2026-10-08T13:59:12+02:00 — Codebase familiarization
 
 - Reviewed app.py, all 11 Jinja templates, README.md, requirements.txt, and the folder structure.
@@ -397,3 +403,8 @@
 
 - Render Tournament score standings with the existing sortable dataframe grid used for League standings and hole statistics. Column-header sorting now works for both relative-to-par and Stableford views, preserving category colours, integer score formatting and existing category ranks.
 - Updated existing UI checks to inspect the interactive grid, including both scoring modes and row colours. All 106 tests pass. Browser verified player-name sorting (Andrea, Diana, Jiří …) on the tournament results. No Supabase writes or scoring changes. Preserve/exclude user's unrelated league/domain.py edit; Device Hub remains waived for this web app.
+
+## 2026-10-24 — Combined tournament round scorecards
+
+- Replaced separate player scorecard tables with one player-by-hole table per recorded round. Each table shows category places, relative scores, recorded hole scores and absolute round totals, with compact score colours and horizontal scrolling.
+- Hole headers use shared recorded par and length values; individual score tooltips retain the saved metadata when categories or historical configurations differ. Totals-only records remain visible. No score data or rankings were changed.

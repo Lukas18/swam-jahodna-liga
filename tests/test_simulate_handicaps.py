@@ -43,7 +43,7 @@ class HandicapSimulationTests(unittest.TestCase):
         self.assertEqual([r['differential'] for r in row['selected']], list(range(1,9)))
         self.assertEqual(row['decimal_estimate'], Decimal('4.5'))
         self.assertEqual(row['integer_estimate'], 5)
-        self.assertEqual(row['current_hcp'], 16)
+        self.assertNotIn('current_hcp', row)
         self.assertEqual(data, before)
 
     def test_top_players_include_attendance_ties_only(self):

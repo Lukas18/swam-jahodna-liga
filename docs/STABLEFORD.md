@@ -1,12 +1,12 @@
 # Stableford
 
-Available across **all leagues and tournaments**, including 2025 and Spring/Summer 2026. Home, League and Tournament screens offer the original relative-to-par standings and a separate Stableford view. Both existing handicap histories remain unchanged; the same calculation and standings rules apply in every league.
+Available across **all leagues and tournaments**, including 2025 and Spring/Summer 2026. Home, League and Tournament screens offer relative-to-par standings and a separate Stableford view. Stableford uses the single golf-style handicap history in every league.
 
 ## Scoring
 
 Net score = actual throws minus allocated handicap strokes. Points per hole are `max(0, 2 + par - net score)`: bogey 1, par 2, birdie 3, eagle 4, albatross 5, four under 6. An ace is scored by its net relation to par; it has no independent bonus. See [R&A Rule 21.1](https://www.randa.org/rog/the-rules-of-golf/rule-21).
 
-The app uses **100% of its existing integer tournament handicap**, as requested. This is a disc-golf adaptation, not a certified WHS competition: [the 95% allowance commonly recommended for individual golf Stableford](https://www.usga.org/content/usga/home-page/handicapping/roh/Content/rules/Appendix%20C%20Handicap%20Allowances.htm) is not applied. Positive handicaps receive strokes hardest-first; negative handicaps return strokes easiest-first. For example, HCP 20 receives one stroke on all 18 holes and another on stroke indices 1–2. HCP −2 gives one back on indices 18 and 17. This repeats for larger magnitudes. Each round uses the handicap recorded for the player at that tournament, under the selected handicap method.
+The app uses **100% of its existing integer tournament handicap**, as requested. This is a disc-golf adaptation, not a certified WHS competition: [the 95% allowance commonly recommended for individual golf Stableford](https://www.usga.org/content/usga/home-page/handicapping/roh/Content/rules/Appendix%20C%20Handicap%20Allowances.htm) is not applied. Positive handicaps receive strokes hardest-first; negative handicaps return strokes easiest-first. For example, HCP 20 receives one stroke on all 18 holes and another on stroke indices 1–2. HCP −2 gives one back on indices 18 and 17. This repeats for larger magnitudes. Each round uses the player's golf-style handicap recorded for that tournament.
 
 ## Difficulty and historical snapshots
 
@@ -22,7 +22,7 @@ Incomplete events or totals-only scorecards stay `pending_inputs` and are exclud
 
 Highest Stableford total wins each tournament; competition ties share places (1, T2, T2, 4). League standings award the existing configured placement points from those Stableford places, using the league's category and tie rules. League grids also show total Stableford points. Home keeps the compact points/attendance/current-HCP columns. Original score standings remain available.
 
-Existing normalized `league_v2.stableford_results` stores one result per tournament/player. Its `points` column remains the original-method projection; the row's `extra.methods` retains both calculated methods and per-hole allocations. The app projects the active method, so switching handicap methods is reversible without recalculating raw scores. Difficulty configuration lives in the owning course's extra metadata, and frozen index lists live on each tournament. No SQL migration is needed; existing core entity tables, foreign keys and atomic revision checks remain in use.
+Existing normalized `league_v2.stableford_results` stores one result per tournament/player. Its `points` column holds the golf-style result, and `extra.rounds` retains per-hole allocations. Difficulty configuration lives in the owning course's extra metadata, and frozen index lists live on each tournament. No SQL migration is needed; existing core entity tables, foreign keys and atomic revision checks remain in use.
 
 `backfill_stableford.py` previews by default. `--apply` saves owner-only checksummed before/after backups, checks that every original entity/score/handicap remains unchanged, uses atomic revision comparison, and verifies exact readback. Previously calculated results and existing difficulty snapshots are preserved exactly during backfill; only pending results gain calculations. Backups are ignored by Git.
 
@@ -30,8 +30,8 @@ After deploying, **reboot the Streamlit application** so Python reloads the new 
 
 ## Verified rollout — 2026-10-15T00:00:40+02:00
 
-Application implementation: `657adab`. Supabase main revision **5** has **75 calculated results across five target tournaments**. Both handicap histories, original scores, other leagues and the active golf method were preserved exactly. Full application suite: **104 passing tests**, plus PostgreSQL RPC/constraint verification. Checksummed owner-only before/after snapshots are in ignored `data/backups`; no new SQL step is necessary.
+Historical deployment record: implementation `657adab`. Supabase main revision **5** had **75 calculated results across five target tournaments** under the former parallel-method design. Full application suite then had **104 passing tests**, plus PostgreSQL RPC/constraint verification. Checksummed owner-only before/after snapshots are in ignored `data/backups`; no new SQL step is necessary.
 
 ## Earlier leagues enabled — 2026-10-16T07:46:55+02:00
 
-Implementation `442f79a`; Supabase main revision **6**. Added **216** earlier results (164 from 2025, 52 from Spring/Summer 2026), bringing the total to **291 results across 29 tournaments**. Autumn's 75 results, prior snapshots, original data and both handicap histories were preserved exactly. All **106 tests** and PostgreSQL RPC/constraint checks pass. Existing course difficulty priorities were reused for the new historical snapshots. No SQL migration is needed.
+Historical deployment record: implementation `442f79a`; Supabase main revision **6**. Added **216** earlier results (164 from 2025, 52 from Spring/Summer 2026), bringing the total to **291 results across 29 tournaments**. The parallel histories in use at that time were preserved. All **106 tests** and PostgreSQL RPC/constraint checks passed. Existing course difficulty priorities were reused for the new historical snapshots. No SQL migration is needed.

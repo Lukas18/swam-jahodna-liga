@@ -103,6 +103,8 @@ Home and Tournament leaderboards use consistent 17 px text for headers and value
 
 Hole lengths display as whole metres in layout tables/editors, round scorecards and hole statistics; layout total length also has no decimals. Formatting preserves stored measurements. Tournament results omit the Complete/Dokončené column; the completed-players filter and completion rules remain available.
 
+Tournament round scorecards show one scrollable table per recorded round, with players as rows and holes as columns. The table shows category places, each round's score relative to par, recorded hole scores and the absolute round total. Shared hole pars and lengths appear in the headers; each score's saved values are also available on hover. When categories have different holes, missing cells show a dash. Totals-only scorecards stay in the table with their round totals.
+
 Explanatory captions below result/statistics tables and the public read-only sidebar label are hidden. Calculation details remain documented here. On Community Cloud, configure the top-level `admin_password = "your-chosen-password"` in app Settings → Secrets, save it, then sign in under Administrácia. Local secrets are deliberately excluded from Git and must be configured separately for hosting.
 
 ## Bulk player creation
@@ -140,11 +142,11 @@ Existing tournaments match league, date and title. Identical rounds are preserve
 
 ## Relational storage and automatic handicap history (review build)
 
-See [migration instructions](docs/RELATIONAL_MIGRATION.md) and [schema](sql/001_relational.sql). The new SQL is additive and leaves app_data intact. Run the SQL, preview/copy with migrate_relational.py, verify, then enable `DISCGOLF_STORAGE_MODEL = "relational"` in Streamlit secrets. The existing JSON backend remains the default until cutover. No commits/deployment are authorized yet.
+See [migration instructions](docs/RELATIONAL_MIGRATION.md) and [schema](sql/001_relational.sql). The SQL is additive and leaves app_data intact. Run it, preview/copy with migrate_relational.py, verify, then enable `DISCGOLF_STORAGE_MODEL = "relational"` in Streamlit secrets. The existing JSON backend remains the default until cutover.
 
-The review build computes integer handicaps from each player's last 10 completed tournaments across leagues, using relative-to-par per round. Round the mean upward (7.1 → 8; −6.8 → −6). The first event bootstraps its own handicap; each subsequent event uses the previous next-handicap snapshot. Historical events show their event handicap; Home/League/player profiles show Current handicap. A public Handicap history screen lists each event's handicap used, next handicap and sample count. Player handicaps are now calculated rather than manually edited. Total throws remain stored and visible but are not the handicap basis. Stableford now uses the historical event handicap and frozen difficulty snapshots; see the Stableford section below. This section supersedes the earlier manual-handicap and hidden-handicap descriptions for the review build.
+The app computes one golf-style integer handicap from the best eligible rounds in a player's latest 20 completed 18-hole rounds across leagues. Until three eligible rounds exist, it uses the player's initial HCP provisionally. Each event uses the handicap established before that event; the result can update the handicap for later events. Home, League and player profiles show the current HCP. Handicap history shows the event HCP, next HCP, rounds selected and provisional status. Stableford uses the same historical event HCP and frozen difficulty snapshots; see the Stableford section below.
 
-Relational cutover completed locally on 2026-10-14: the normalized Supabase data is verified at revision 1, with the original app_data revision 50 preserved unchanged. Local secrets select relational mode and http://127.0.0.1:8502/ runs the live app. The hosted app still needs the reviewed code and `DISCGOLF_STORAGE_MODEL = "relational"` in its own secrets; no code has been committed/pushed for this migration. See the migration guide's current-status section for backup paths and verification.
+Relational cutover completed locally on 2026-10-14: the normalized Supabase data was verified at revision 1, with the original app_data revision 50 preserved unchanged. See the migration guide's historical status section for backup paths and verification.
 
 ## Scoring trends and accent-insensitive player search
 
@@ -181,14 +183,14 @@ Home standings label the latest handicap **Current HCP** / **HCP Aktuálne**. Ra
 Home uses **#** for the place header and centres only that column; other column alignments remain unchanged. Numeric columns fit their unwrapped headers, with names filling the remaining width. Yellow decorative outlines have been removed from Home/League/Tournament leaderboard containers and the placement-points legend. Hole statistics and handicap history keep their existing grid renderers and formatting.
 
 
-## Read-only golf-style handicap comparison
+## Golf-style handicap calculation
 
-See [the 14 October 2026 simulation](docs/HANDICAP_SIMULATION_2026-10-14.md) for the six most active players (including an attendance tie). `simulate_handicaps.py LOCAL_SNAPSHOT --top 5` reproduces the best-score selection comparison without connecting to or writing to the database. It assumes Course Rating = recorded par, Slope = 113 and PCC = 0; uncapped scores and omitted WHS safeguards mean these are illustrative estimates, not official golf indexes. The production last-10/ceiling algorithm is unchanged.
+See [the 14 October 2026 simulation](docs/HANDICAP_SIMULATION_2026-10-14.md) for the original research. `simulate_handicaps.py LOCAL_SNAPSHOT --top 5` reproduces best-score selection without connecting to or writing to the database. It assumes Course Rating = recorded par, Slope = 113 and PCC = 0; uncapped scores and omitted WHS safeguards mean these are illustrative estimates, not official golf indexes.
 
 
-## Switchable handicap calculations
+## Single handicap calculation
 
-The app now keeps both original last-10 and golf-style best-of-20 histories. **Administration → Settings → Active handicap method** switches the displayed/calculated handicap view; the original core database handicap values remain intact. Golf-style values use the original method provisionally until three eligible 18-hole rounds exist. Administrators can inspect either method in Handicap history; public visitors see only the active method, without a method picker or calculation explanation. See [storage, backup and backfill details](docs/HANDICAP_METHODS.md). No additional SQL migration is required; reboot Streamlit after deploying the new modules. The initial backfill populates both methods, and subsequent result saves maintain them together.
+The golf-style best-of-20 history is the only active handicap history. It uses each player's initial HCP before three eligible 18-hole rounds are available. The last-10 method and method selector have been removed. See [storage, backup and backfill details](docs/HANDICAP_METHODS.md). No additional SQL migration is required; reboot Streamlit after deploying the new modules.
 
 
 Home table header cells and their content explicitly disable wrapping, so points, attendance and current HCP headers stay on one line even when a theme supplies its own table styles. The table uses automatic column sizing and horizontal scrolling where needed on narrow screens.

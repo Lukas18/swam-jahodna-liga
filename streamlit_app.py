@@ -19,8 +19,9 @@ from league.domain import (new_id, find, profile, validate_holes, save_player, a
 from league.stableford import (enabled as stableford_enabled, league_standings as stableford_league,
                                tournament_standings as stableford_tournament, digest, difficulty_rows)
 from league.presentation import category_styles, percentage_value, percentage_label
+from league.scorecards import round_scorecard_html
 from league.search import matching_players
-from league.handicaps import recalculate_handicaps, handicap_method, METHODS
+from league.handicaps import recalculate_handicaps
 from league.statistics import selected_rounds, summary, hole_statistics, hole_heat_styles, scoring_trend, top_trend_players
 from league.storage import Store, StorageError, encoded
 from league.imports import read_export, preview_import
@@ -58,6 +59,23 @@ h1,h2,h3 {letter-spacing:-.025em;}
 .st-key-placement_points table {width:auto;}
 .st-key-placement_points table :is(th, td) {white-space:nowrap;padding:6px 10px !important;}
 [data-testid="stMetric"] {background:rgba(127,127,127,.08);border-radius:12px;padding:16px;}
+.round-scorecard {overflow-x:auto;margin:0 0 1.25rem;border:1px solid #304255;border-radius:8px;}
+.round-scorecard table {border-collapse:collapse;width:max-content;min-width:100%;background:#0B1017;color:#E9EEF3;font-variant-numeric:tabular-nums;}
+.round-scorecard :is(th,td) {padding:11px 10px;text-align:center;white-space:nowrap;border-bottom:1px solid #304255;}
+.round-scorecard tbody tr:last-child :is(th,td) {border-bottom:0;}
+.round-scorecard thead th {font-size:.85rem;font-weight:700;vertical-align:bottom;}
+.round-scorecard thead th small {display:block;color:#AEBCCD;font-size:.72rem;font-weight:500;line-height:1.25;}
+.round-scorecard .position {min-width:55px;}
+.round-scorecard .name {min-width:190px;text-align:left;}
+.round-scorecard .category {min-width:75px;}
+.round-scorecard .total,.round-scorecard .round-total {min-width:75px;font-weight:700;}
+.round-scorecard .hole {min-width:53px;}
+.round-scorecard .empty {color:#8292A4;}
+.round-scorecard .score {display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:32px;border-radius:50%;font-weight:700;}
+.round-scorecard .score.under {background:#254A79;color:#FFFFFF;}
+.round-scorecard .score.ace {background:#2BAF8D;color:#FFFFFF;border-radius:7px;}
+.round-scorecard .score.over {background:#C47D5B;color:#FFFFFF;border-radius:9px;}
+.round-scorecard .totals-only {display:block;color:#AEBCCD;font-size:.72rem;font-weight:400;}
 </style>''', unsafe_allow_html=True)
 
 
@@ -299,7 +317,7 @@ def players():
         cat = st.selectbox('Default category', DATA['categories'], index=DATA['categories'].index(p['category']) if p else 0)
         hcp = st.number_input('Current handicap', value=int(p['handicap']) if p else 0, step=1, disabled=True)
         udisc = st.text_input('uDisc username', value=p['udisc'] if p else '', help='Used to match imported results. Matching ignores case and surrounding spaces.')
-        st.caption('Handicaps are calculated automatically using the method selected in Administration → Settings.')
+        st.caption('Handicaps use the best eligible rounds from the latest 20. The initial handicap applies until three eligible rounds are available.')
         if st.form_submit_button('Save player'):
             draft = deepcopy(DATA)
             try:
@@ -636,16 +654,14 @@ def tournaments():
     stableford = stableford_picker(t['league_id'], 'tournament_scoring')
     table(stableford_tournament(DATA, t['id'], cat) if stableford else tournament_results(DATA, t['id'], cat, metric, complete), 'tournament_table', sortable=True)
     with st.expander('Round scorecards'):
-        records = sorted([r for r in DATA['rounds'] if r['tournament_id'] == t['id'] and (cat == 'All' or r['category'] == cat)],
-                         key=lambda r: (r['player_id'], r['round_number']))
-        for r in records:
-            p = find(DATA, 'players', r['player_id'])
-            st.markdown(f"**{p['first_name']} {p['last_name']} · {r['category']} · Round {r['round_number']} · {r['total']} throws ({r['total']-r['par']:+} par)**")
-            if r['holes']:
-                st.dataframe(pd.DataFrame(r['holes']).rename(columns={'number': 'Hole', 'par': 'Par', 'length': 'Length (m)', 'throws': 'Throws'}), hide_index=True, width='stretch',
-                             column_config={'Length (m)': st.column_config.NumberColumn(format='%.0f')})
-            else:
-                st.caption('Totals-only result — hole scores unavailable.')
+        records = [r for r in DATA['rounds'] if r['tournament_id'] == t['id'] and (cat == 'All' or r['category'] == cat)]
+        labels = {label: translate(label) for label in ['Pos', 'Name', 'Category', 'Total', 'Round', 'Hole', 'Par', 'Totals only']}
+        for number in sorted({r['round_number'] for r in records}):
+            st.markdown(f"**{translate('Round')} {number}**")
+            round_records = [r for r in records if r['round_number'] == number]
+            st.markdown(round_scorecard_html(DATA, round_records, labels), unsafe_allow_html=True)
+        if not records:
+            st.info('No results yet.')
 
     st.subheader('Tournament statistics')
     stats_cat = statistics_category('tournament_stats_category_' + t['id'], t['categories'])
@@ -908,20 +924,16 @@ def handicap_history_page():
         player = choose('Player', options, 'handicap_player', lambda p: f"{p['first_name']} {p['last_name']}".strip())
     if not player:
         return
-    method = handicap_method(DATA)
-    if admin():
-        method = st.radio('Handicap method', METHODS, index=METHODS.index(method),
-                          format_func=method_label, horizontal=True, key='history_handicap_method')
-    history = DATA.get('golf_handicap_history', []) if method == 'golf' else DATA.get('handicap_history', [])
+    history = DATA.get('handicap_history', [])
     history = sorted([h for h in history if h['player_id'] == player['id']],
                      key=lambda h: (h['date'], h.get('event_order', 0)), reverse=True)
-    current.metric('Current handicap', str(history[0]['handicap_after']) if history else '—')
+    current.metric('Current handicap', str(player['handicap']))
     tournaments = {t['id']: t for t in DATA['tournaments']}
-    count_label = 'Rounds used' if method == 'golf' else 'Tournaments in average'
+    count_label = 'Rounds used'
     rows = [{'Date': h['date'], 'Tournament': tournaments[h['tournament_id']]['name'],
              'Score relative to par': float(h['event_score']), 'Handicap': h['handicap_used'],
              'Next handicap': h['handicap_after'], count_label: h.get('selection_count', h['sample_count']),
-             **({'Status': 'Provisional' if h['provisional'] else 'Calculated'} if method == 'golf' else {})}
+             'Status': 'Provisional' if h['provisional'] else 'Calculated'}
             for h in history]
     if not rows:
         st.info('No completed tournaments yet.')
@@ -930,10 +942,6 @@ def handicap_history_page():
         'Score relative to par': st.column_config.NumberColumn(format='%.2f'),
         **{c: st.column_config.NumberColumn(format='%.0f') for c in ['Handicap', 'Next handicap', count_label]}})
     st.download_button('Download CSV', pd.DataFrame(rows).to_csv(index=False), 'handicap_history.csv', 'text/csv')
-
-
-def method_label(method):
-    return 'Golf-style · best rounds' if method == 'golf' else 'Original · last 10 tournaments'
 
 
 def application_settings():
@@ -945,25 +953,13 @@ def application_settings():
                               index=choices.index(SETTINGS['active_league_id']) if choices else 0,
                               format_func=lambda x: find(DATA, 'leagues', x)['name'] if x else 'No leagues yet')
         st.caption('Home shows standings for this league. Only one league is active at a time.')
-        method = st.selectbox('Active handicap method', METHODS,
-            index=METHODS.index(handicap_method(DATA)), format_func=method_label, key='admin_handicap_method')
-        st.caption('Both handicap histories are kept. Switching changes displayed handicaps and handicap-adjusted results; original stored handicap values remain intact.')
         if st.form_submit_button('Save settings'):
             if not title.strip():
                 st.error('Enter an application title.')
             else:
                 draft = deepcopy(DATA)
-                draft.setdefault('settings', {}).update(site_title=title.strip(), active_league_id=active, handicap_method=method)
+                draft.setdefault('settings', {}).update(site_title=title.strip(), active_league_id=active)
                 persist(draft)
-    st.subheader('Handicap comparison')
-    originals = {h['player_id']: h['handicap_after'] for h in sorted(DATA.get('handicap_history', []),
-                 key=lambda h: (h['date'], h.get('event_order', 0)))}
-    comparison = [{'Player': (p['first_name'] + ' ' + p['last_name']).strip(),
-                   'Original HCP': originals.get(p['id']), 'Golf-style HCP': p.get('golf_handicap') if not p.get('golf_handicap_pending') else None,
-                   'Status': 'Provisional' if p.get('golf_provisional', True) else 'Calculated'}
-                  for p in sorted(DATA['players'], key=lambda p: (p['last_name'], p['first_name']))]
-    st.dataframe(pd.DataFrame(comparison), hide_index=True, width='stretch',
-        column_config={c: st.column_config.NumberColumn(format='%.0f') for c in ['Original HCP', 'Golf-style HCP']})
 
 
 def category_settings():

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-"""Back up and add the parallel golf-style history; preview unless --apply."""
+"""Back up and replace the legacy handicap history with golf-style history."""
 import argparse
-from copy import deepcopy
 from datetime import datetime
 import hashlib
 import json
@@ -13,38 +12,33 @@ from league.handicaps import recalculate_handicaps
 from league.storage import encoded
 
 
-def verify_legacy(before, after):
-    """Preserve existing values; calculation-run IDs may refresh to current inputs."""
-    for key,value in before.items():
-        if key in ['revision','golf_handicap_run','golf_handicap_history']:
-            continue
-        if key == 'handicap_run':
-            if value.get('algorithm') != after[key].get('algorithm'):
-                raise ValueError('Original handicap algorithm changed.')
-        elif key == 'handicap_history':
-            strip = lambda h:{k:v for k,v in h.items() if k not in ['id','run_id']}
-            if [strip(h) for h in value] != [strip(h) for h in after[key]]:
-                raise ValueError('Original handicap history values changed.')
-        elif key == 'stableford_results':
-            strip = lambda h:{k:v for k,v in h.items() if k not in ['handicap_snapshot_id','source_run_id']}
-            if [strip(h) for h in value] != [strip(h) for h in after[key]]:
-                raise ValueError('Existing Stableford values changed.')
-        elif key == 'settings':
-            for field,old in value.items():
-                if field != 'handicap_method' and after[key].get(field) != old:
-                    raise ValueError(f'Existing setting changed: {field}')
-        elif key in ['players','rounds','registrations']:
-            identity = (lambda r:(r['tournament_id'],r['player_id'])) if key=='registrations' else (lambda r:r['id'])
-            current = {identity(r):r for r in after[key]}
-            if len(current) != len(value):
-                raise ValueError(f'Entity count changed: {key}')
-            for old in value:
-                new = current[identity(old)]
-                for field,original in old.items():
-                    if not field.startswith('golf_') and field != 'handicap_snapshot_id' and new.get(field) != original:
-                        raise ValueError(f'Existing value changed: {key}.{field}')
-        elif after.get(key) != value:
-            raise ValueError(f'Existing collection changed: {key}')
+def verify_source(before, after):
+    """Check that migrating calculated values does not change recorded inputs."""
+    for collection, identity, fields in [
+        ('players', lambda r: r['id'], ('first_name','last_name','category','udisc')),
+        ('registrations', lambda r: (r['tournament_id'],r['player_id']), ('category',)),
+        ('rounds', lambda r: r['id'], ('tournament_id','player_id','round_number','category','total','par','holes')),
+    ]:
+        current = {identity(r):r for r in after[collection]}
+        if set(current) != {identity(r) for r in before[collection]}:
+            raise ValueError(f'{collection} identities changed.')
+        for old in before[collection]:
+            new = current[identity(old)]
+            if any(new.get(field) != old.get(field) for field in fields):
+                raise ValueError(f'{collection} source data changed.')
+    for collection in ('categories','layouts','leagues'):
+        if before[collection] != after[collection]:
+            raise ValueError(f'{collection} changed.')
+    for collection in ('courses', 'tournaments'):
+        old = {row['id']: row for row in before[collection]}
+        new = {row['id']: row for row in after[collection]}
+        if set(old) != set(new):
+            raise ValueError(f'{collection} identities changed.')
+        for rid, row in old.items():
+            original = {k: v for k, v in row.items() if k != 'stableford_difficulty'}
+            current = {k: v for k, v in new[rid].items() if k != 'stableford_difficulty'}
+            if original != current:
+                raise ValueError(f'{collection} source data changed.')
 
 
 def backup(data, name):
@@ -60,33 +54,28 @@ def backup(data, name):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--apply',action='store_true')
-    parser.add_argument('--activate',choices=['legacy','golf'],help='Default: keep the current method')
     parser.add_argument('--document-id',default='main')
     parser.add_argument('--secrets',type=Path,default=Path(__file__).resolve().parent/'.streamlit/secrets.toml')
     args=parser.parse_args()
     store=load_store(args.secrets,args.document_id)
     if store.model!='relational':raise ValueError('Requires relational storage.')
     before,version=store.load();draft=recalculate_handicaps(before)
-    method=args.activate or before.get('settings',{}).get('handicap_method','legacy')
-    draft.setdefault('settings',{})['handicap_method']=method
-    verify_legacy(before,draft)
-    print(json.dumps({'source_revision':version,'method':method,
-        'legacy_snapshots':len(draft['handicap_history']),
-        'golf_snapshots':len(draft['golf_handicap_history']),
-        'players_with_golf_estimate':sum(not p['golf_provisional'] for p in draft['players']),
-        'players_provisional':sum(p['golf_provisional'] for p in draft['players'])}))
+    verify_source(before,draft)
+    print(json.dumps({'source_revision':version,'golf_snapshots':len(draft['handicap_history']),
+        'players_with_golf_estimate':sum(not p['handicap_provisional'] for p in draft['players']),
+        'players_provisional':sum(p['handicap_provisional'] for p in draft['players'])}))
     if not args.apply:
-        print('Preview only; all original fields preserved. No writes.');return
+        print('Preview only; recorded inputs preserved. No writes.');return
     if before==draft:
         print('Already up to date. No writes.');return
     path=backup(before,'before-golf-backfill');print('Backup:',path)
     # Atomic revision check in dg_save rejects edits since the source was loaded.
     store.save(draft,version)
     saved,new_version=store.load()
-    verify_legacy(before,saved)
+    verify_source(before,saved)
     if saved!=draft:raise ValueError('Saved document differs from verified payload.')
     after=backup(saved,'after-golf-backfill')
-    print('Verified revision',new_version,'both histories retained. Snapshot:',after)
+    print('Verified revision',new_version,'single golf history retained. Snapshot:',after)
 
 
 if __name__=='__main__':main()

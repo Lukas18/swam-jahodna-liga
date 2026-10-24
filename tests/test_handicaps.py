@@ -20,12 +20,12 @@ def fixture(scores):
 class HandicapTests(unittest.TestCase):
  def test_ceiling_including_negative(self):
   self.assertEqual([ceil_handicap(n) for n in [7.1,-6.8,-7,0,3.0001]],[8,-6,-7,0,4])
- def test_bootstrap_and_last_ten_not_rounded_inputs(self):
+ def test_initial_handicap_without_eligible_rounds(self):
   d=fixture([10,14,6]+list(range(4,14)));before=deepcopy(d);out=recalculate_handicaps(d)
   h=out['handicap_history']
-  self.assertEqual([(r['handicap_used'],r['handicap_after']) for r in h[:3]],[(10,10),(10,12),(12,10)])
-  self.assertEqual(h[10]['sources'][0]['tournament_id'],'1')
-  self.assertEqual(h[10]['sample_count'],10)
+  self.assertEqual([(r['handicap_used'],r['handicap_after']) for r in h[:3]],[(99,99)] * 3)
+  self.assertEqual(h[10]['sources'],[])
+  self.assertEqual(h[10]['selection_count'],0)
   self.assertEqual(out['players'][0]['handicap'],h[-1]['handicap_after'])
   self.assertEqual(d,before)
   self.assertTrue(all(r['original_handicap']==99 for r in out['rounds']))
@@ -34,7 +34,7 @@ class HandicapTests(unittest.TestCase):
   d=fixture([10,14,6]);out=recalculate_handicaps(d)
   d['rounds'][0]['total']=8;d['rounds'][0]['holes'][0]['throws']=8
   new=recalculate_handicaps(d)
-  self.assertEqual(new['handicap_history'][1]['handicap_used'],5)
+  self.assertEqual(new['handicap_history'][1]['handicap_used'],99)
   self.assertNotEqual(out['handicap_run']['id'],new['handicap_run']['id'])
   self.assertEqual(new['rounds'][1]['holes'],out['rounds'][1]['holes'])
   self.assertTrue(all(r['status']=='calculated' for r in new['stableford_results']))
@@ -44,15 +44,16 @@ class HandicapTests(unittest.TestCase):
   add_round(d,'1','p',2,'MPO',99,{1:7})
   out=recalculate_handicaps(d)
   self.assertEqual(out['handicap_history'][-1]['event_score'],'9')
-  self.assertEqual(out['handicap_history'][-1]['handicap_after'],10)
-  self.assertEqual(out['handicap_history'][-1]['sample_count'],2)
+  self.assertEqual(out['handicap_history'][-1]['handicap_after'],99)
+  self.assertEqual(out['handicap_history'][-1]['selection_count'],0)
  def test_same_date_requires_order_and_debut_pending(self):
   d=fixture([1,2]);d['tournaments'][1]['date']=d['tournaments'][0]['date']
   with self.assertRaises(ValueError):recalculate_handicaps(d)
   d['tournaments'][1]['event_order']=1
   recalculate_handicaps(d)
   save_player(d,'new','New','Player','MPO',0,'new')
-  out=recalculate_handicaps(d);self.assertTrue(out['players'][-1]['handicap_pending'])
+  out=recalculate_handicaps(d);self.assertEqual(out['players'][-1]['handicap'],0)
+  self.assertTrue(out['players'][-1]['handicap_provisional'])
  def test_relational_lossless_adapter_and_preserved_original_values(self):
   d=recalculate_handicaps(fixture([1,2]));d['players'][0]['custom_metadata']='preserved'
   self.assertEqual(from_records(to_records(d),d['revision']),d)

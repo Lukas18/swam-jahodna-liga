@@ -1,6 +1,8 @@
 # Review and migrate the relational store
 
-No commit or push is authorized yet. The app_data table is retained throughout.
+The handicap rules and deployment status below record the original 14 October migration. The current single golf-style calculation is described in [HANDICAP_METHODS.md](HANDICAP_METHODS.md); the last-10 rules below are no longer active.
+
+The app_data table is retained throughout this historical migration.
 
 ## Current cutover status — 2026-10-14
 

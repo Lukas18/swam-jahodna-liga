@@ -1,6 +1,6 @@
 import unittest
 from copy import deepcopy
-from test_dual_handicaps import golf_fixture
+from test_golf_handicaps import golf_fixture
 from league.handicaps import recalculate_handicaps, project_handicaps
 from league.relational import to_records, from_records
 from league.stableford import (strokes_received, hole_points, league_standings,
@@ -30,18 +30,18 @@ class StablefordTests(unittest.TestCase):
         self.assertEqual([strokes_received(2,n) for n in [1,2,3,18]],[1,1,0,0])
         self.assertEqual([strokes_received(-2,n) for n in [1,16,17,18]],[0,0,-1,-1])
 
-    def test_historical_handicaps_and_reversible_method_switch(self):
+    def test_historical_handicaps_and_single_stableford_result(self):
         before=fixture([1,2,3,10]);saved=recalculate_handicaps(before)
         self.assertEqual(saved,recalculate_handicaps(saved))
         self.assertEqual(from_records(to_records(saved),saved['revision']),saved)
-        self.assertEqual(saved['stableford_results'][-1]['methods']['golf']['rounds'][0]['handicap'],-1)
-        self.assertEqual(saved['stableford_results'][-1]['methods']['legacy']['rounds'][0]['handicap'],2)
+        self.assertEqual(saved['stableford_results'][-1]['rounds'][0]['handicap'],-1)
+        self.assertNotIn('methods',saved['stableford_results'][-1])
         for old,new in zip(before['rounds'],saved['rounds']):
             self.assertEqual(old['holes'],new['holes'])
-        saved['settings']['handicap_method']='golf';view=project_handicaps(saved)
+        view=project_handicaps(saved)
         row=view['stableford_results'][-1]
-        self.assertEqual(row['points'],row['methods']['golf']['points'])
-        self.assertEqual(recalculate_handicaps(view)['stableford_results'][-1]['points'],row['methods']['legacy']['points'])
+        self.assertEqual(row['points'],saved['stableford_results'][-1]['points'])
+        self.assertEqual(recalculate_handicaps(view)['stableford_results'][-1]['points'],row['points'])
 
     def test_difficulty_frozen_until_explicit_reset_and_shared_across_numbers(self):
         data=fixture([5,8])
@@ -75,7 +75,7 @@ class StablefordTests(unittest.TestCase):
         self.assertTrue(all(r['status']=='pending_inputs' and r['points'] is None for r in out['stableford_results']))
         self.assertEqual(tournament_standings(out,'0'),[])
 
-    def test_backfill_earlier_leagues_preserves_existing_results_and_snapshots(self):
+    def test_backfill_earlier_leagues_preserves_scores_and_difficulty(self):
         from backfill_stableford import verify_preserved
         data=golf_fixture([1,2,3,10])
         data['leagues'].append({**data['leagues'][0], 'id':'fall', 'name':'Jesenna SWAM Liga'})
@@ -96,7 +96,7 @@ class StablefordTests(unittest.TestCase):
         self.assertEqual(after,from_records(to_records(after),after['revision']))
         broken=deepcopy(after);broken['rounds'][0]['total']+=1
         with self.assertRaises(ValueError): verify_preserved(before,broken)
-        broken=deepcopy(after);broken['stableford_results'][-1]['points']+=1
+        broken=deepcopy(after);broken['courses'][0]['stableford_difficulty']['rows'][0]['priority']+=1
         with self.assertRaises(ValueError): verify_preserved(before,broken)
 
     def test_tied_stableford_places_and_existing_league_points(self):

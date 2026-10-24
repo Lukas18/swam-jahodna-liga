@@ -27,6 +27,6 @@ class RelationalStoreTests(unittest.TestCase):
   store,client=self.store(True);data=fixture([1,3]);store.save(data,'0')
   args=client.rpc.call_args
   self.assertEqual(args.args[0],'dg_save');self.assertEqual(data['revision'],1)
-  self.assertEqual(data['players'][0]['handicap'],2)
+  self.assertEqual(data['players'][0]['handicap'],99)
   self.assertIn('hole_scores',args.args[1]['p_payload'])
   self.assertNotIn('rounds',args.args[1]['p_payload'])

@@ -50,35 +50,27 @@ def simulate(data, top=5):
     for pid in chosen:
         player = players[pid]
         rounds = []
-        event_scores = []
         for event, records in events[pid]:
-            # Golf selection is by round; the app's baseline is by tournament.
             # This simulation only accepts full recorded 18-hole rounds.
-            scores = []
             for r in records:
                 if len(r['holes']) != 18 or {h['number'] for h in r['holes']} != set(range(1, 19)):
                     raise ValueError('Simulation requires complete 18-hole scorecards.')
                 if sum(h['throws'] for h in r['holes']) != r['total'] or sum(h['par'] for h in r['holes']) != r['par']:
                     raise ValueError('Recorded round totals do not match its hole snapshots.')
                 relative = Decimal(str(r['total'])) - Decimal(str(r['par']))
-                scores.append(relative)
                 rounds.append({'date': event['date'], 'tournament': event['name'],
                     'tournament_id': event['id'], 'round_number': r['round_number'],
                     'layout_id': r['layout_id'], 'category': r['category'],
                     'total': r['total'], 'par': r['par'], 'differential': relative})
-            event_scores.append(sum(scores) / len(scores))
         recent = rounds[-20:]
         used, adjustment = selection_rule(len(recent))
         selected = sorted(recent, key=lambda r: (r['differential'], r['date'],
                           r['tournament_id'], r['round_number']))[:used]
         raw = min(Decimal(54), sum(r['differential'] for r in selected) / used + adjustment) if used else None
-        baseline_mean = sum(event_scores[-10:]) / len(event_scores[-10:])
-        baseline = int(baseline_mean.to_integral_value(rounding=ROUND_CEILING))
         results.append({'player_id': pid, 'name': (player['first_name'] + ' ' + player['last_name']).strip(),
             'category': player['category'], 'tournaments': len(events[pid]), 'rounds': len(rounds),
             'window_count': len(recent), 'used_count': used, 'adjustment': adjustment,
-            'stored_current_hcp': player['handicap'], 'current_hcp': baseline,
-            'current_mean': baseline_mean, 'raw_estimate': raw,
+            'raw_estimate': raw,
             'decimal_estimate': raw.quantize(Decimal('.1'), rounding=ROUND_HALF_UP) if raw is not None else None,
             # Preserve the league's upward-rounding rule on the unrounded mean.
             'integer_estimate': int(raw.to_integral_value(rounding=ROUND_CEILING)) if raw is not None else None,

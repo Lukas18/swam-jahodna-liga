@@ -1,4 +1,4 @@
-"""Net Stableford with frozen event stroke indices and parallel handicap methods."""
+"""Net Stableford with frozen event stroke indices and golf-style handicaps."""
 from collections import defaultdict
 from datetime import datetime, timezone
 import hashlib
@@ -6,7 +6,7 @@ import json
 
 from .domain import find, rank_rows, whole_number
 
-ALGORITHM = 'net-stableford-full-handicap-v1'
+ALGORITHM = 'net-stableford-full-handicap-v2'
 
 
 def digest(value):
@@ -80,7 +80,7 @@ def hole_points(throws, par, strokes):
 
 
 def calculate_stablefords(data):
-    """Called after both historical handicap calculations; returns canonical state.
+    """Called after historical handicap calculation; returns canonical state.
 
     Difficulty is captured on first calculation and reused. A changed score or
     historical handicap recalculates points, while later statistics do not move
@@ -110,47 +110,36 @@ def calculate_stablefords(data):
         rounds = sorted(grouped[key], key=lambda r: r['round_number'])
         ready = ({r['round_number'] for r in rounds} == set(range(1, t['num_rounds'] + 1))
                  and len(rounds) == t['num_rounds'] and all(r['holes'] for r in rounds))
-        method_results = {}
-        for method, prefix in [('legacy', ''), ('golf', 'golf_')]:
-            total, details = 0, []
-            valid = ready and all(not r.get(prefix + 'handicap_pending', True) for r in rounds)
-            if valid:
-                for r in rounds:
-                    layout = layouts[r['layout_id']]
-                    config = courses[layout['course_id']]['stableford_difficulty']
-                    priorities = {h['id']: h['priority'] for h in config['rows']}
-                    signature = digest([r['layout_id'], [(h['number'], h['par'], h['length']) for h in r['holes']]])
-                    snapshots = t.setdefault('stableford_difficulty', {})
-                    if signature not in snapshots:
-                        ordered = sorted(r['holes'], key=lambda h: (priorities.get(hole_identity(layout, h), float('inf')), h['number']))
-                        snapshots[signature] = {'source_version': config['version'], 'holes': [
-                            {'number': h['number'], 'identity': hole_identity(layout, h), 'stroke_index': i}
-                            for i, h in enumerate(ordered, 1)]}
-                    indices = {h['number']: h['stroke_index'] for h in snapshots[signature]['holes']}
-                    holes = []
-                    for h in r['holes']:
-                        strokes = strokes_received(r[prefix + 'handicap'], indices[h['number']], len(r['holes']))
-                        points = hole_points(h['throws'], h['par'], strokes)
-                        total += points
-                        holes.append({'number': h['number'], 'stroke_index': indices[h['number']],
-                                      'strokes': strokes, 'net_score': h['throws'] - strokes, 'points': points})
-                    details.append({'round_id': r['id'], 'handicap': r[prefix + 'handicap'],
-                                    'difficulty_snapshot': signature, 'holes': holes})
-            method_results[method] = {'points': total if valid else None,
-                                      'status': 'calculated' if valid else 'pending_inputs', 'rounds': details,
-                                      'handicap_snapshot_id': rounds[0].get(prefix + 'handicap_snapshot_id') if rounds else None,
-                                      'source_run_id': data[prefix + 'handicap_run']['id']}
-        result.update(points=method_results['legacy']['points'], status=method_results['legacy']['status'],
-                      calculation_version=ALGORITHM, methods=method_results)
+        total, details = 0, []
+        valid = ready and all(not r.get('handicap_pending', False) for r in rounds)
+        if valid:
+            for r in rounds:
+                layout = layouts[r['layout_id']]
+                config = courses[layout['course_id']]['stableford_difficulty']
+                priorities = {h['id']: h['priority'] for h in config['rows']}
+                signature = digest([r['layout_id'], [(h['number'], h['par'], h['length']) for h in r['holes']]])
+                snapshots = t.setdefault('stableford_difficulty', {})
+                if signature not in snapshots:
+                    ordered = sorted(r['holes'], key=lambda h: (priorities.get(hole_identity(layout, h), float('inf')), h['number']))
+                    snapshots[signature] = {'source_version': config['version'], 'holes': [
+                        {'number': h['number'], 'identity': hole_identity(layout, h), 'stroke_index': i}
+                        for i, h in enumerate(ordered, 1)]}
+                indices = {h['number']: h['stroke_index'] for h in snapshots[signature]['holes']}
+                holes = []
+                for h in r['holes']:
+                    strokes = strokes_received(r['handicap'], indices[h['number']], len(r['holes']))
+                    points = hole_points(h['throws'], h['par'], strokes)
+                    total += points
+                    holes.append({'number': h['number'], 'stroke_index': indices[h['number']],
+                                  'strokes': strokes, 'net_score': h['throws'] - strokes, 'points': points})
+                details.append({'round_id': r['id'], 'handicap': r['handicap'],
+                                'difficulty_snapshot': signature, 'holes': holes})
+        result.update(points=total if valid else None, status='calculated' if valid else 'pending_inputs',
+                      calculation_version=ALGORITHM, rounds=details,
+                      handicap_snapshot_id=rounds[0].get('handicap_snapshot_id') if rounds else None,
+                      source_run_id=data['handicap_run']['id'])
+        result.pop('methods', None)
     data['stableford_version'] = ALGORITHM
-    return data
-
-
-def project_stablefords(data, method):
-    for result in data.get('stableford_results', []):
-        if result.get('calculation_version') == ALGORITHM:
-            chosen = result['methods'][method]
-            result.update(points=chosen['points'], status=chosen['status'])
     return data
 
 

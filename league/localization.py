@@ -20,7 +20,7 @@ SK = {
     'League leaderboard': 'Poradie ligy', 'Overall standings': 'Celkové poradie',
     'Leaderboard view': 'Zobrazenie výsledkov', 'Score relative to par': 'Skóre voči paru',
     'Handicap adjusted': 'Skóre s handicapom', 'Category': 'Kategória', 'All': 'Všetky',
-    'Place': 'Poradie', 'Name': 'Meno', 'Player': 'Hráč', 'Players': 'Hráči', 'Points': 'Body',
+    'Place': 'Poradie', 'Pos': 'Poz.', 'Name': 'Meno', 'Player': 'Hráč', 'Players': 'Hráči', 'Points': 'Body',
     'Total points': 'Celkové body', 'Total Stableford': 'Stableford spolu', 'Tournaments attended': 'Odohrané turnaje',
     'Rounds': 'Kolá', 'Throws': 'Hody', 'HCP adjusted': 'Skóre s HCP', 'Complete': 'Dokončené',
     'Recent tournaments': 'Posledné turnaje', 'League': 'Liga', 'League tournaments': 'Turnaje ligy',
@@ -151,7 +151,7 @@ SK = {
     'Download full JSON backup': 'Stiahnuť úplnú zálohu JSON', 'Restore JSON backup': 'Obnoviť zálohu JSON',
     'Replace all current data with this backup': 'Nahradiť všetky aktuálne údaje touto zálohou', 'Restore backup': 'Obnoviť zálohu',
     'Hole number': 'Číslo jamky', 'number': 'Jamka', 'par': 'Par', 'length': 'Dĺžka (m)', 'throws': 'Hody',
-    'Configuration': 'Konfigurácia', 'Score': 'Skóre', 'Round': 'Kolo',
+    'Configuration': 'Konfigurácia', 'Score': 'Skóre', 'Total': 'Celkom', 'Round': 'Kolo',
 }
 
 SK.update({
@@ -265,7 +265,7 @@ def translate(value, language=None):
     return value
 
 
-SK.update({'Order on the same date': 'Poradie v rovnaký deň', 'Use different order numbers when a player plays two tournaments on the same date.': 'Ak hráč hrá dva turnaje v rovnaký deň, nastavte im odlišné poradie.', 'Handicap': 'Hendikep', 'Handicap history': 'História hendikepu', 'Current handicap': 'Aktuálny hendikep', 'Next handicap': 'Ďalší hendikep', 'Tournaments in average': 'Turnaje v priemere', 'Stableford': 'Stableford', 'No completed tournaments yet.': 'Zatiaľ bez dokončených turnajov.', 'Handicaps are calculated automatically from the last 10 completed tournaments.': 'Hendikep sa počíta automaticky z posledných 10 dokončených turnajov.'})
+SK.update({'Order on the same date': 'Poradie v rovnaký deň', 'Use different order numbers when a player plays two tournaments on the same date.': 'Ak hráč hrá dva turnaje v rovnaký deň, nastavte im odlišné poradie.', 'Handicap': 'Hendikep', 'Handicap history': 'História hendikepu', 'Current handicap': 'Aktuálny hendikep', 'Next handicap': 'Ďalší hendikep', 'Stableford': 'Stableford', 'No completed tournaments yet.': 'Zatiaľ bez dokončených turnajov.'})
 
 SK.update({'Search players': 'Hľadať hráčov', 'Name or surname': 'Meno alebo priezvisko', 'Search ignores accents.': 'Vyhľadávanie nerozlišuje diakritiku.', 'No players match this search.': 'Vyhľadávaniu nezodpovedá žiadny hráč.'})
 
@@ -283,18 +283,9 @@ SK.update({'Trend category': 'Kategória trendu', 'Trend layout': 'Layout grafu'
 
 
 SK.update({
-    'Handicap method': 'Metóda výpočtu hendikepu', 'Active handicap method': 'Používaná metóda hendikepu',
-    'Golf-style · best rounds': 'Golfový model · najlepšie kolá',
-    'Original · last 10 tournaments': 'Pôvodný model · posledných 10 turnajov',
-    'Rounds used': 'Započítané kolá', 'Handicap comparison': 'Porovnanie hendikepov',
-    'Original HCP': 'Pôvodný HCP', 'Golf-style HCP': 'Golfový HCP',
-    'Provisional': 'Dočasný', 'Calculated': 'Vypočítaný',
-    'Handicaps are calculated automatically using the method selected in Administration → Settings.':
-        'Hendikepy sa počítajú automaticky podľa metódy zvolenej v Administrácia → Nastavenia.',
-    'Both handicap histories are kept. Switching changes displayed handicaps and handicap-adjusted results; original stored handicap values remain intact.':
-        'Obe histórie hendikepov zostávajú zachované. Prepnutie mení zobrazené hendikepy a výsledky upravené o hendikep; pôvodné uložené hodnoty zostávajú zachované.',
-    'Golf-style estimate: best eligible rounds of the latest 20; recorded par, slope 113, no hole caps. Original handicap is provisional until three rounds are available.':
-        'Golfový odhad: najlepšie vyhovujúce kolá z posledných 20; zapísaný par, slope 113, bez limitov skóre jamiek. Do troch kôl sa dočasne používa pôvodný hendikep.'
+    'Rounds used': 'Započítané kolá', 'Provisional': 'Dočasný', 'Calculated': 'Vypočítaný',
+    'Handicaps use the best eligible rounds from the latest 20. The initial handicap applies until three eligible rounds are available.':
+        'Hendikep vychádza z najlepších oprávnených kôl z posledných 20. Do troch oprávnených kôl platí počiatočný hendikep.'
 })
 
 

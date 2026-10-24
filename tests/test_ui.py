@@ -62,8 +62,8 @@ class ScreensTest(unittest.TestCase):
         app.sidebar.radio[0].set_value('Handicap history').run()
         self.assertFalse(app.exception)
         rows = app.dataframe[0].value
-        self.assertEqual(rows.iloc[0]['Handicap'], 2)
-        self.assertEqual(rows.iloc[0]['Next handicap'], 2)
+        self.assertEqual(rows.iloc[0]['Handicap'], 1)
+        self.assertEqual(rows.iloc[0]['Next handicap'], 1)
         app.sidebar.radio[0].set_value('Tournaments').run()
         result = next(x.value for x in app.dataframe if 'Player' in x.value)
         self.assertIn('Handicap', result)
@@ -124,6 +124,27 @@ class ScreensTest(unittest.TestCase):
         self.assertFalse(app.exception)
         self.assertTrue(any('Save difficulty' == b.label for b in app.button))
         self.assertEqual(self.path.read_bytes(), encoded(data))  # All view changes are read-only.
+
+    def test_tournament_rounds_show_one_scorecard_table_per_round(self):
+        data = fixture()
+        data['tournaments'][0]['num_rounds'] = 2
+        add_round(data, 't', 'a', 1, 'MPO', 1, {1: 2, 2: 4})
+        add_round(data, 't', 'b', 1, 'MPO', 0, {1: 3, 2: 4})
+        add_round(data, 't', 'j', 1, 'MJ15', 0, {1: 2})
+        add_round(data, 't', 'a', 2, 'MPO', 1, {1: 3, 2: 4})
+        self.path.write_bytes(encoded(data))
+
+        app = english_app().run(timeout=20)
+        app.sidebar.radio[0].set_value('Tournaments').run()
+        self.assertFalse(app.exception)
+        tables = [item.value for item in app.markdown if 'class="round-scorecard"' in item.value]
+        self.assertEqual(len(tables), 2)
+        self.assertEqual(tables[0].count('<td class="position">'), 3)
+        self.assertEqual(tables[1].count('<td class="position">'), 1)
+        app.selectbox(key='tournament_cat').set_value('MPO').run()
+        self.assertFalse(app.exception)
+        tables = [item.value for item in app.markdown if 'class="round-scorecard"' in item.value]
+        self.assertEqual(tables[0].count('<td class="position">'), 2)
 
     def test_trend_modes_and_whole_percentage_data(self):
         data = fixture()
@@ -186,66 +207,49 @@ class ScreensTest(unittest.TestCase):
         frame = next(x.value for x in app.dataframe if 'Average throws' in x.value)
         self.assertEqual(set(frame['Layout']), {'Other'})
 
-    def test_admin_switches_handicap_method_and_keeps_both_histories(self):
-        from test_dual_handicaps import golf_fixture
+    def test_admin_settings_keep_a_single_golf_history(self):
+        from test_golf_handicaps import golf_fixture
         from league.handicaps import recalculate_handicaps
         data = recalculate_handicaps(golf_fixture([1,2,3,10]))
         data['settings']['active_league_id'] = 'lg'
         self.path.write_bytes(encoded(data))
         app = self.administrator('Settings')
-        app.selectbox(key='admin_handicap_method').set_value('golf')
         app.button(key='FormSubmitter:application_settings-Save settings').click().run()
         self.assertFalse(app.exception)
         stored = Store(self.path).load()[0]
-        self.assertEqual(stored['settings']['handicap_method'], 'golf')
-        self.assertEqual(stored['players'][0]['handicap'], 4)
-        self.assertEqual(stored['players'][0]['golf_handicap'], 0)
+        self.assertNotIn('handicap_method', stored['settings'])
+        self.assertEqual(stored['players'][0]['handicap'], 0)
+        self.assertNotIn('golf_handicap_history', stored)
         app.sidebar.radio[0].set_value('Home').run()
         home = next(x.value for x in app.table if 'Current HCP' in x.value)
         self.assertEqual(home.iloc[0]['Current HCP'], 0)
         app.sidebar.radio[0].set_value('Handicap history').run()
-        self.assertEqual(app.radio(key='history_handicap_method').value, 'golf')
+        self.assertFalse(any(r.key == 'history_handicap_method' for r in app.radio))
         history = app.dataframe[0].value
-        self.assertEqual(history['Next handicap'].tolist(), [0,-1,2,1])
+        self.assertEqual(history['Next handicap'].tolist(), [0,-1,99,99])
         self.assertEqual(history['Status'].tolist(), ['Calculated','Calculated','Provisional','Provisional'])
-        app.radio(key='history_handicap_method').set_value('legacy').run()
-        self.assertFalse(app.exception)
-        self.assertEqual(app.dataframe[0].value['Next handicap'].tolist(), [4,2,2,1])
-        app.sidebar.radio[0].set_value('Admin').run()
-        app.radio(key='admin_section').set_value('Settings').run()
-        app.selectbox(key='admin_handicap_method').set_value('legacy')
-        app.button(key='FormSubmitter:application_settings-Save settings').click().run()
-        self.assertFalse(app.exception)
-        after = Store(self.path).load()[0]
-        self.assertEqual(after['handicap_history'], stored['handicap_history'])
-        self.assertEqual(after['golf_handicap_history'], stored['golf_handicap_history'])
-        app.sidebar.radio[0].set_value('Home').run()
-        self.assertEqual(next(x.value for x in app.table if 'Current HCP' in x.value).iloc[0]['Current HCP'],4)
+        self.assertEqual(len(stored['handicap_history']), 4)
 
-    def test_public_history_uses_active_method_without_controls_or_explanation(self):
-        from test_dual_handicaps import golf_fixture
+    def test_public_history_uses_single_method_without_controls(self):
+        from test_golf_handicaps import golf_fixture
         from league.handicaps import recalculate_handicaps
         data = recalculate_handicaps(golf_fixture([1,2,3,10]))
-        data['settings']['handicap_method'] = 'golf'
         self.path.write_bytes(encoded(data))
         original = self.path.read_bytes()
         app = english_app().run(timeout=20)
-        app.session_state['history_handicap_method'] = 'legacy'  # A previous admin choice.
         app.sidebar.radio[0].set_value('Handicap history').run()
         self.assertFalse(app.exception)
         self.assertFalse(any(r.key == 'history_handicap_method' for r in app.radio))
-        self.assertEqual(app.dataframe[0].value['Next handicap'].tolist(), [0,-1,2,1])
-        self.assertFalse(any('slope' in c.value or 'Golf-style estimate:' in c.value for c in app.caption))
+        self.assertEqual(app.dataframe[0].value['Next handicap'].tolist(), [0,-1,99,99])
         app.session_state['admin_expires'] = time.time() + 100
         app.run()
-        self.assertTrue(any(r.key == 'history_handicap_method' for r in app.radio))
-        app.radio(key='history_handicap_method').set_value('legacy').run()
-        self.assertEqual(app.dataframe[0].value['Next handicap'].tolist(), [4,2,2,1])
+        self.assertFalse(any(r.key == 'history_handicap_method' for r in app.radio))
+        self.assertEqual(app.dataframe[0].value['Next handicap'].tolist(), [0,-1,99,99])
         app.session_state['admin_expires'] = 0
         app.run()
         self.assertFalse(app.exception)
         self.assertFalse(any(r.key == 'history_handicap_method' for r in app.radio))
-        self.assertEqual(app.dataframe[0].value['Next handicap'].tolist(), [0,-1,2,1])
+        self.assertEqual(app.dataframe[0].value['Next handicap'].tolist(), [0,-1,99,99])
         self.assertEqual(self.path.read_bytes(), original)
 
     def test_admin_login_edit_and_logout(self):
@@ -488,7 +492,7 @@ class ScreensTest(unittest.TestCase):
         next(x for x in app.selectbox if x.label == 'Active league').set_value('lg2')
         app.button(key='FormSubmitter:application_settings-Save settings').click().run()
         self.assertFalse(app.exception)
-        self.assertEqual(Store(self.path).load()[0]['settings'], {'site_title': 'My local league', 'active_league_id': 'lg2', 'handicap_method': 'legacy'})
+        self.assertEqual(Store(self.path).load()[0]['settings'], {'site_title': 'My local league', 'active_league_id': 'lg2'})
         app.sidebar.radio[0].set_value('Home').run()
         self.assertTrue(any(x.value == '🥏 My local league' for x in app.title))
         self.assertFalse(any('Total points' in x.value for x in app.table))
