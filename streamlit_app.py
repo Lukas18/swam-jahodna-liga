@@ -174,7 +174,8 @@ def home():
     if SETTINGS['active_league_id']:
         st.subheader('Overall standings')
         metric = metric_picker('home_metric')
-        standings = (stableford_league(DATA, SETTINGS['active_league_id']) if stableford_picker(SETTINGS['active_league_id'], 'home_scoring') else home_standings(DATA, SETTINGS['active_league_id'], metric))
+        stableford = stableford_picker(SETTINGS['active_league_id'], 'home_scoring')
+        standings = (stableford_league(DATA, SETTINGS['active_league_id']) if stableford else home_standings(DATA, SETTINGS['active_league_id'], metric))
         medals = {1: '🥇', 2: '🥈', 3: '🥉'}
         for category in DATA['categories']:
 
@@ -183,7 +184,9 @@ def home():
             if rows:
                 st.subheader(category)
                 frame = pd.DataFrame([{'Place': medals.get(r['Place'], label), 'Name': r['Player'],
-                                       'Total points': r['Points'], 'Tournaments attended': r['Tournaments'], 'Current HCP': r['Current handicap']} for r, label in zip(rows, place_labels(rows))])
+                                       'Total points': r['Points'],
+                                       **({'Total Stableford': r['Stableford']} if stableford else {}),
+                                       'Tournaments attended': r['Tournaments'], 'Current HCP': r['Current handicap']} for r, label in zip(rows, place_labels(rows))])
                 # Static table headers parse Markdown, so escape the rank symbol.
                 home_label = lambda c: r'\#' if c == 'Place' else translate(c)
                 frame = frame.rename(columns=home_label)
@@ -191,7 +194,10 @@ def home():
                 styled = styled.apply(lambda row: [
                     'background-color: #DED9C7' if row.name % 2 == 0 else 'background-color: #EAE4D0'
                 ] * len(row), axis=1)
-                styled = styled.set_properties(subset=[home_label(c) for c in ['Place', 'Name', 'Total points', 'Tournaments attended']], **{'color': '#16492F', 'font-weight': 'bold'})
+                highlighted = ['Place', 'Name', 'Total points', 'Tournaments attended']
+                if stableford:
+                    highlighted.append('Total Stableford')
+                styled = styled.set_properties(subset=[home_label(c) for c in highlighted], **{'color': '#16492F', 'font-weight': 'bold'})
                 with st.container(key='leaderboard_home_' + category):
                     st.table(styled.format({translate('Current HCP'): '{:.0f}'}, na_rep='—', escape='html'))
         if not standings:
@@ -785,7 +791,7 @@ def trend_controls(tournament_id=None, category='All'):
         layout_id=None if trend_scope == 'Whole course' else layout['id'], category=category)
     context = course['name'] if trend_scope == 'Whole course' else f"{course['name']} / {layout['name']}"
     st.write(context + ' · ' + translate(category))
-    mode = st.radio('Players in trend', ['All players', 'Specific player', 'Top 3', 'Top 5'], horizontal=True, key='trend_mode', help='Top players have the lowest average score relative to par in the selected filters. The same players are used throughout the trend.')
+    mode = st.radio('Players in trend', ['All players', 'Specific player', 'Top 3', 'Top 5'], horizontal=True, key='trend_mode', help='Top players have more than two recorded rounds in the selected filters and the lowest average score relative to par. The same players are used throughout the trend.')
     player_ids = None
     if mode == 'Specific player':
         ids = {r['player_id'] for r in rounds}
@@ -796,6 +802,9 @@ def trend_controls(tournament_id=None, category='All'):
         player_ids = [player['id']]
     elif mode in ['Top 3', 'Top 5']:
         player_ids = top_trend_players(DATA, rounds, 3 if mode == 'Top 3' else 5)
+        if not player_ids:
+            st.info('No players have more than two recorded rounds in the selected filters.')
+            return
         names = [f"{find(DATA, 'players', pid)['first_name']} {find(DATA, 'players', pid)['last_name']}".strip() for pid in player_ids]
         st.write(translate('Players included') + ': ' + ', '.join(names))
     draw_scoring_trend(scoring_trend(DATA, rounds, player_ids), 'scoring_trend')

@@ -30,22 +30,32 @@ class ScoringTrendTests(unittest.TestCase):
 
  def test_top_cohort_uses_best_event_average_with_stable_ties(self):
   data=fixture([5,1])
+  data['tournaments'][0]['num_rounds']=3
   for pid,name,score in [('a','Alpha',0),('b','Beta',2),('c','Charlie',2),('d','Delta',7),('e','Echo',8)]:
    save_player(data,pid,name,'Player','MPO',0,pid)
-   add_round(data,'0',pid,1,'MPO',0,{1:score+3})
+   for round_number in (1,2,3):
+    add_round(data,'0',pid,round_number,'MPO',0,{1:score+3})
+  save_player(data,'u','Under','Player','MPO',0,'u')
+  add_round(data,'0','u',1,'MPO',0,{1:1})
+  save_player(data,'v','Very','Player','MPO',0,'v')
+  for round_number in (1,2):
+   add_round(data,'0','v',round_number,'MPO',0,{1:2})
   self.assertEqual(top_trend_players(data,data['rounds'],3),['a','b','c'])
-  self.assertEqual(top_trend_players(data,data['rounds'],5),['a','b','c','p','d'])
+  self.assertEqual(top_trend_players(data,data['rounds'],5),['a','b','c','d','e'])
+  self.assertEqual(top_trend_players(data,[r for r in data['rounds'] if r['tournament_id']=='1'],3),[])
   selected=scoring_trend(data,data['rounds'],top_trend_players(data,data['rounds'],3))
   self.assertEqual(len(selected),1)  # no invented zero at the next event
   self.assertAlmostEqual(selected[0]['Average +/− par'],4/3)
 
  def test_precomputed_summaries_preserve_multi_round_weights_and_categories(self):
   from league.statistics import trend_observations,selected_rounds
-  data=fixture([5,1]);data['tournaments'][0]['num_rounds']=2
+  data=fixture([5,1]);data['tournaments'][0]['num_rounds']=3
   add_round(data,'0','p',2,'MPO',99,{1:10})
+  add_round(data,'0','p',3,'MPO',99,{1:10})
   data['tournaments'][0]['categories'].append('FPO')
   save_player(data,'f','Female','Player','FPO',0,'f')
-  add_round(data,'0','f',1,'FPO',0,{1:3})
+  for round_number in (1,2,3):
+   add_round(data,'0','f',round_number,'FPO',0,{1:3})
   observations=trend_observations(data)
   self.assertLess(len(observations),len(data['rounds']))
   for category in ['All','MPO','FPO']:

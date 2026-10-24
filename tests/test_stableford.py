@@ -113,3 +113,13 @@ class StablefordTests(unittest.TestCase):
         standings=league_standings(data,'lg')
         self.assertEqual([r['Points'] for r in standings],[9,9,0])
         self.assertEqual([r['Place'] for r in standings],[1,1,3])
+
+    def test_league_stableford_total_uses_only_its_tournaments(self):
+        data=fixture([1,2,3])
+        data['leagues'].append({**data['leagues'][0],'id':'other','name':'Other league'})
+        data['tournaments'][2]['league_id']='other'
+        data=recalculate_handicaps(data)
+        expected=sum(tournament_standings(data,tid)[0]['Stableford'] for tid in ('0','1'))
+        self.assertEqual(league_standings(data,'lg')[0]['Stableford'],expected)
+        self.assertEqual(league_standings(data,'other')[0]['Stableford'],
+                         tournament_standings(data,'2')[0]['Stableford'])

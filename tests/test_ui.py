@@ -99,8 +99,14 @@ class ScreensTest(unittest.TestCase):
         add_round(data, 't', 'b', 1, 'MPO', 0, {1: 3, 2: 4})
         self.path.write_bytes(encoded(data))
         app = english_app().run(timeout=20)
+        normal_home = next(x.value for x in app.table if 'Total points' in x.value)
+        self.assertNotIn('Total Stableford', normal_home.columns)
         app.radio(key='home_scoring').set_value('Stableford').run()
         self.assertFalse(app.exception)
+        stableford_home = next(x.value for x in app.table if 'Total Stableford' in x.value)
+        self.assertEqual(list(stableford_home.columns),
+                         [r'\#', 'Name', 'Total points', 'Total Stableford', 'Tournaments attended', 'Current HCP'])
+        self.assertEqual(set(stableford_home['Total Stableford']), {4})
         app.sidebar.radio[0].set_value('Leagues').run()
         app.radio(key='league_scoring').set_value('Stableford').run()
         self.assertFalse(app.exception)
@@ -132,7 +138,8 @@ class ScreensTest(unittest.TestCase):
         for mode in ['All players', 'Top 3', 'Top 5', 'Specific player']:
             app.radio(key='trend_mode').set_value(mode).run()
             self.assertFalse(app.exception, mode)
-            self.assertEqual(len(app.get('arrow_vega_lite_chart')), 1)
+            self.assertEqual(len(app.get('arrow_vega_lite_chart')),
+                             0 if mode in ('Top 3', 'Top 5') else 1)
         app.radio(key='trend_scope').set_value('Whole course').run()
         self.assertFalse(app.exception)
         self.assertEqual(len(app.get('arrow_vega_lite_chart')), 1)

@@ -21,7 +21,7 @@ SK = {
     'Leaderboard view': 'Zobrazenie výsledkov', 'Score relative to par': 'Skóre voči paru',
     'Handicap adjusted': 'Skóre s handicapom', 'Category': 'Kategória', 'All': 'Všetky',
     'Place': 'Poradie', 'Name': 'Meno', 'Player': 'Hráč', 'Players': 'Hráči', 'Points': 'Body',
-    'Total points': 'Celkové body', 'Tournaments attended': 'Odohrané turnaje',
+    'Total points': 'Celkové body', 'Total Stableford': 'Stableford spolu', 'Tournaments attended': 'Odohrané turnaje',
     'Rounds': 'Kolá', 'Throws': 'Hody', 'HCP adjusted': 'Skóre s HCP', 'Complete': 'Dokončené',
     'Recent tournaments': 'Posledné turnaje', 'League': 'Liga', 'League tournaments': 'Turnaje ligy',
     'Placement points': 'Bodovanie podľa umiestnenia', 'Tournament': 'Turnaj', 'Date': 'Dátum',
@@ -271,7 +271,8 @@ SK.update({'Search players': 'Hľadať hráčov', 'Name or surname': 'Meno alebo
 
 SK.update({'Scoring trend': 'Vývoj skóre', 'Players in trend': 'Hráči v grafe', 'All players': 'Všetci hráči', 'Specific player': 'Konkrétny hráč', 'Top 3': 'Top 3', 'Top 5': 'Top 5', 'Players included': 'Zahrnutí hráči'})
 
-SK.update({'Top players have the lowest average score relative to par in the selected filters. The same players are used throughout the trend.': 'Najlepší hráči majú najnižší priemer skóre voči paru vo vybraných filtroch. V celom grafe sa používa rovnaká skupina hráčov.'})
+SK.update({'Top players have more than two recorded rounds in the selected filters and the lowest average score relative to par. The same players are used throughout the trend.': 'Najlepší hráči majú vo vybraných filtroch viac ako dve zaznamenané kolá a najnižší priemer skóre voči paru. V celom grafe sa používa rovnaká skupina hráčov.'})
+SK.update({'No players have more than two recorded rounds in the selected filters.': 'Vo vybraných filtroch nemá žiadny hráč viac ako dve zaznamenané kolá.'})
 
 SK.update({'Trend scope': 'Rozsah grafu', 'Selected layout': 'Vybraný layout', 'Whole course': 'Celé ihrisko'})
 

@@ -133,15 +133,18 @@ def scoring_trend(data, rounds, player_ids=None):
 
 
 def top_trend_players(data, rounds, count):
-    """Fixed cohort: lowest mean event score per round within the current scope."""
+    """Lowest mean event score among players with at least three scoped rounds."""
     from fractions import Fraction
     by_event = defaultdict(list)
+    round_counts = defaultdict(int)
     for r in rounds:
         by_event[(r['player_id'], r['tournament_id'])].append((r['total'] - r['par'], r.get('round_count', 1)))
+        round_counts[r['player_id']] += r.get('round_count', 1)
     by_player = defaultdict(list)
     for (pid, _), scores in by_event.items():
         by_player[pid].append(Fraction(sum(value for value, _ in scores), sum(count for _, count in scores)))
     players = {p['id']: p for p in data['players']}
-    ranking = sorted(by_player, key=lambda pid: (sum(by_player[pid]) / len(by_player[pid]),
+    ranking = sorted((pid for pid in by_player if round_counts[pid] > 2),
+                     key=lambda pid: (sum(by_player[pid]) / len(by_player[pid]),
                      (players[pid]['first_name'] + ' ' + players[pid]['last_name']).casefold(), pid))
     return ranking[:count]
