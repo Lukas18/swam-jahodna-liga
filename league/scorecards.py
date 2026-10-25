@@ -4,6 +4,51 @@ from html import escape
 from .domain import place_labels, rank_rows
 
 
+SORT_SCRIPT = '''<script>
+(() => {
+  const root = document.currentScript?.getRootNode() || document;
+  root.querySelectorAll('.round-scorecard:not([data-sort-ready])').forEach(card => {
+    card.dataset.sortReady = 'true';
+    const table = card.querySelector('table');
+    const body = table.tBodies[0];
+    const headers = Array.from(table.tHead.rows[0].cells);
+    Array.from(body.rows).forEach((row, index) => { row.dataset.originalOrder = index; });
+    headers.forEach((header, column) => {
+      header.tabIndex = 0;
+      header.setAttribute('aria-sort', 'none');
+      const sort = () => {
+        const ascending = header.getAttribute('aria-sort') !== 'ascending';
+        headers.forEach(item => item.setAttribute('aria-sort', 'none'));
+        header.setAttribute('aria-sort', ascending ? 'ascending' : 'descending');
+        const textColumn = header.classList.contains('name') || header.classList.contains('category');
+        const value = row => row.cells[column].textContent.trim();
+        const number = text => Number(text.replace(/^T(?=\\d)/i, ''));
+        const rows = Array.from(body.rows);
+        rows.sort((left, right) => {
+          const a = value(left), b = value(right);
+          const aMissing = !a || a === '—', bMissing = !b || b === '—';
+          if (aMissing !== bMissing) return aMissing ? 1 : -1;
+          const comparison = textColumn
+            ? a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'})
+            : number(a) - number(b);
+          return (ascending ? comparison : -comparison)
+            || Number(left.dataset.originalOrder) - Number(right.dataset.originalOrder);
+        });
+        rows.forEach(row => body.appendChild(row));
+      };
+      header.addEventListener('click', sort);
+      header.addEventListener('keydown', event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          sort();
+        }
+      });
+    });
+  });
+})();
+</script>'''
+
+
 def round_scorecard_html(data, records, labels):
     """Render one round's recorded scores, using each scorecard's saved hole par."""
     players = {player['id']: player for player in data['players']}
@@ -24,7 +69,7 @@ def round_scorecard_html(data, records, labels):
     def header(label, css=''):
         return f'<th scope="col" class="{css}">{escape(label)}</th>'
 
-    head = [header(labels['Pos'], 'position'), header(labels['Name'], 'name')]
+    head = [header(labels['#'], 'position'), header(labels['Name'], 'name')]
     if show_category:
         head.append(header(labels['Category'], 'category'))
     head.append(header(labels['Total'], 'total'))
@@ -63,8 +108,14 @@ def round_scorecard_html(data, records, labels):
                 cells.append('<td class="hole empty">—</td>')
                 continue
             difference = hole['throws'] - hole['par']
-            score_class = ('ace' if hole['throws'] == 1 else 'under' if difference < 0
-                           else 'over' if difference > 0 else 'par')
+            if hole['throws'] == 1:
+                score_class = 'ace'
+            elif difference < 0:
+                score_class = 'under'
+            elif difference == 0:
+                score_class = 'par'
+            else:
+                score_class = 'over' if difference == 1 else f'over over-{min(difference, 4)}'
             tooltip = f'{labels["Hole"]} {number} · {labels["Par"]} {hole["par"]}'
             if hole['length'] > 0:
                 tooltip += f' · {hole["length"]:.0f} m'
@@ -75,4 +126,4 @@ def round_scorecard_html(data, records, labels):
     round_label = escape(f'{labels["Round"]} {records[0]["round_number"]}', quote=True)
     return (f'<div class="round-scorecard" role="region" aria-label="{round_label}" tabindex="0">'
             '<table><thead><tr>' + ''.join(head) + '</tr></thead><tbody>'
-            + ''.join(body) + '</tbody></table></div>')
+            + ''.join(body) + '</tbody></table></div>' + SORT_SCRIPT)

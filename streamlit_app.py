@@ -58,12 +58,14 @@ h1,h2,h3 {letter-spacing:-.025em;}
 
 .st-key-placement_points table {width:auto;}
 .st-key-placement_points table :is(th, td) {white-space:nowrap;padding:6px 10px !important;}
-[data-testid="stMetric"] {background:rgba(127,127,127,.08);border-radius:12px;padding:16px;}
 .round-scorecard {overflow-x:auto;margin:0 0 1.25rem;border:1px solid #304255;border-radius:8px;}
-.round-scorecard table {border-collapse:collapse;width:max-content;min-width:100%;background:#0B1017;color:#E9EEF3;font-variant-numeric:tabular-nums;}
+.round-scorecard table {border-collapse:collapse;width:max-content;min-width:100%;background:transparent;color:#E9EEF3;font-variant-numeric:tabular-nums;}
 .round-scorecard :is(th,td) {padding:11px 10px;text-align:center;white-space:nowrap;border-bottom:1px solid #304255;}
 .round-scorecard tbody tr:last-child :is(th,td) {border-bottom:0;}
-.round-scorecard thead th {font-size:.85rem;font-weight:700;vertical-align:bottom;}
+.round-scorecard thead th {font-size:.85rem;font-weight:700;vertical-align:bottom;background:rgba(127,127,127,.08);color:#AEBCCD;cursor:pointer;position:relative;}
+.round-scorecard thead th:focus-visible {outline:2px solid currentColor;outline-offset:-2px;}
+.round-scorecard thead th[aria-sort="ascending"]::after {content:"▲";position:absolute;right:2px;top:4px;font-size:.55rem;}
+.round-scorecard thead th[aria-sort="descending"]::after {content:"▼";position:absolute;right:2px;top:4px;font-size:.55rem;}
 .round-scorecard thead th small {display:block;color:#AEBCCD;font-size:.72rem;font-weight:500;line-height:1.25;}
 .round-scorecard .position {min-width:55px;}
 .round-scorecard .name {min-width:190px;text-align:left;}
@@ -75,7 +77,11 @@ h1,h2,h3 {letter-spacing:-.025em;}
 .round-scorecard .score.under {background:#254A79;color:#FFFFFF;}
 .round-scorecard .score.ace {background:#2BAF8D;color:#FFFFFF;border-radius:7px;}
 .round-scorecard .score.over {background:#C47D5B;color:#FFFFFF;border-radius:9px;}
+.round-scorecard .score.over-2 {background:#D2683F;}
+.round-scorecard .score.over-3 {background:#C94D28;}
+.round-scorecard .score.over-4 {background:#B83032;}
 .round-scorecard .totals-only {display:block;color:#AEBCCD;font-size:.72rem;font-weight:400;}
+[data-testid="stMetric"] {background:rgba(127,127,127,.08);border-radius:12px;padding:16px;}
 </style>''', unsafe_allow_html=True)
 
 
@@ -650,16 +656,16 @@ def tournaments():
     cat = category_filter('tournament_cat', t['categories'])
     metric = metric_picker('tournament_metric')
     st.caption(f"{len(tournament_entries(DATA, t['id']))} registered players")
-    complete = st.checkbox('Completed players only', value=True)
     stableford = stableford_picker(t['league_id'], 'tournament_scoring')
-    table(stableford_tournament(DATA, t['id'], cat) if stableford else tournament_results(DATA, t['id'], cat, metric, complete), 'tournament_table', sortable=True)
+    table(stableford_tournament(DATA, t['id'], cat) if stableford else tournament_results(DATA, t['id'], cat, metric, complete_only=True), 'tournament_table', sortable=True)
     with st.expander('Round scorecards'):
         records = [r for r in DATA['rounds'] if r['tournament_id'] == t['id'] and (cat == 'All' or r['category'] == cat)]
-        labels = {label: translate(label) for label in ['Pos', 'Name', 'Category', 'Total', 'Round', 'Hole', 'Par', 'Totals only']}
+        labels = {label: translate(label) for label in ['Name', 'Category', 'Total', 'Round', 'Hole', 'Par', 'Totals only']}
+        labels['#'] = '#'
         for number in sorted({r['round_number'] for r in records}):
             st.markdown(f"**{translate('Round')} {number}**")
             round_records = [r for r in records if r['round_number'] == number]
-            st.markdown(round_scorecard_html(DATA, round_records, labels), unsafe_allow_html=True)
+            st.html(round_scorecard_html(DATA, round_records, labels), unsafe_allow_javascript=True)
         if not records:
             st.info('No results yet.')
 
@@ -789,10 +795,13 @@ def draw_scoring_trend(rows, key):
     st.altair_chart(chart, use_container_width=True, key=key)
 
 
-def trend_controls(tournament_id=None, category='All'):
+def trend_controls(tournament_id=None, category='All', league_id=None):
     st.subheader('Scoring trend')
     event = find(DATA, 'tournaments', tournament_id) if tournament_id else None
-    layouts = [l for l in DATA['layouts'] if event is None or l['id'] == event['layout_id']]
+    league_layout_ids = ({t['layout_id'] for t in DATA['tournaments'] if t['league_id'] == league_id}
+                         if league_id is not None else None)
+    layouts = [l for l in DATA['layouts'] if (event is None or l['id'] == event['layout_id'])
+               and (league_layout_ids is None or l['id'] in league_layout_ids)]
     layout = choose('Trend layout', layouts, 'trend_layout',
                     lambda l: find(DATA, 'courses', l['course_id'])['name'] + ' / ' + l['name'])
     if not layout:
@@ -804,7 +813,8 @@ def trend_controls(tournament_id=None, category='All'):
     category = statistics_category('trend_category', label='Trend category')
     rounds = selected_rounds({**DATA, 'rounds': TREND_OBSERVATIONS},
         tournament_id=tournament_id, course_id=course['id'],
-        layout_id=None if trend_scope == 'Whole course' else layout['id'], category=category)
+        layout_id=None if trend_scope == 'Whole course' else layout['id'], category=category,
+        league_id=league_id)
     context = course['name'] if trend_scope == 'Whole course' else f"{course['name']} / {layout['name']}"
     st.write(context + ' · ' + translate(category))
     mode = st.radio('Players in trend', ['All players', 'Specific player', 'Top 3', 'Top 5'], horizontal=True, key='trend_mode', help='Top players have more than two recorded rounds in the selected filters and the lowest average score relative to par. The same players are used throughout the trend.')
@@ -828,30 +838,40 @@ def trend_controls(tournament_id=None, category='All'):
 
 def statistics_page():
     st.title('Statistics')
-    scope = st.radio('Results scope', ['All time', 'Tournament'], horizontal=True, key='stats_scope')
+    scope = st.radio('Results scope', ['All time', 'League', 'Tournament'], horizontal=True, key='stats_scope')
     tournament_id = None
+    league_id = None
+    layout_ids = None
     if scope == 'Tournament':
         t = choose('Tournament', sorted(DATA['tournaments'], key=lambda x: x['date'], reverse=True), 'stats_tournament',
                    lambda x: f"{x['date']} · {x['name']}")
         if not t:
             return
         tournament_id = t['id']
-    layouts = [l for l in DATA['layouts'] if tournament_id is None or l['id'] == t['layout_id']]
+        layout_ids = {t['layout_id']}
+    elif scope == 'League':
+        league = choose('League', DATA['leagues'], 'stats_league')
+        if not league:
+            return
+        league_id = league['id']
+        layout_ids = {t['layout_id'] for t in DATA['tournaments'] if t['league_id'] == league_id}
+    layouts = [l for l in DATA['layouts'] if layout_ids is None or l['id'] in layout_ids]
     courses = [c for c in DATA['courses'] if any(l['course_id'] == c['id'] for l in layouts)]
     if len(courses) > 1:
         course = choose('Course', courses, 'stats_course')
         if not course:
             return
         layouts = [l for l in layouts if l['course_id'] == course['id']]
-    layout = choose('Layout', layouts, 'stats_layout_' + (tournament_id or 'alltime'))
+    layout = choose('Layout', layouts, 'stats_layout_' + (tournament_id or league_id or 'alltime'))
     if not layout:
         return
     category = statistics_category('stats_category')
-    st.subheader('All-time statistics' if scope == 'All time' else 'Tournament statistics')
+    st.subheader({'All time': 'All-time statistics', 'League': 'League statistics',
+                  'Tournament': 'Tournament statistics'}[scope])
     rounds = selected_rounds(DATA, tournament_id, None,
-                             layout['id'], category)
+                             layout['id'], category, league_id)
     show_statistics(rounds, 'public_stats', category == 'All')
-    trend_controls(tournament_id, category)
+    trend_controls(tournament_id, category, league_id)
 
 
 def admin_page():

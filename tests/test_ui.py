@@ -125,7 +125,7 @@ class ScreensTest(unittest.TestCase):
         self.assertTrue(any('Save difficulty' == b.label for b in app.button))
         self.assertEqual(self.path.read_bytes(), encoded(data))  # All view changes are read-only.
 
-    def test_tournament_rounds_show_one_scorecard_table_per_round(self):
+    def test_tournament_rounds_show_one_scorecard_per_round(self):
         data = fixture()
         data['tournaments'][0]['num_rounds'] = 2
         add_round(data, 't', 'a', 1, 'MPO', 1, {1: 2, 2: 4})
@@ -137,14 +137,21 @@ class ScreensTest(unittest.TestCase):
         app = english_app().run(timeout=20)
         app.sidebar.radio[0].set_value('Tournaments').run()
         self.assertFalse(app.exception)
-        tables = [item.value for item in app.markdown if 'class="round-scorecard"' in item.value]
+        tables = [item.value for item in app.get('html') if 'class="round-scorecard"' in item.value]
         self.assertEqual(len(tables), 2)
-        self.assertEqual(tables[0].count('<td class="position">'), 3)
-        self.assertEqual(tables[1].count('<td class="position">'), 1)
+        self.assertEqual(tables[0].count('<tbody><tr>'), 1)
+        self.assertEqual(tables[0].count('</tr>'), 4)
+        self.assertEqual(tables[1].count('</tr>'), 2)
+        self.assertIn('<th scope="col" class="position">#</th>', tables[0])
+        self.assertFalse(any(box.label == 'Completed players only' for box in app.checkbox))
         app.selectbox(key='tournament_cat').set_value('MPO').run()
         self.assertFalse(app.exception)
-        tables = [item.value for item in app.markdown if 'class="round-scorecard"' in item.value]
-        self.assertEqual(tables[0].count('<td class="position">'), 2)
+        tables = [item.value for item in app.get('html') if 'class="round-scorecard"' in item.value]
+        self.assertEqual(tables[0].count('</tr>'), 3)
+        app.session_state['language'] = 'sk'
+        app.run()
+        tables = [item.value for item in app.get('html') if 'class="round-scorecard"' in item.value]
+        self.assertIn('<th scope="col" class="position">#</th>', tables[0])
 
     def test_trend_modes_and_whole_percentage_data(self):
         data = fixture()
@@ -327,6 +334,38 @@ class ScreensTest(unittest.TestCase):
         app.sidebar.radio[0].set_value('Tournaments').run()
         self.assertFalse(app.exception)
         self.assertTrue(any(x.value == 'Tournament statistics' for x in app.subheader))
+
+    def test_statistics_league_scope_limits_results_and_layouts(self):
+        data = fixture()
+        data['leagues'].append(dict(data['leagues'][0], id='lg2', name='Other league'))
+        add_round(data, 't', 'a', 1, 'MPO', 1, {1: 2, 2: 4})
+        data['tournaments'].append(dict(data['tournaments'][0], id='t2', name='Second event', date='2026-10-09'))
+        add_round(data, 't2', 'b', 1, 'MPO', 0, {1: 4, 2: 4})
+        data['tournaments'].append(dict(data['tournaments'][0], id='t3', name='Other league event',
+                                        date='2026-10-10', league_id='lg2'))
+        add_round(data, 't3', 'a', 1, 'MPO', 1, {1: 6, 2: 4})
+        other_layout = dict(data['layouts'][0], id='l2', name='Other layout')
+        data['layouts'].append(other_layout)
+        data['tournaments'].append(dict(data['tournaments'][0], id='t4', name='Other layout event',
+                                        date='2026-10-11', league_id='lg2', layout_id='l2'))
+        add_round(data, 't4', 'b', 1, 'MPO', 0, {1: 3, 2: 4})
+        self.path.write_bytes(encoded(data))
+
+        app = english_app().run(timeout=20)
+        app.sidebar.radio[0].set_value('Statistics').run()
+        app.radio(key='stats_scope').set_value('League').run()
+        self.assertEqual(app.selectbox(key='stats_league').options, ['League', 'Other league'])
+        self.assertEqual(app.selectbox(key='stats_layout_lg').options, ['Main'])
+        self.assertEqual(app.selectbox(key='trend_layout').options, ['Park / Main'])
+        self.assertEqual(next(m.value for m in app.metric if m.label == 'Recorded rounds'), '2')
+        self.assertTrue(any(x.value == 'League statistics' for x in app.subheader))
+        app.radio(key='trend_scope').set_value('Whole course').run()
+        self.assertFalse(app.exception)
+        app.selectbox(key='stats_league').set_value('lg2').run()
+        self.assertFalse(app.exception)
+        self.assertEqual(app.selectbox(key='stats_layout_lg2').options, ['Main', 'Other layout'])
+        self.assertEqual(app.selectbox(key='trend_layout').options, ['Park / Main', 'Park / Other layout'])
+        self.assertEqual(next(m.value for m in app.metric if m.label == 'Recorded rounds'), '1')
 
     def test_simplified_statistics_and_sortable_league(self):
         data = fixture()

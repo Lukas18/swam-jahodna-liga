@@ -1,12 +1,12 @@
 import unittest
 
-from league.domain import add_round
+from league.domain import add_round, save_player
 from league.scorecards import round_scorecard_html
 from test_league import fixture
 
 
 LABELS = {label: label for label in
-          ['Pos', 'Name', 'Category', 'Total', 'Round', 'Hole', 'Par', 'Totals only']}
+          ['#', 'Name', 'Category', 'Total', 'Round', 'Hole', 'Par', 'Totals only']}
 
 
 class RoundScorecardTests(unittest.TestCase):
@@ -21,6 +21,7 @@ class RoundScorecardTests(unittest.TestCase):
         html = round_scorecard_html(data, data['rounds'], LABELS)
 
         self.assertEqual(html.count('<table>'), 1)
+        self.assertIn('<th scope="col" class="position">#</th>', html)
         self.assertEqual(html.count('<tbody><tr>'), 1)
         self.assertEqual(html.count('</tr>'), 4)  # Header and three players.
         self.assertIn('&lt;Alice &amp; Co&gt;', html)
@@ -46,3 +47,15 @@ class RoundScorecardTests(unittest.TestCase):
         self.assertIn('Bob Player<small class="totals-only">Totals only</small>', html)
         self.assertIn('<td class="round-total">8</td>', html)
         self.assertEqual(html.count('class="hole empty">—</td>'), 2)
+
+    def test_above_par_scores_use_progressively_stronger_colors(self):
+        data = fixture()
+        for player_id, throws in [('a', 4), ('b', 5), ('c', 6), ('d', 7), ('e', 8)]:
+            if player_id not in {'a', 'b'}:
+                save_player(data, player_id, player_id.upper(), 'Player', 'MPO', 0, player_id)
+            add_round(data, 't', player_id, 1, 'MPO', 0, {1: throws, 2: 4})
+
+        html = round_scorecard_html(data, data['rounds'], LABELS)
+        for throws, css_class in [(4, 'over'), (5, 'over over-2'), (6, 'over over-3'),
+                                  (7, 'over over-4'), (8, 'over over-4')]:
+            self.assertIn(f'class="score {css_class}">{throws}</span>', html)

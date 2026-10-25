@@ -3,10 +3,13 @@ from collections import defaultdict
 from .domain import OUTCOMES, outcome
 
 
-def selected_rounds(data, tournament_id=None, course_id=None, layout_id=None, category='All'):
+def selected_rounds(data, tournament_id=None, course_id=None, layout_id=None, category='All', league_id=None):
     layouts = {layout['id']: layout for layout in data['layouts']}
+    league_tournaments = ({t['id'] for t in data['tournaments'] if t['league_id'] == league_id}
+                          if league_id is not None else None)
     return [r for r in data['rounds']
             if (tournament_id is None or r['tournament_id'] == tournament_id)
+            and (league_tournaments is None or r['tournament_id'] in league_tournaments)
             and (course_id is None or layouts[r['layout_id']]['course_id'] == course_id)
             and (layout_id is None or r['layout_id'] == layout_id)
             and (category == 'All' or r['category'] == category)]

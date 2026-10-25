@@ -2,7 +2,7 @@ import unittest
 from copy import deepcopy
 from test_league import fixture
 from league.domain import add_round
-from league.statistics import selected_rounds, summary, round_overview, hole_statistics
+from league.statistics import selected_rounds, summary, round_overview, hole_statistics, trend_observations, scoring_trend
 
 
 class StatisticsTest(unittest.TestCase):
@@ -66,6 +66,25 @@ class StatisticsTest(unittest.TestCase):
         self.assertEqual(summary(d['rounds'])['Hole scores'], 7)
         self.assertEqual(summary(d['rounds'])['Tournaments'], 3)
         self.assertEqual(len(hole_statistics(d, d['rounds'])), 5)
+
+    def test_league_scope_keeps_hole_and_trend_rounds_in_the_selected_league(self):
+        d = fixture()
+        d['leagues'].append(dict(d['leagues'][0], id='lg2', name='Other league'))
+        add_round(d, 't', 'a', 1, 'MPO', 1, {1: 2, 2: 4})
+        d['tournaments'].append(dict(d['tournaments'][0], id='t2', name='Second event', date='2026-10-09'))
+        add_round(d, 't2', 'b', 1, 'MPO', 0, {1: 4, 2: 4})
+        d['tournaments'].append(dict(d['tournaments'][0], id='t3', name='Other league event',
+                                     date='2026-10-10', league_id='lg2'))
+        add_round(d, 't3', 'a', 1, 'MPO', 1, {1: 6, 2: 4})
+
+        league_rounds = selected_rounds(d, layout_id='l', league_id='lg')
+        self.assertEqual({r['tournament_id'] for r in league_rounds}, {'t', 't2'})
+        self.assertEqual(summary(league_rounds)['Recorded rounds'], 2)
+        self.assertEqual(hole_statistics(d, league_rounds)[0]['Average throws'], 3)
+        observations = trend_observations(d)
+        trend_rounds = selected_rounds({**d, 'rounds': observations}, league_id='lg')
+        self.assertEqual([r['tournament_id'] for r in scoring_trend(d, trend_rounds)], ['t', 't2'])
+        self.assertEqual({r['tournament_id'] for r in selected_rounds(d, league_id='lg2')}, {'t3'})
 
     def test_totals_only_empty_and_historical_tees(self):
         d = fixture()

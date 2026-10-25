@@ -20,7 +20,7 @@ SK = {
     'League leaderboard': 'Poradie ligy', 'Overall standings': 'Celkové poradie',
     'Leaderboard view': 'Zobrazenie výsledkov', 'Score relative to par': 'Skóre voči paru',
     'Handicap adjusted': 'Skóre s handicapom', 'Category': 'Kategória', 'All': 'Všetky',
-    'Place': 'Poradie', 'Pos': 'Poz.', 'Name': 'Meno', 'Player': 'Hráč', 'Players': 'Hráči', 'Points': 'Body',
+    'Place': 'Poradie', 'Name': 'Meno', 'Player': 'Hráč', 'Players': 'Hráči', 'Points': 'Body',
     'Total points': 'Celkové body', 'Total Stableford': 'Stableford spolu', 'Tournaments attended': 'Odohrané turnaje',
     'Rounds': 'Kolá', 'Throws': 'Hody', 'HCP adjusted': 'Skóre s HCP', 'Complete': 'Dokončené',
     'Recent tournaments': 'Posledné turnaje', 'League': 'Liga', 'League tournaments': 'Turnaje ligy',
@@ -34,11 +34,12 @@ SK = {
     'The admin can create the first league and tournament.': 'Administrátor môže vytvoriť prvú ligu a turnaj.',
     'Points follow the selected leaderboard view. Attendance counts tournaments with a recorded round, including incomplete tournaments. Tied places share the same medal and use T (for example T3, T3, 5).':
         'Body zodpovedajú zvolenému zobrazeniu výsledkov. Účasť sa počíta za turnaje so zapísaným kolom, aj za nedokončené turnaje. Pri zhode hráči zdieľajú medailu a poradie s T (napríklad T3, T3, 5).',
-    'Completed players only': 'Iba hráči s dokončenými kolami', 'Round scorecards': 'Výsledky jednotlivých kôl',
-    'Place is the player’s category rank, even in the combined view. Lower scores rank higher. Incomplete players are excluded by default. Raw totals across different hole counts are not directly comparable.':
-        'Poradie patrí ku kategórii hráča aj v spoločnom zobrazení. Nižšie skóre znamená lepšie umiestnenie. Hráči s nedokončenými kolami sa predvolene nezobrazujú.',
+    'Round scorecards': 'Výsledky jednotlivých kôl',
+    'Place is the player’s category rank, even in the combined view. Lower scores rank higher. Incomplete players are excluded. Raw totals across different hole counts are not directly comparable.':
+        'Poradie patrí ku kategórii hráča aj v spoločnom zobrazení. Nižšie skóre znamená lepšie umiestnenie. Hráči s nedokončenými kolami sa nezobrazujú.',
     'Totals-only result — hole scores unavailable.': 'Zapísaný je iba celkový výsledok — skóre jamiek nie je dostupné.',
-    'Tournament statistics': 'Štatistiky turnaja', 'Statistics category': 'Kategória štatistík',
+    'Tournament statistics': 'Štatistiky turnaja', 'League statistics': 'Štatistiky ligy',
+    'Statistics category': 'Kategória štatistík',
     'Recorded rounds': 'Zapísané kolá', 'Hole scores': 'Zapísané skóre jamiek',
     'Average throws per round': 'Priemerný počet hodov na kolo', 'Average +/− par per round': 'Priemerné skóre voči paru na kolo',
     'Average throws': 'Priemerné hody', 'Average +/− par': 'Priemer voči paru',
@@ -340,6 +341,9 @@ class LocalizedUI:
                 if hasattr(data, 'columns'):
                     configs = deepcopy(kwargs.get('column_config', {}))
                     for column in data.columns:
+                        if isinstance(column, tuple):
+                            # Streamlit renders MultiIndex headers directly; tuple config keys are not JSON keys.
+                            continue
                         if column not in configs:
                             configs[column] = {'label': translate(column)}
                         elif configs[column] is not None:

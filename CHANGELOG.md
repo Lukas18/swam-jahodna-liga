@@ -1,5 +1,23 @@
 # Change log
 
+## 2026-10-24 — Graduated over-par score colors
+
+- Kept the existing bogey orange in tournament round scorecards, then added stronger orange for double and triple bogeys and red for scores four or more throws over par. Ace and under-par colors remain unchanged.
+
+## 2026-10-24 — Restored original round scorecard layout
+
+- Restored the single custom round table shown in the original screenshot, with hole number, recorded distance, and par stacked inside each header cell. Kept the `#` position header and removed completed-players checkbox. The custom table uses its original fixed order and score colors.
+
+## 2026-10-24 — League-specific statistics
+
+- Added a League scope to public Statistics. Selecting a league limits the hole table, round summary, scoring trend, and both layout pickers to tournaments in that league, including the Whole course trend view.
+- Added the Slovak heading and regression coverage for league isolation across multiple tournaments and shared layouts.
+
+## 2026-10-24 — Sortable round scorecards
+
+- Rendered each combined round scorecard as a sortable dataframe, with the same grid approach as hole statistics. Kept recorded par and distance in the hole headers, category places, relative and absolute totals, totals-only records, and fixed ace/under/over cell colors without a heat map.
+- Changed the round position header to `#` in both languages and removed the completed-players checkbox. Tournament standings continue to show completed players.
+
 ## 2026-10-24 — Single golf-style handicap history
 
 - Removed the last-10 tournament handicap calculation and the parallel method selector. The best-of-20 golf-style result now occupies the canonical handicap run, history, player, entry and scorecard fields.
