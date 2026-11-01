@@ -347,7 +347,8 @@ function render(animate = true) {
         icon.src = underParIcon ? `/static/images/${underParIcon}-face.png`
           : player.lastDelta >= 4 ? "/static/images/crying-frog.png" : "/static/images/sad-frog.png";
         // Explicit dimensions prevent image decoding from changing row geometry.
-        icon.width = underParIcon ? 86 : 72; icon.height = underParIcon ? 86 : 72;
+        const iconSize = underParIcon === "birdie" ? 112 : underParIcon ? 86 : 72;
+        icon.width = iconSize; icon.height = iconSize;
         icon.alt = "";
         icon.setAttribute("aria-hidden", "true");
         iconSlot.append(icon);

@@ -479,3 +479,9 @@
 - Restored Troll Face (-1) and eagle (-2) images to their original 86px size; kept Pepe icons at 72px. Reserved icon space expanded so the larger faces do not shift row geometry or lose the requested total → hole change → icon order.
 - Removed separate frog/crying animation overrides. Every icon now uses the same hole-icon-float keyframes, 950ms duration and easing. Crying Pepe retains its required visibility after the shared animation using an end-opacity variable; movement delays and reduced-motion handling remain in effect.
 - Eight replay API tests, Node render regression and JS syntax checks pass, including restored birdie/eagle intrinsic dimensions. Browser computed styles confirmed 86px faces, 72px Pepes and identical hole-icon-float/0.95s animation on all four. Saved replay-shared-animation-original-size-preview.jpg. Exclude unrelated .devcontainer/test.py; no league or Supabase data changes.
+
+
+## 2026-11-01T17:36:09+01:00 — Enlarge Troll Face by 30 percent
+
+- Increased only the birdie (-1) Troll Face from 86px to 112px (86 × 1.3 rounded to a whole pixel). Eagle remains 86px and Pepe icons remain 72px; animations and scoring unchanged.
+- Expanded reserved icon space to accommodate the larger Troll Face without shifting rows. Updated documentation and existing render size assertions. Node syntax/render checks and eight replay API tests pass. No league or Supabase changes; exclude unrelated .devcontainer/test.py.

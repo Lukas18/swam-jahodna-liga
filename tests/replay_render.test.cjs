@@ -83,7 +83,8 @@ context.testPlayers = [-1,-2].map(delta => ({ id: String(delta), name: `Under ${
 vm.runInContext(`window.matchMedia = () => ({ matches: true }); render(true);`, context);
 const underIcons = images(elements.get('standings-body'));
 assert.equal(underIcons.length,2);
-for (const icon of underIcons) { assert.equal(icon.width,86); assert.equal(icon.height,86); }
+assert.equal(underIcons[0].width,112); assert.equal(underIcons[0].height,112);
+assert.equal(underIcons[1].width,86); assert.equal(underIcons[1].height,86);
 assert.equal(underIcons[0].src,'/static/images/birdie-face.png');
 assert.equal(underIcons[1].src,'/static/images/eagle-face.png');
-console.log('PASS: birdie and eagle icons retain their original 86px size.');
+console.log('PASS: Troll Face grows 30 percent to 112px; eagle stays 86px.');

@@ -43,10 +43,10 @@ tbody tr.highlighted td { border-bottom-color: #577148; }
 .player-highlight-button:hover { text-decoration: underline; text-decoration-color: var(--lime); }
 tr.highlighted .player-highlight-button::before { content: "★ "; color: var(--lime); }
 .score { font-size: 16px; }
-.score-content { display: inline-flex; align-items: center; gap: 6px; position: relative; width: 204px; height: 22px; vertical-align: middle; white-space: nowrap; }
+.score-content { display: inline-flex; align-items: center; gap: 6px; position: relative; width: 230px; height: 22px; vertical-align: middle; white-space: nowrap; }
 .score-total { flex: none; }
 .hole-delta-slot { position: relative; flex: 0 0 56px; width: 56px; height: 22px; }
-.score-icon-slot { position: relative; flex: 0 0 94px; width: 94px; height: 22px; }
+.score-icon-slot { position: relative; flex: 0 0 120px; width: 120px; height: 22px; }
 .hole-delta { position: absolute; top: -5px; left: 0; z-index: 2; white-space: nowrap; pointer-events: none; font-size: 16px; line-height: 1; font-weight: 900; color: var(--muted); text-shadow: 0 2px 5px #071012; animation: hole-delta-rise 750ms ease-out both; animation-delay: var(--score-effect-delay, 0ms); }
 .hole-delta.over { color: var(--orange); }
 .hole-delta.big-over { color: var(--red); }
@@ -55,7 +55,8 @@ tr.highlighted .player-highlight-button::before { content: "★ "; color: var(--
 .hole-delta.large { font-size: 30px; }
 .hole-delta.huge { font-size: 38px; }
 .hole-icon { position: absolute; top: 50%; left: 0; z-index: 3; width: 72px; height: 72px; object-fit: contain; pointer-events: none; transform: translateY(-50%); animation: hole-icon-float 950ms ease-out both; animation-delay: var(--score-effect-delay, 0ms); filter: drop-shadow(0 3px 4px #071012); }
-.hole-icon.birdie-icon, .hole-icon.eagle-icon { width: 86px; height: 86px; }
+.hole-icon.birdie-icon { width: 112px; height: 112px; }
+.hole-icon.eagle-icon { width: 86px; height: 86px; }
 /* Keep the crying icon visible after the same floating motion finishes. */
 .hole-icon.crying-icon { --icon-final-opacity: 1; }
 @keyframes hole-delta-rise {
