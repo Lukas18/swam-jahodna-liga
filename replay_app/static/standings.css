@@ -52,7 +52,7 @@ tr.highlighted .player-highlight-button::before { content: "★ "; color: var(--
 .hole-delta.large { font-size: 30px; }
 .hole-delta.huge { font-size: 38px; }
 .hole-icon { position: absolute; top: -50px; left: calc(100% + 45px); z-index: 3; width: 83px; height: auto; pointer-events: none; animation: hole-icon-float 950ms ease-out both; filter: drop-shadow(0 3px 4px #071012); }
-.hole-icon.birdie-icon { top: -19px; left: -90px; width: 86px; }
+.hole-icon.birdie-icon, .hole-icon.eagle-icon { top: -19px; left: -90px; width: 86px; }
 @keyframes hole-delta-rise {
   0% { opacity: 0; transform: translateY(8px) scale(.9); }
   12% { opacity: 1; transform: translateY(0) scale(1); }

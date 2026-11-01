@@ -435,3 +435,10 @@
 - Reproduced corrupt .xlsx uploads returning HTTP 500; catch BadZipFile and return a readable JSON validation error with HTTP 400. Added four passing replay tests covering the landing page/assets, valid two-round upload with distinct shotgun starts, malformed uploads, missing files and the 8 MB limit.
 - Browser verified synthetic two-round/three-player upload, manual 18-hole par validation, per-player first holes 18/8/1, next/end/beginning controls, 4x continuous autoplay through Round 2 completion, cumulative totals (-2/106, +6/114, +36/144), division filtering and retained highlighting. No browser console errors. Saved replay-app-running-preview.jpg; no user workbook, league file or Supabase data was modified. Sound was muted for deterministic playback verification.
 - Wider repository suite: 116 tests, 7 failures and 2 errors in the separate, untouched Streamlit UI. They stem from the installed Streamlit html() not accepting unsafe_allow_javascript, preventing subsequent Tournament widgets from rendering. The standalone replay tests pass independently. Keep the user's unrelated .devcontainer/test.py untracked and excluded. Device Hub remains waived for this web app.
+
+
+## 2026-11-01T12:36:57+01:00 — Replay eagle and +5-or-worse icons
+
+- Added the user's supplied eagle face for a hole scored exactly two under par, and the supplied crying frog for +5 or worse. Birdies retain the Troll Face; +3/+4 retain the existing sad frog. Preserve floating animation, numeric score changes, per-division icon controls and existing sound rules.
+- Copied the PNG attachments unchanged into replay_app/static/images/eagle-face.png and crying-frog.png. Eagle uses the same placement/size as the existing birdie icon. Updated replay README and asset-serving coverage.
+- Four replay tests and JavaScript syntax validation pass. Browser verified loaded image paths and natural dimensions for -2, -1, +4, +5 and +6 in a synthetic one-round/five-player workbook. Saved replay-new-score-icons-preview.jpg. No league/Supabase data changed. Exclude the unrelated .devcontainer/test.py. Device Hub remains waived for the web app.

@@ -333,10 +333,12 @@ function render(animate = true) {
       holeDelta.textContent = scoreText(player.lastDelta);
       holeDelta.title = `Hole ${player.last}: ${scoreText(player.lastDelta)} relative to par`;
       scoreContent.append(holeDelta);
-      if (state.iconDivisions.has(player.division) && (player.lastDelta >= 3 || player.lastDelta === -1)) {
+      const underParIcon = { "-1": "birdie", "-2": "eagle" }[player.lastDelta];
+      if (state.iconDivisions.has(player.division) && (player.lastDelta >= 3 || underParIcon)) {
         const icon = document.createElement("img");
-        icon.className = `hole-icon${player.lastDelta === -1 ? " birdie-icon" : ""}`;
-        icon.src = player.lastDelta === -1 ? "/static/images/birdie-face.png" : "/static/images/sad-frog.png";
+        icon.className = `hole-icon${underParIcon ? ` ${underParIcon}-icon` : ""}`;
+        icon.src = underParIcon ? `/static/images/${underParIcon}-face.png`
+          : player.lastDelta >= 5 ? "/static/images/crying-frog.png" : "/static/images/sad-frog.png";
         icon.alt = "";
         icon.setAttribute("aria-hidden", "true");
         scoreContent.append(icon);

@@ -31,7 +31,7 @@ class ReplayAppTests(unittest.TestCase):
         response = self.client.get('/')
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Open replay', response.data)
-        for path in ['app.js', 'style.css', 'standings.css', 'images/birdie-face.png', 'images/sad-frog.png']:
+        for path in ['app.js', 'style.css', 'standings.css', 'images/birdie-face.png', 'images/eagle-face.png', 'images/sad-frog.png', 'images/crying-frog.png']:
             with self.client.get('/static/' + path) as response:
                 self.assertEqual(response.status_code, 200, path)
 
