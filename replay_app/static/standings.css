@@ -53,6 +53,11 @@ tr.highlighted .player-highlight-button::before { content: "★ "; color: var(--
 .hole-delta.huge { font-size: 38px; }
 .hole-icon { position: absolute; top: -50px; left: calc(100% + 45px); z-index: 3; width: 83px; height: auto; pointer-events: none; animation: hole-icon-float 950ms ease-out both; filter: drop-shadow(0 3px 4px #071012); }
 .hole-icon.birdie-icon, .hole-icon.eagle-icon { top: -19px; left: -90px; width: 86px; }
+.hole-icon.crying-icon { position: static; display: inline-block; width: 44px; height: auto; margin-left: 8px; vertical-align: middle; animation: crying-icon-enter 220ms ease-out both; }
+@keyframes crying-icon-enter {
+  from { opacity: 0; transform: translateY(5px) scale(.9); }
+  to { opacity: 1; transform: none; }
+}
 @keyframes hole-delta-rise {
   0% { opacity: 0; transform: translateY(8px) scale(.9); }
   12% { opacity: 1; transform: translateY(0) scale(1); }
@@ -67,7 +72,7 @@ tr.highlighted .player-highlight-button::before { content: "★ "; color: var(--
 }
 @media (prefers-reduced-motion: reduce) {
   .hole-delta { animation: none; opacity: 1; transform: translateY(-5px); }
-  .hole-icon { animation: none; opacity: 1; transform: translateY(-10px); }
+  .hole-icon, .hole-icon.crying-icon { animation: none; opacity: 1; transform: translateY(-10px); }
 }
 .division-tag { font-size: 10px; margin-left: 6px; }
 @media (max-width: 650px) {

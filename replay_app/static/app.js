@@ -325,7 +325,8 @@ function render(animate = true) {
     const scoreCell = cell(row, "", `score ${player.score > 0 ? "over" : player.score === 0 ? "even" : ""}`);
     const scoreContent = document.createElement("span"); scoreContent.className = "score-content";
     const total = document.createElement("span"); total.textContent = score; scoreContent.append(total);
-    if (animate && player.lastDelta !== null && player.lastDelta !== 0 && player.lastRoundIndex === roundNumber - 1) {
+    const currentHole = player.lastDelta !== null && player.lastRoundIndex === roundNumber - 1;
+    if (animate && currentHole && player.lastDelta !== 0) {
       const holeDelta = document.createElement("sup");
       const tone = player.lastDelta >= 3 ? "big-over" : player.lastDelta > 0 ? "over" : "under";
       const size = player.lastDelta > 5 ? "huge" : player.lastDelta >= 3 ? "large" : player.lastDelta > 0 ? "small-over" : "";
@@ -333,10 +334,13 @@ function render(animate = true) {
       holeDelta.textContent = scoreText(player.lastDelta);
       holeDelta.title = `Hole ${player.last}: ${scoreText(player.lastDelta)} relative to par`;
       scoreContent.append(holeDelta);
+    }
+    // Severe holes remain visible even after the animation or a highlight redraw.
+    if (currentHole && (animate || player.lastDelta >= 4)) {
       const underParIcon = { "-1": "birdie", "-2": "eagle" }[player.lastDelta];
       if (state.iconDivisions.has(player.division) && (player.lastDelta >= 2 || underParIcon)) {
         const icon = document.createElement("img");
-        icon.className = `hole-icon${underParIcon ? ` ${underParIcon}-icon` : ""}`;
+        icon.className = `hole-icon${underParIcon ? ` ${underParIcon}-icon` : player.lastDelta >= 4 ? " crying-icon" : ""}`;
         icon.src = underParIcon ? `/static/images/${underParIcon}-face.png`
           : player.lastDelta >= 4 ? "/static/images/crying-frog.png" : "/static/images/sad-frog.png";
         icon.alt = "";

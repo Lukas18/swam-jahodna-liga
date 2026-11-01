@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>uDisc Leaderboard Replay</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='standings.css') }}">
-  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=asset_version) }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='standings.css', v=asset_version) }}">
+  <script src="{{ url_for('static', filename='app.js', v=asset_version) }}" defer></script>
 </head>
 <body>
   <main class="shell">
@@ -23,7 +23,7 @@
         <input id="workbook" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
         <span class="upload-symbol">↑</span>
         <strong>Choose a uDisc .xlsx export</strong>
-        <span>or drop it here · Round 1 / Round 2 worksheets</span>
+        <span>or drop it here · numbered rounds or a single-sheet export</span>
       </label>
       <div id="file-status" class="status" role="status"></div>
     </section>

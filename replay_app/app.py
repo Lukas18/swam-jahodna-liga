@@ -20,7 +20,10 @@ DEFAULT_LAYOUTS = Path(__file__).resolve().parents[1] / "data" / "league.json"
 
 @app.get("/")
 def index():
-    return render_template("index.html")
+    # Reloads must pick up changed icon rules and styles instead of cached files.
+    static = Path(app.static_folder)
+    version = max((static / name).stat().st_mtime_ns for name in ("app.js", "style.css", "standings.css"))
+    return render_template("index.html", asset_version=version)
 
 
 @app.post("/api/workbook")

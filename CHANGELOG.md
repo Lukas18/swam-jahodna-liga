@@ -448,3 +448,12 @@
 
 - Show the existing sad frog for +2/+3 relative to par and the crying frog for +4 or worse. Birdie/eagle icons, division controls, numeric sizes, animation and +3 sound threshold remain unchanged. Updated README.
 - Four replay tests and JavaScript syntax check pass. Executed the actual icon-rendering block for -2, -1, 0, +1 through +6 and a disabled division, verifying exact image sources at both new boundaries. No league or Supabase changes; exclude unrelated .devcontainer/test.py.
+
+
+## 2026-11-01T17:12:24+01:00 — Single-sheet replay fallback and reliable crying icons
+
+- If no numbered Round sheets exist, import the only worksheet or the saved active worksheet as Round 1 regardless of its name, including Event results. Numbered Round1/Round2/Round3 sheets still take priority and must remain consecutive. Retain existing hole/player validation. Updated upload hint and README.
+- Moved +4-or-worse crying icons outside the animation-only redraw gate. They now remain inline beside the latest hole's score while paused and after highlight/division redraws, until the next replay step. Numeric marker and other icon animation behavior are unchanged; division opt-outs still apply. No stale icons from preceding rounds.
+- Added asset modification versions to JS/CSS URLs so refreshed pages request changed rules/styles. Restarted the identified loopback replay server; app remains available at http://127.0.0.1:5055.
+- Eight replay API tests pass: arbitrary single-sheet names, active-sheet selection, three numbered rounds, missing-round rejection, column validation and existing uploads/assets/errors. Node syntax check and real-render DOM regression pass for +4/+5/+6/+10, non-animated redraws, division opt-out and round boundaries.
+- Browser uploaded an unnumbered Event results sheet as one round; verified +4/+5/+6 crying icons remain opacity 1 after a player highlight redraw. Saved replay-single-sheet-crying-icons-preview.jpg. No league/Supabase/user workbook data modified. Exclude unrelated .devcontainer/test.py; Device Hub remains waived for the web app.

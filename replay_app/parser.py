@@ -27,7 +27,7 @@ def _integer(value, label, *, optional=False):
 
 
 def parse_workbook(content):
-    """Return complete or partial scorecards from sheets named Round N."""
+    """Read numbered rounds, or the active/only worksheet as a single round."""
     workbook = load_workbook(BytesIO(content), read_only=True, data_only=True)
     sheets = []
     for sheet in workbook.worksheets:
@@ -35,7 +35,12 @@ def parse_workbook(content):
         if match:
             sheets.append((int(match.group(1)), sheet))
     if not sheets:
-        raise ValueError("No 'Round 1' / 'Round 2' worksheets were found")
+        if not workbook.worksheets:
+            raise ValueError("No data worksheets were found")
+        # A single-round export may use any sheet title, including Event results.
+        # With multiple unnumbered sheets, Excel's saved active sheet is current.
+        sheet = workbook.active if workbook.active in workbook.worksheets else workbook.worksheets[0]
+        sheets = [(1, sheet)]
     sheets.sort(key=lambda item: item[0])
     numbers = [number for number, _ in sheets]
     if len(set(numbers)) != len(numbers) or numbers != list(range(1, len(numbers) + 1)):
