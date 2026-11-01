@@ -472,3 +472,10 @@
 - Split the score display into ordered total-score, hole-delta and icon slots. The floating hole number starts 6px after the total score instead of appearing beyond an icon-sized area. Icons follow the hole number.
 - Increased all score icons to explicit 72×72 dimensions with object-fit containment. Images may extend beyond the row vertically; fixed slot widths/heights and delayed effects preserve smooth row movement. Kept crying icon persistence, scoring thresholds and division controls unchanged.
 - Extended the actual-render regression to check total → delta → icon order and the new intrinsic dimensions; eight replay API tests, Node render regression and syntax validation pass. Browser verified the 6px number gap, 72px icons, correct slot order and unchanged ~37px row geometry during a reorder. Saved replay-number-before-large-icon-preview.jpg. No data writes; exclude unrelated .devcontainer/test.py.
+
+
+## 2026-11-01T17:33:54+01:00 — Share Troll Face animation and restore original face size
+
+- Restored Troll Face (-1) and eagle (-2) images to their original 86px size; kept Pepe icons at 72px. Reserved icon space expanded so the larger faces do not shift row geometry or lose the requested total → hole change → icon order.
+- Removed separate frog/crying animation overrides. Every icon now uses the same hole-icon-float keyframes, 950ms duration and easing. Crying Pepe retains its required visibility after the shared animation using an end-opacity variable; movement delays and reduced-motion handling remain in effect.
+- Eight replay API tests, Node render regression and JS syntax checks pass, including restored birdie/eagle intrinsic dimensions. Browser computed styles confirmed 86px faces, 72px Pepes and identical hole-icon-float/0.95s animation on all four. Saved replay-shared-animation-original-size-preview.jpg. Exclude unrelated .devcontainer/test.py; no league or Supabase data changes.

@@ -43,10 +43,10 @@ tbody tr.highlighted td { border-bottom-color: #577148; }
 .player-highlight-button:hover { text-decoration: underline; text-decoration-color: var(--lime); }
 tr.highlighted .player-highlight-button::before { content: "★ "; color: var(--lime); }
 .score { font-size: 16px; }
-.score-content { display: inline-flex; align-items: center; gap: 6px; position: relative; width: 190px; height: 22px; vertical-align: middle; white-space: nowrap; }
+.score-content { display: inline-flex; align-items: center; gap: 6px; position: relative; width: 204px; height: 22px; vertical-align: middle; white-space: nowrap; }
 .score-total { flex: none; }
 .hole-delta-slot { position: relative; flex: 0 0 56px; width: 56px; height: 22px; }
-.score-icon-slot { position: relative; flex: 0 0 80px; width: 80px; height: 22px; }
+.score-icon-slot { position: relative; flex: 0 0 94px; width: 94px; height: 22px; }
 .hole-delta { position: absolute; top: -5px; left: 0; z-index: 2; white-space: nowrap; pointer-events: none; font-size: 16px; line-height: 1; font-weight: 900; color: var(--muted); text-shadow: 0 2px 5px #071012; animation: hole-delta-rise 750ms ease-out both; animation-delay: var(--score-effect-delay, 0ms); }
 .hole-delta.over { color: var(--orange); }
 .hole-delta.big-over { color: var(--red); }
@@ -55,17 +55,9 @@ tr.highlighted .player-highlight-button::before { content: "★ "; color: var(--
 .hole-delta.large { font-size: 30px; }
 .hole-delta.huge { font-size: 38px; }
 .hole-icon { position: absolute; top: 50%; left: 0; z-index: 3; width: 72px; height: 72px; object-fit: contain; pointer-events: none; transform: translateY(-50%); animation: hole-icon-float 950ms ease-out both; animation-delay: var(--score-effect-delay, 0ms); filter: drop-shadow(0 3px 4px #071012); }
-.hole-icon.frog-icon { animation-name: frog-icon-fade; }
-.hole-icon.crying-icon { animation-name: crying-icon-enter; animation-duration: 220ms; }
-@keyframes frog-icon-fade {
-  0% { opacity: 0; transform: translateY(-50%) scale(.9); }
-  14%, 60% { opacity: 1; transform: translateY(-50%) scale(1); }
-  100% { opacity: 0; transform: translateY(calc(-50% - 5px)) scale(.95); }
-}
-@keyframes crying-icon-enter {
-  from { opacity: 0; transform: translateY(-50%) scale(.9); }
-  to { opacity: 1; transform: translateY(-50%); }
-}
+.hole-icon.birdie-icon, .hole-icon.eagle-icon { width: 86px; height: 86px; }
+/* Keep the crying icon visible after the same floating motion finishes. */
+.hole-icon.crying-icon { --icon-final-opacity: 1; }
 @keyframes hole-delta-rise {
   0% { opacity: 0; transform: translateY(8px) scale(.9); }
   12% { opacity: 1; transform: translateY(0) scale(1); }
@@ -76,7 +68,7 @@ tr.highlighted .player-highlight-button::before { content: "★ "; color: var(--
   0% { opacity: 0; transform: translate(0, calc(-50% + 14px)) scale(.7) rotate(-8deg); }
   14% { opacity: 1; transform: translate(0, -50%) scale(1) rotate(0); }
   52% { opacity: 1; transform: translate(4px, calc(-50% - 13px)) scale(1.06) rotate(5deg); }
-  100% { opacity: 0; transform: translate(6px, calc(-50% - 24px)) scale(.9) rotate(10deg); }
+  100% { opacity: var(--icon-final-opacity, 0); transform: translate(6px, calc(-50% - 24px)) scale(.9) rotate(10deg); }
 }
 @media (prefers-reduced-motion: reduce) {
   .hole-delta { animation: none; opacity: 1; transform: translateY(-5px); }

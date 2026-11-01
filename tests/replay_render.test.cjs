@@ -77,3 +77,13 @@ for (const row of elements.get('standings-body').rows) {
   assert.equal(icon.parent,score.children[2]);
 }
 console.log('PASS: total score, adjacent hole delta and larger icon have separate slots in that order.');
+
+context.testPlayers = [-1,-2].map(delta => ({ id: String(delta), name: `Under ${delta}`, division: 'FPO',
+  score: delta, throws: delta+3, currentPlayed: 1, last: 1, start: 1, lastDelta: delta, lastRoundIndex: 0 }));
+vm.runInContext(`window.matchMedia = () => ({ matches: true }); render(true);`, context);
+const underIcons = images(elements.get('standings-body'));
+assert.equal(underIcons.length,2);
+for (const icon of underIcons) { assert.equal(icon.width,86); assert.equal(icon.height,86); }
+assert.equal(underIcons[0].src,'/static/images/birdie-face.png');
+assert.equal(underIcons[1].src,'/static/images/eagle-face.png');
+console.log('PASS: birdie and eagle icons retain their original 86px size.');
