@@ -426,3 +426,12 @@
 
 - Replaced separate player scorecard tables with one player-by-hole table per recorded round. Each table shows category places, relative scores, recorded hole scores and absolute round totals, with compact score colours and horizontal scrolling.
 - Hole headers use shared recorded par and length values; individual score tooltips retain the saved metadata when categories or historical configurations differ. Totals-only records remain visible. No score data or rankings were changed.
+
+
+## 2026-11-01T12:26:26+01:00 — Repair and run standalone replay app
+
+- Read replay_app/README.md (no readme.txt exists). Corrected the launch command to use the checkout's .venv, added minimal environment setup and documented direct-script/IDE launch.
+- Reproduced the startup ImportError: the local absolute `from parser` edit selected Python 3.9's standard-library parser in module mode. Added explicit package-relative import in module mode and local import for direct-script mode. Verified both launch methods and HTTP 200 on loopback ports 5055/5056; stopped the temporary 5056 process and left the module server running at http://127.0.0.1:5055.
+- Reproduced corrupt .xlsx uploads returning HTTP 500; catch BadZipFile and return a readable JSON validation error with HTTP 400. Added four passing replay tests covering the landing page/assets, valid two-round upload with distinct shotgun starts, malformed uploads, missing files and the 8 MB limit.
+- Browser verified synthetic two-round/three-player upload, manual 18-hole par validation, per-player first holes 18/8/1, next/end/beginning controls, 4x continuous autoplay through Round 2 completion, cumulative totals (-2/106, +6/114, +36/144), division filtering and retained highlighting. No browser console errors. Saved replay-app-running-preview.jpg; no user workbook, league file or Supabase data was modified. Sound was muted for deterministic playback verification.
+- Wider repository suite: 116 tests, 7 failures and 2 errors in the separate, untouched Streamlit UI. They stem from the installed Streamlit html() not accepting unsafe_allow_javascript, preventing subsequent Tournament widgets from rendering. The standalone replay tests pass independently. Keep the user's unrelated .devcontainer/test.py untracked and excluded. Device Hub remains waived for this web app.

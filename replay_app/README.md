@@ -7,8 +7,10 @@ This is a separate local Flask app. It reads a uDisc `.xlsx` workbook in memory 
 From the repository root:
 
 ```bash
-venv/bin/python -m replay_app.app
+.venv/bin/python -m replay_app.app
 ```
+
+If the environment has not been set up, run `python3 -m venv .venv` and `.venv/bin/python -m pip install Flask openpyxl` first. You can also launch the file directly with `.venv/bin/python replay_app/app.py`, including from an IDE.
 
 Open <http://127.0.0.1:5055>, upload the workbook, confirm the layout for each round, and press **Open replay**. Use the timeline, playback buttons, and speed selector. The whole tournament plays continuously across rounds. The division selector filters the standings. Set `PORT` if 5055 is occupied on your computer.
 

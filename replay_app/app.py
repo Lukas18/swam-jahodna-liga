@@ -1,11 +1,16 @@
 """Local Flask server for a standalone uDisc leaderboard replay."""
 from pathlib import Path
 import os
+from zipfile import BadZipFile
 
 from flask import Flask, jsonify, render_template, request
 from werkzeug.exceptions import RequestEntityTooLarge
 
-from .parser import load_layouts, parse_workbook
+if __package__:
+    from .parser import load_layouts, parse_workbook
+else:
+    # Also support running this file directly from an IDE or the command line.
+    from parser import load_layouts, parse_workbook
 
 
 app = Flask(__name__)
@@ -28,6 +33,8 @@ def workbook():
         layouts_path = os.environ.get("REPLAY_LAYOUTS_PATH", str(DEFAULT_LAYOUTS))
         parsed["layouts"] = load_layouts(layouts_path)
         return jsonify(parsed)
+    except BadZipFile:
+        return jsonify(error="Could not read workbook. Choose a valid, uncorrupted .xlsx file."), 400
     except (ValueError, OSError, KeyError, TypeError) as exc:
         return jsonify(error=str(exc)), 400
 
