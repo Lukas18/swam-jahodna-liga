@@ -334,11 +334,11 @@ function render(animate = true) {
       holeDelta.title = `Hole ${player.last}: ${scoreText(player.lastDelta)} relative to par`;
       scoreContent.append(holeDelta);
       const underParIcon = { "-1": "birdie", "-2": "eagle" }[player.lastDelta];
-      if (state.iconDivisions.has(player.division) && (player.lastDelta >= 3 || underParIcon)) {
+      if (state.iconDivisions.has(player.division) && (player.lastDelta >= 2 || underParIcon)) {
         const icon = document.createElement("img");
         icon.className = `hole-icon${underParIcon ? ` ${underParIcon}-icon` : ""}`;
         icon.src = underParIcon ? `/static/images/${underParIcon}-face.png`
-          : player.lastDelta >= 5 ? "/static/images/crying-frog.png" : "/static/images/sad-frog.png";
+          : player.lastDelta >= 4 ? "/static/images/crying-frog.png" : "/static/images/sad-frog.png";
         icon.alt = "";
         icon.setAttribute("aria-hidden", "true");
         scoreContent.append(icon);

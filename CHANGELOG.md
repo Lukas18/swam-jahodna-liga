@@ -442,3 +442,9 @@
 - Added the user's supplied eagle face for a hole scored exactly two under par, and the supplied crying frog for +5 or worse. Birdies retain the Troll Face; +3/+4 retain the existing sad frog. Preserve floating animation, numeric score changes, per-division icon controls and existing sound rules.
 - Copied the PNG attachments unchanged into replay_app/static/images/eagle-face.png and crying-frog.png. Eagle uses the same placement/size as the existing birdie icon. Updated replay README and asset-serving coverage.
 - Four replay tests and JavaScript syntax validation pass. Browser verified loaded image paths and natural dimensions for -2, -1, +4, +5 and +6 in a synthetic one-round/five-player workbook. Saved replay-new-score-icons-preview.jpg. No league/Supabase data changed. Exclude the unrelated .devcontainer/test.py. Device Hub remains waived for the web app.
+
+
+## 2026-11-01T12:42:14+01:00 — Adjust replay frog thresholds
+
+- Show the existing sad frog for +2/+3 relative to par and the crying frog for +4 or worse. Birdie/eagle icons, division controls, numeric sizes, animation and +3 sound threshold remain unchanged. Updated README.
+- Four replay tests and JavaScript syntax check pass. Executed the actual icon-rendering block for -2, -1, 0, +1 through +6 and a disabled division, verifying exact image sources at both new boundaries. No league or Supabase changes; exclude unrelated .devcontainer/test.py.
