@@ -457,3 +457,11 @@
 - Added asset modification versions to JS/CSS URLs so refreshed pages request changed rules/styles. Restarted the identified loopback replay server; app remains available at http://127.0.0.1:5055.
 - Eight replay API tests pass: arbitrary single-sheet names, active-sheet selection, three numbered rounds, missing-round rejection, column validation and existing uploads/assets/errors. Node syntax check and real-render DOM regression pass for +4/+5/+6/+10, non-animated redraws, division opt-out and round boundaries.
 - Browser uploaded an unnumbered Event results sheet as one round; verified +4/+5/+6 crying icons remain opacity 1 after a player highlight redraw. Saved replay-single-sheet-crying-icons-preview.jpg. No league/Supabase/user workbook data modified. Exclude unrelated .devcontainer/test.py; Device Hub remains waived for the web app.
+
+
+## 2026-11-01T17:22:17+01:00 — Stabilize replay icons during leaderboard movement
+
+- Fixed score-cell geometry (84px effect area / 22px content height) and reserved explicit 30×30 dimensions for frog images. Frogs are positioned within their own slot rather than entering table layout; image loading and icon changes no longer grow rows or shift columns. +2/+3 frogs fade within that slot, +4-or-worse crying frogs stay visible, and birdie/eagle rules remain intact.
+- Delayed icon/numeric effects by the actual row-movement duration only for rows changing position. Stationary rows show effects immediately. Keep floating numerical markers separate from icon bounds and preserve reduced-motion behavior, score calculation and division controls.
+- Extended the real-render DOM regression to exercise moving and stationary rows, checking effect delays and intrinsic frog dimensions. Node regression and syntax checks pass; all eight replay API tests pass.
+- Browser replay explicitly crossed +2/+3/+6 players. Verified row heights remain ~37px (last collapsed-border row 36.5px), score areas stay 84px, all moving rows use 240ms delays, and floating numeric markers remain separated from frog bounds. Saved replay-stable-moving-icons-preview.jpg. No league/Supabase data changed. Exclude unrelated .devcontainer/test.py. Device Hub remains waived for this web app.

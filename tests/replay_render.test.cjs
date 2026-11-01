@@ -4,11 +4,14 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 class Element {
-  constructor(tag) { this.tag = tag; this.children = []; this.dataset = {}; this.classList = { toggle() {} }; }
-  append(...nodes) { this.children.push(...nodes); }
+  constructor(tag) { this.tag = tag; this.children = []; this.dataset = {}; this.style = { setProperty: (key,value) => { this[key] = value; } }; this.classList = { toggle() {} }; }
+  append(...nodes) { nodes.forEach(node => { if (node instanceof Element) node.parent = this; }); this.children.push(...nodes); }
   replaceChildren() { this.children = []; }
   setAttribute() {}
   addEventListener() {}
+  getAnimations() { return []; }
+  getBoundingClientRect() { return { top: this.parent ? this.parent.children.indexOf(this) * 36 : 0 }; }
+  animate(frames, options) { this.movement = { frames, options }; }
   get rows() { return this.children; }
 }
 const elements = new Map();
@@ -35,6 +38,7 @@ for (const animate of [true, false]) {
   for (const icon of icons) {
     assert.equal(icon.src, '/static/images/crying-frog.png');
     assert.match(icon.className, /crying-icon/);
+    assert.equal(icon.width, 30); assert.equal(icon.height, 30);
   }
 }
 vm.runInContext(`state.iconDivisions.clear(); render(false)`, context);
@@ -44,3 +48,21 @@ context.testPlayers = [context.testPlayers[0]];
 vm.runInContext(`state.iconDivisions.add('FPO'); render(false)`, context);
 assert.equal(images(elements.get('standings-body')).length, 0, 'Previous-round icon leaked');
 console.log('PASS: +4/+5/+6/+10 crying icons survive redraws; division opt-out and round boundaries hold.');
+
+context.testPlayers = [2, 3, 4].map(delta => ({ id: String(delta), name: `Plus ${delta}`, division: 'FPO',
+  score: delta, throws: delta+3, currentPlayed: 1, last: 1, start: 1, lastDelta: delta, lastRoundIndex: 0 }));
+vm.runInContext(`render(false); window.matchMedia = () => ({ matches: false });`, context);
+context.testPlayers.reverse();
+vm.runInContext(`render(true)`, context);
+const rows = elements.get('standings-body').rows;
+for (const row of [rows[0],rows[2]]) {
+  assert(row.movement, 'Moving row was not animated');
+  assert.equal(row['--score-effect-delay'], `${row.movement.options.duration}ms`);
+}
+assert.equal(rows[1].movement, undefined, 'Stationary row should not move');
+assert.equal(rows[1]['--score-effect-delay'], undefined, 'Stationary effects should not be delayed');
+for (const icon of images(elements.get('standings-body'))) {
+  assert.match(icon.className,/frog-icon/);
+  assert.equal(icon.width,30); assert.equal(icon.height,30);
+}
+console.log('PASS: moving rows delay icon effects; stationary rows do not; all frogs reserve fixed dimensions.');

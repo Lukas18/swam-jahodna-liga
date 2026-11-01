@@ -340,9 +340,11 @@ function render(animate = true) {
       const underParIcon = { "-1": "birdie", "-2": "eagle" }[player.lastDelta];
       if (state.iconDivisions.has(player.division) && (player.lastDelta >= 2 || underParIcon)) {
         const icon = document.createElement("img");
-        icon.className = `hole-icon${underParIcon ? ` ${underParIcon}-icon` : player.lastDelta >= 4 ? " crying-icon" : ""}`;
+        icon.className = `hole-icon${underParIcon ? ` ${underParIcon}-icon` : player.lastDelta >= 4 ? " frog-icon crying-icon" : " frog-icon"}`;
         icon.src = underParIcon ? `/static/images/${underParIcon}-face.png`
           : player.lastDelta >= 4 ? "/static/images/crying-frog.png" : "/static/images/sad-frog.png";
+        // Explicit dimensions prevent image decoding from changing row geometry.
+        if (!underParIcon) { icon.width = 30; icon.height = 30; }
         icon.alt = "";
         icon.setAttribute("aria-hidden", "true");
         scoreContent.append(icon);
@@ -361,9 +363,13 @@ function render(animate = true) {
       const old = oldRows.get(row.dataset.playerId);
       if (!old) continue;
       const offset = old.top - row.getBoundingClientRect().top;
-      if (Math.abs(offset) > 1) row.animate(
-        [{ transform: `translateY(${offset}px)`, zIndex: 1 }, { transform: "translateY(0)", zIndex: 1 }],
-        { duration, easing: "cubic-bezier(.2,.8,.2,1)" });
+      if (Math.abs(offset) > 1) {
+        // Let the row settle before starting its separate score/icon effects.
+        row.style.setProperty("--score-effect-delay", `${duration}ms`);
+        row.animate(
+          [{ transform: `translateY(${offset}px)`, zIndex: 1 }, { transform: "translateY(0)", zIndex: 1 }],
+          { duration, easing: "cubic-bezier(.2,.8,.2,1)" });
+      }
     }
   }
   return standing;
