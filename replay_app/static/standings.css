@@ -47,7 +47,7 @@ tr.highlighted .player-highlight-button::before { content: "★ "; color: var(--
 .score-total { flex: none; }
 .hole-delta-slot { position: relative; flex: 0 0 56px; width: 56px; height: 22px; }
 .score-icon-slot { position: relative; flex: 0 0 120px; width: 120px; height: 22px; }
-.hole-delta { position: absolute; top: -5px; left: 0; z-index: 2; white-space: nowrap; pointer-events: none; font-size: 16px; line-height: 1; font-weight: 900; color: var(--muted); text-shadow: 0 2px 5px #071012; animation: hole-delta-rise 750ms ease-out both; animation-delay: var(--score-effect-delay, 0ms); }
+.hole-delta { position: absolute; top: -5px; left: 4px; z-index: 2; white-space: nowrap; pointer-events: none; font-size: 16px; line-height: 1; font-weight: 900; color: var(--muted); text-shadow: 0 2px 5px #071012; animation: hole-delta-rise 750ms ease-out both; animation-delay: var(--score-effect-delay, 0ms); }
 .hole-delta.over { color: var(--orange); }
 .hole-delta.big-over { color: var(--red); }
 .hole-delta.under { color: var(--lime); }

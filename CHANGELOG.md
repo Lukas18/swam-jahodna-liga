@@ -485,3 +485,9 @@
 
 - Increased only the birdie (-1) Troll Face from 86px to 112px (86 × 1.3 rounded to a whole pixel). Eagle remains 86px and Pepe icons remain 72px; animations and scoring unchanged.
 - Expanded reserved icon space to accommodate the larger Troll Face without shifting rows. Updated documentation and existing render size assertions. Node syntax/render checks and eight replay API tests pass. No league or Supabase changes; exclude unrelated .devcontainer/test.py.
+
+
+## 2026-11-01T17:37:54+01:00 — Separate the floating hole score from the total
+
+- Moved only the popping hole +/− number 4px right inside its reserved slot, increasing separation from the actual total score. Icon positions/sizes, row geometry and animations remain unchanged.
+- Verified the CSS change and passed the existing Node render regression. Exclude unrelated .devcontainer/test.py.
