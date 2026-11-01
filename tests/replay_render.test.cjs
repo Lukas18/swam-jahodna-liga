@@ -38,7 +38,7 @@ for (const animate of [true, false]) {
   for (const icon of icons) {
     assert.equal(icon.src, '/static/images/crying-frog.png');
     assert.match(icon.className, /crying-icon/);
-    assert.equal(icon.width, 30); assert.equal(icon.height, 30);
+    assert.equal(icon.width, 72); assert.equal(icon.height, 72);
   }
 }
 vm.runInContext(`state.iconDivisions.clear(); render(false)`, context);
@@ -63,6 +63,17 @@ assert.equal(rows[1].movement, undefined, 'Stationary row should not move');
 assert.equal(rows[1]['--score-effect-delay'], undefined, 'Stationary effects should not be delayed');
 for (const icon of images(elements.get('standings-body'))) {
   assert.match(icon.className,/frog-icon/);
-  assert.equal(icon.width,30); assert.equal(icon.height,30);
+  assert.equal(icon.width,72); assert.equal(icon.height,72);
 }
 console.log('PASS: moving rows delay icon effects; stationary rows do not; all frogs reserve fixed dimensions.');
+
+const byClass = (node, name) => (node.className || '').split(' ').includes(name) ? node : node.children.map(child => byClass(child, name)).find(Boolean);
+for (const row of elements.get('standings-body').rows) {
+  const score = byClass(row, 'score-content');
+  assert.deepEqual(score.children.map(child => child.className), ['score-total','hole-delta-slot','score-icon-slot']);
+  const delta = byClass(row, 'hole-delta');
+  const icon = images(row)[0];
+  assert.equal(delta.parent,score.children[1]);
+  assert.equal(icon.parent,score.children[2]);
+}
+console.log('PASS: total score, adjacent hole delta and larger icon have separate slots in that order.');

@@ -465,3 +465,10 @@
 - Delayed icon/numeric effects by the actual row-movement duration only for rows changing position. Stationary rows show effects immediately. Keep floating numerical markers separate from icon bounds and preserve reduced-motion behavior, score calculation and division controls.
 - Extended the real-render DOM regression to exercise moving and stationary rows, checking effect delays and intrinsic frog dimensions. Node regression and syntax checks pass; all eight replay API tests pass.
 - Browser replay explicitly crossed +2/+3/+6 players. Verified row heights remain ~37px (last collapsed-border row 36.5px), score areas stay 84px, all moving rows use 240ms delays, and floating numeric markers remain separated from frog bounds. Saved replay-stable-moving-icons-preview.jpg. No league/Supabase data changed. Exclude unrelated .devcontainer/test.py. Device Hub remains waived for this web app.
+
+
+## 2026-11-01T17:29:46+01:00 — Put hole numbers before larger replay icons
+
+- Split the score display into ordered total-score, hole-delta and icon slots. The floating hole number starts 6px after the total score instead of appearing beyond an icon-sized area. Icons follow the hole number.
+- Increased all score icons to explicit 72×72 dimensions with object-fit containment. Images may extend beyond the row vertically; fixed slot widths/heights and delayed effects preserve smooth row movement. Kept crying icon persistence, scoring thresholds and division controls unchanged.
+- Extended the actual-render regression to check total → delta → icon order and the new intrinsic dimensions; eight replay API tests, Node render regression and syntax validation pass. Browser verified the 6px number gap, 72px icons, correct slot order and unchanged ~37px row geometry during a reorder. Saved replay-number-before-large-icon-preview.jpg. No data writes; exclude unrelated .devcontainer/test.py.

@@ -324,7 +324,10 @@ function render(animate = true) {
     const score = player.score > 0 ? `+${player.score}` : String(player.score);
     const scoreCell = cell(row, "", `score ${player.score > 0 ? "over" : player.score === 0 ? "even" : ""}`);
     const scoreContent = document.createElement("span"); scoreContent.className = "score-content";
-    const total = document.createElement("span"); total.textContent = score; scoreContent.append(total);
+    const total = document.createElement("span"); total.className = "score-total"; total.textContent = score;
+    const deltaSlot = document.createElement("span"); deltaSlot.className = "hole-delta-slot";
+    const iconSlot = document.createElement("span"); iconSlot.className = "score-icon-slot";
+    scoreContent.append(total, deltaSlot, iconSlot);
     const currentHole = player.lastDelta !== null && player.lastRoundIndex === roundNumber - 1;
     if (animate && currentHole && player.lastDelta !== 0) {
       const holeDelta = document.createElement("sup");
@@ -333,7 +336,7 @@ function render(animate = true) {
       holeDelta.className = `hole-delta ${tone} ${size}`;
       holeDelta.textContent = scoreText(player.lastDelta);
       holeDelta.title = `Hole ${player.last}: ${scoreText(player.lastDelta)} relative to par`;
-      scoreContent.append(holeDelta);
+      deltaSlot.append(holeDelta);
     }
     // Severe holes remain visible even after the animation or a highlight redraw.
     if (currentHole && (animate || player.lastDelta >= 4)) {
@@ -344,10 +347,10 @@ function render(animate = true) {
         icon.src = underParIcon ? `/static/images/${underParIcon}-face.png`
           : player.lastDelta >= 4 ? "/static/images/crying-frog.png" : "/static/images/sad-frog.png";
         // Explicit dimensions prevent image decoding from changing row geometry.
-        if (!underParIcon) { icon.width = 30; icon.height = 30; }
+        icon.width = 72; icon.height = 72;
         icon.alt = "";
         icon.setAttribute("aria-hidden", "true");
-        scoreContent.append(icon);
+        iconSlot.append(icon);
       }
     }
     scoreCell.append(scoreContent);

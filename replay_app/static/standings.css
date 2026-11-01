@@ -43,18 +43,19 @@ tbody tr.highlighted td { border-bottom-color: #577148; }
 .player-highlight-button:hover { text-decoration: underline; text-decoration-color: var(--lime); }
 tr.highlighted .player-highlight-button::before { content: "★ "; color: var(--lime); }
 .score { font-size: 16px; }
-.score-content { display: inline-flex; align-items: center; position: relative; width: 84px; height: 22px; vertical-align: middle; }
-.hole-delta { position: absolute; top: -5px; left: calc(100% + 14px); z-index: 2; white-space: nowrap; pointer-events: none; font-size: 16px; line-height: 1; font-weight: 900; color: var(--muted); text-shadow: 0 2px 5px #071012; animation: hole-delta-rise 750ms ease-out both; animation-delay: var(--score-effect-delay, 0ms); }
+.score-content { display: inline-flex; align-items: center; gap: 6px; position: relative; width: 190px; height: 22px; vertical-align: middle; white-space: nowrap; }
+.score-total { flex: none; }
+.hole-delta-slot { position: relative; flex: 0 0 56px; width: 56px; height: 22px; }
+.score-icon-slot { position: relative; flex: 0 0 80px; width: 80px; height: 22px; }
+.hole-delta { position: absolute; top: -5px; left: 0; z-index: 2; white-space: nowrap; pointer-events: none; font-size: 16px; line-height: 1; font-weight: 900; color: var(--muted); text-shadow: 0 2px 5px #071012; animation: hole-delta-rise 750ms ease-out both; animation-delay: var(--score-effect-delay, 0ms); }
 .hole-delta.over { color: var(--orange); }
 .hole-delta.big-over { color: var(--red); }
 .hole-delta.under { color: var(--lime); }
 .hole-delta.small-over { font-size: 22px; }
 .hole-delta.large { font-size: 30px; }
 .hole-delta.huge { font-size: 38px; }
-.hole-icon { position: absolute; top: -50px; left: calc(100% + 45px); z-index: 3; width: 83px; height: auto; pointer-events: none; animation: hole-icon-float 950ms ease-out both; filter: drop-shadow(0 3px 4px #071012); }
-.hole-icon.birdie-icon, .hole-icon.eagle-icon { top: -19px; left: -90px; width: 86px; }
-.hole-icon { animation-delay: var(--score-effect-delay, 0ms); }
-.hole-icon.frog-icon { top: 50%; left: 48px; width: 30px; height: 30px; margin: 0; object-fit: contain; transform: translateY(-50%); animation-name: frog-icon-fade; }
+.hole-icon { position: absolute; top: 50%; left: 0; z-index: 3; width: 72px; height: 72px; object-fit: contain; pointer-events: none; transform: translateY(-50%); animation: hole-icon-float 950ms ease-out both; animation-delay: var(--score-effect-delay, 0ms); filter: drop-shadow(0 3px 4px #071012); }
+.hole-icon.frog-icon { animation-name: frog-icon-fade; }
 .hole-icon.crying-icon { animation-name: crying-icon-enter; animation-duration: 220ms; }
 @keyframes frog-icon-fade {
   0% { opacity: 0; transform: translateY(-50%) scale(.9); }
@@ -72,15 +73,14 @@ tr.highlighted .player-highlight-button::before { content: "★ "; color: var(--
   100% { opacity: 0; transform: translateY(-22px) scale(1.06); }
 }
 @keyframes hole-icon-float {
-  0% { opacity: 0; transform: translate(0, 14px) scale(.7) rotate(-8deg); }
-  14% { opacity: 1; transform: translate(0, 0) scale(1) rotate(0); }
-  52% { opacity: 1; transform: translate(10px, -13px) scale(1.06) rotate(5deg); }
-  100% { opacity: 0; transform: translate(25px, -37px) scale(.9) rotate(10deg); }
+  0% { opacity: 0; transform: translate(0, calc(-50% + 14px)) scale(.7) rotate(-8deg); }
+  14% { opacity: 1; transform: translate(0, -50%) scale(1) rotate(0); }
+  52% { opacity: 1; transform: translate(4px, calc(-50% - 13px)) scale(1.06) rotate(5deg); }
+  100% { opacity: 0; transform: translate(6px, calc(-50% - 24px)) scale(.9) rotate(10deg); }
 }
 @media (prefers-reduced-motion: reduce) {
   .hole-delta { animation: none; opacity: 1; transform: translateY(-5px); }
-  .hole-icon { animation: none; opacity: 1; transform: translateY(-10px); }
-  .hole-icon.frog-icon { animation: none; opacity: 1; transform: translateY(-50%); }
+  .hole-icon { animation: none; opacity: 1; transform: translateY(-50%); }
 }
 .division-tag { font-size: 10px; margin-left: 6px; }
 @media (max-width: 650px) {
