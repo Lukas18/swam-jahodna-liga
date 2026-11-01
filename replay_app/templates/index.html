@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>uDisc Leaderboard Replay</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='standings.css') }}">
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="masthead">
+      <div class="brand"><span class="brand-mark">↗</span> SWAM <span class="brand-muted">/ replay</span></div>
+      <div class="eyebrow">ROUND BY ROUND · HOLE BY HOLE</div>
+      <h1>Watch the leaderboard <em>take shape.</em></h1>
+      <p>Upload a uDisc workbook, select the course pars, and replay every player’s actual hole order.</p>
+    </header>
+
+    <section class="card upload-card" aria-labelledby="upload-title">
+      <div class="section-heading"><span class="step-number">01</span><h2 id="upload-title">Load a tournament</h2></div>
+      <label class="drop-zone" id="drop-zone">
+        <input id="workbook" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+        <span class="upload-symbol">↑</span>
+        <strong>Choose a uDisc .xlsx export</strong>
+        <span>or drop it here · Round 1 / Round 2 worksheets</span>
+      </label>
+      <div id="file-status" class="status" role="status"></div>
+    </section>
+
+    <section id="setup" class="card hidden" aria-labelledby="setup-title">
+      <div class="section-heading"><span class="step-number">02</span><h2 id="setup-title">Match each round to its layout</h2></div>
+      <p class="help">uDisc exports throws and total par, but not par for each hole. Choose a course layout for each round. The app checks its par total against the export.</p>
+      <div id="layout-controls" class="layout-grid"></div>
+      <div id="setup-error" class="error" role="alert"></div>
+      <button id="start" class="primary-button" type="button">Open replay <span>→</span></button>
+    </section>
+
+    <section id="dashboard" class="hidden" aria-labelledby="dashboard-title">
+      <div class="dashboard-top">
+        <div><div class="eyebrow">TOURNAMENT TIMELINE</div><h2 id="dashboard-title">Leaderboard replay</h2>
+          <p id="dashboard-summary" class="muted"></p></div>
+        <button id="change-file" class="ghost-button" type="button">Change workbook</button>
+      </div>
+
+      <div class="card playback-card">
+        <div class="playback-topline">
+          <h3 id="moment-label">Before play</h3>
+          <label class="speed-control">Speed <select id="speed">
+            <option value="2000">0.5×</option>
+            <option value="1000" selected>1×</option>
+            <option value="500">2×</option>
+            <option value="250">4×</option>
+          </select></label>
+        </div>
+        <input id="timeline" type="range" min="0" max="36" value="0" aria-label="Replay position">
+        <div id="round-markers" class="round-markers"></div>
+        <div class="playback-controls">
+          <div class="transport">
+            <button id="first" title="Beginning" aria-label="Beginning" type="button">|◀</button>
+            <button id="previous" title="Previous hole" aria-label="Previous hole" type="button">◀</button>
+            <button id="play" class="play-button" type="button" aria-label="Play">▶ <span>Play</span></button>
+            <button id="next" title="Next hole" aria-label="Next hole" type="button">▶</button>
+            <button id="last" title="End" aria-label="End" type="button">▶|</button>
+            <button id="sound-toggle" class="sound-toggle" type="button" aria-pressed="true" title="Mute triple bogey sound">🔊 Sound</button>
+          </div>
+        </div>
+      </div>
+      <audio id="oof-audio" preload="auto" src="https://www.myinstants.com/media/sounds/og-roblox-death-sound-effect-uhh-oof.mp3"></audio>
+
+      <div class="card standings-card">
+        <div class="standings-heading"><h3>Standings</h3>
+          <div class="standings-filters">
+            <details class="icon-division-control"><summary id="icon-division-summary">Score icons</summary><div id="icon-division-options" class="icon-division-options" aria-label="Divisions showing score icons"></div></details>
+            <label>Division <select id="division"></select></label>
+          </div></div>
+        <div class="highlight-toolbar">
+          <label for="highlight-search">Highlight players</label>
+          <div class="highlight-entry"><input id="highlight-search" type="search" list="player-options" placeholder="Find a player" autocomplete="off"><datalist id="player-options"></datalist><button id="add-highlight" type="button">Highlight</button><button id="clear-highlights" class="clear-highlights" type="button">Clear</button></div>
+          <div id="highlight-chips" class="highlight-chips" aria-live="polite"></div>
+        </div>
+        <div class="table-scroll"><table><thead><tr><th class="rank-col">#</th><th>Player</th><th>Score</th><th>Throws</th><th>Thru</th><th>Last hole</th><th>Start</th></tr></thead><tbody id="standings-body"></tbody></table></div>
+      </div>
+      <p class="footnote">Snapshots advance by each player’s <em>played-hole count</em>. Shotgun groups are treated as advancing together; the export has no timestamp for each individual hole.</p>
+    </section>
+  </main>
+</body>
+</html>
